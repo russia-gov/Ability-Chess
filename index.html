@@ -17,7 +17,7 @@
   .sq.drag-over{outline:4px solid rgba(77,163,255,.9);outline-offset:-4px}
   .sq.drag-origin{box-shadow:inset 0 0 0 4px rgba(77,163,255,.45)}
   .piece-svg{pointer-events:none;position:relative;z-index:2}
-  .piece-svg{width:88%;height:88%;display:block;filter:drop-shadow(0 1px 1px rgba(0,0,0,.28));will-change:transform;transition:transform 230ms cubic-bezier(.2,.8,.25,1)}
+  .piece-svg{width:88%;height:88%;display:block;filter:drop-shadow(0 1px 1px rgba(0,0,0,.28));will-change:transform;transition:transform var(--move-animation-ms,230ms) cubic-bezier(.2,.8,.25,1)}
   .piece-raster{object-fit:contain;image-rendering:auto}
   .piece-svg.no-transition{transition:none}
   .drag-ghost{position:fixed;z-index:9999;pointer-events:none;transform:translate(-50%,-50%) scale(1.06);filter:drop-shadow(0 10px 10px rgba(0,0,0,.35));opacity:.95}
@@ -146,7 +146,7 @@
   .time-setup h3{margin:0 0 12px;font-size:15px}.slider-row{display:grid;grid-template-columns:110px 1fr 72px;gap:12px;align-items:center;margin:10px 0}.slider-row label{font-weight:700;font-size:13px}.slider-row output{text-align:right;color:var(--warn);font-weight:800;font-variant-numeric:tabular-nums}.slider-row input[type=range]{width:100%;accent-color:#ffb84d}
   .clock-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 10px}.clock{background:#151a20;border:1px solid #354150;border-radius:11px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center}.clock.active{border-color:#ffb84d;box-shadow:0 0 0 2px rgba(255,184,77,.18) inset}.clock.low{color:#ff7b7b}.clock-time{font-size:22px;font-weight:900;font-variant-numeric:tabular-nums}
   .content-screen{display:none;grid-template-columns:220px minmax(0,1fr);min-height:100vh;background:var(--bg)}.content-screen.active{display:grid}.content-main{padding:clamp(22px,4vw,52px);max-width:1000px;width:100%;box-sizing:border-box;margin:0 auto}.page-title{font-size:clamp(34px,5vw,54px);margin:0 0 8px}.page-lead{color:var(--muted);font-size:17px;line-height:1.55;max-width:760px;margin:0 0 26px}.guide-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.guide-card,.settings-card{background:var(--panel);border:1px solid rgba(255,255,255,.07);border-radius:15px;padding:18px;box-shadow:0 10px 26px rgba(0,0,0,.18)}.guide-card h2{display:flex;justify-content:space-between;gap:12px;margin:0 0 8px;font-size:20px}.guide-cost{color:var(--warn)}.guide-card p,.guide-card li{color:#c4ccd4;line-height:1.5}.guide-card ul{padding-left:20px;margin-bottom:0}.guide-rule{margin-top:16px;background:#171c22;border-left:4px solid var(--warn);padding:14px 16px;border-radius:10px;color:#cbd3db;line-height:1.5}
-  .settings-stack{display:grid;gap:16px}.setting-row{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06)}.setting-row:last-child{border-bottom:0}.setting-copy b{display:block;margin-bottom:3px}.setting-copy span{font-size:13px;color:var(--muted)}.switch{position:relative;width:48px;height:27px;flex:0 0 auto}.switch input{opacity:0;width:0;height:0}.switch span{position:absolute;inset:0;background:#3b4652;border-radius:999px;cursor:pointer;transition:.2s}.switch span:before{content:'';position:absolute;width:21px;height:21px;left:3px;top:3px;background:white;border-radius:50%;transition:.2s}.switch input:checked+span{background:#d98a20}.switch input:checked+span:before{transform:translateX(21px)}.board-presets{display:flex;gap:10px;flex-wrap:wrap}.board-preset{width:58px;height:58px;border-radius:10px;padding:0;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;border:3px solid transparent}.board-preset.selected{border-color:var(--accent)}.board-preset i{display:block;height:100%}.custom-colors{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px}.color-field{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:13px}.color-field input{width:42px;height:34px;padding:1px;border-radius:8px}.settings-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  .settings-stack{display:grid;gap:16px}.setting-row{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06)}.setting-row:last-child{border-bottom:0}.setting-copy b{display:block;margin-bottom:3px}.setting-copy span{font-size:13px;color:var(--muted)}.switch{position:relative;width:48px;height:27px;flex:0 0 auto}.switch input{opacity:0;width:0;height:0}.switch span{position:absolute;inset:0;background:#3b4652;border-radius:999px;cursor:pointer;transition:.2s}.switch span:before{content:'';position:absolute;width:21px;height:21px;left:3px;top:3px;background:white;border-radius:50%;transition:.2s}.switch input:checked+span{background:#d98a20}.switch input:checked+span:before{transform:translateX(21px)}.board-presets{display:flex;gap:10px;flex-wrap:wrap}.board-preset{width:58px;height:58px;border-radius:10px;padding:0;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;border:3px solid transparent}.board-preset.selected{border-color:var(--accent)}.board-preset i{display:block;height:100%}.custom-colors{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px}.color-field{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:13px}.color-field input{width:42px;height:34px;padding:1px;border-radius:8px}.settings-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.setting-select{background:#13181e;color:#fff;border:1px solid #465363;border-radius:9px;padding:8px 10px;min-width:130px}
   @media(max-width:900px){.content-screen.active{grid-template-columns:1fr}.content-screen .site-ribbon{min-height:auto;height:auto;position:static;flex-direction:row;align-items:center;padding:10px 12px;border-right:0;border-bottom:1px solid rgba(255,255,255,.06);gap:14px}.content-screen .site-ribbon .home-nav{display:flex;overflow-x:auto}.content-main{padding:22px}.guide-grid{grid-template-columns:1fr}}
   @media(max-width:560px){.slider-row{grid-template-columns:90px 1fr 58px;gap:7px}.clock-time{font-size:18px}.setting-row{align-items:flex-start}}
 
@@ -187,6 +187,8 @@
 
   .piece-upgrade-tooltip{position:fixed!important;left:0!important;top:0!important;right:auto!important;display:block!important;opacity:0!important;visibility:hidden!important;z-index:2147483647!important;max-width:min(280px,calc(100vw - 24px))!important}
   .piece-upgrade-tooltip.tooltip-visible{opacity:1!important;visibility:visible!important}
+
+  .history-screen{display:none;min-height:100vh;background:var(--bg)}.history-screen.active{display:grid;grid-template-columns:250px 1fr}.history-main{padding:42px;overflow:auto}.history-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}.history-list{display:grid;gap:12px;max-width:980px}.history-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:16px 18px;background:#171c22;border:1px solid #354150;border-radius:13px}.history-title{font-weight:900;font-size:17px}.history-meta{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.45}.history-result-win{color:#68d391}.history-result-loss{color:#ff7b7b}.history-result-draw{color:#f6c76e}.history-empty{max-width:760px;padding:24px;background:#171c22;border:1px solid #354150;border-radius:13px;color:var(--muted)}.analysis-banner{display:none;margin:0 0 10px;padding:9px 12px;border-radius:10px;background:#2c2440;border:1px solid #7657a8;color:#e9ddff;font-weight:800}.game-screen.analysis-mode .analysis-banner{display:block}.game-screen.analysis-mode #offerDrawBtn,.game-screen.analysis-mode #acceptDrawBtn,.game-screen.analysis-mode #declineDrawBtn,.game-screen.analysis-mode #resignBtn{display:none}.game-screen.analysis-mode .clock{opacity:.75}.history-analysis-btn{background:#302746;border-color:#7657a8}.history-signin-btn{margin-top:14px}@media(max-width:760px){.history-screen.active{grid-template-columns:1fr}.history-screen .site-ribbon{display:none}.history-main{padding:24px 16px}.history-card{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -197,7 +199,7 @@
       <button class="home-nav-item active" type="button"><span class="home-nav-icon">▶</span>Play</button>
       <button class="home-nav-item abilities-nav-btn" type="button"><span class="home-nav-icon">★</span>Abilities Guide</button>
       <button class="home-nav-item settings-nav-btn" type="button"><span class="home-nav-icon">⚙</span>Settings</button>
-      <button class="home-nav-item members-nav-btn" type="button"><span class="home-nav-icon">♙</span>Members</button><button class="home-nav-item" type="button" disabled title="Coming later"><span class="home-nav-icon">◫</span>Game history</button>
+      <button class="home-nav-item members-nav-btn" type="button"><span class="home-nav-icon">♙</span>Members</button><button class="home-nav-item history-nav-btn" type="button"><span class="home-nav-icon">◫</span>Game history</button>
     </nav>
     <div class="home-sidebar-note">A tactical chess variant where captures fuel special abilities. Create a private room and play online with a six-character code.</div>
   </aside>
@@ -261,7 +263,7 @@
   </section>
 </div>
 <div id="abilitiesScreen" class="content-screen screen">
-  <aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item active" type="button"><span class="home-nav-icon">★</span>Abilities Guide</button><button class="home-nav-item settings-nav-btn" type="button"><span class="home-nav-icon">⚙</span>Settings</button><button class="home-nav-item members-nav-btn" type="button"><span class="home-nav-icon">♙</span>Members</button><button class="home-nav-item" disabled><span class="home-nav-icon">◫</span>Game history</button></nav></aside>
+  <aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item active" type="button"><span class="home-nav-icon">★</span>Abilities Guide</button><button class="home-nav-item settings-nav-btn" type="button"><span class="home-nav-icon">⚙</span>Settings</button><button class="home-nav-item members-nav-btn" type="button"><span class="home-nav-icon">♙</span>Members</button><button class="home-nav-item history-nav-btn" type="button"><span class="home-nav-icon">◫</span>Game history</button></nav></aside>
   <main class="content-main"><h1 class="page-title">Abilities Guide</h1><p class="page-lead">Captures earn points equal to the captured piece's standard value. Spend those points on one ability before making your normal move.</p>
     <div class="guide-grid">
       <article class="guide-card"><h2>Shield <span class="guide-cost">3 points</span></h2><p>Protect one of your pieces from ordinary capture until your next turn begins. The shield is immediately lost if that piece moves. Bomb is not an ordinary capture.</p></article>
@@ -271,7 +273,7 @@
       <article class="guide-card"><h2>Recall <span class="guide-cost">4 points</span></h2><p>Return your most recently moved non-king piece to the square from which it moved, provided the piece is still there and the old square is empty.</p></article>
       <article class="guide-card"><h2>Ambush <span class="guide-cost">4 points</span></h2><p>Trap one of your non-king pieces. If it is captured before your next turn, the capturing piece is destroyed as well.</p></article>
       <article class="guide-card"><h2>Fortify <span class="guide-cost">4 points</span></h2><p>Protect a 2×2 area containing your king. Enemy abilities cannot affect your pieces in that area until your next turn.</p></article>
-      <article class="guide-card"><h2>Teleport <span class="guide-cost">4 points</span></h2><p>Move one non-king piece to any empty, unfortified square. Teleport counts as your move and ends your turn. It cannot expose your king or place the teleported piece where it immediately attacks the enemy king.</p></article>
+      <article class="guide-card"><h2>Teleport <span class="guide-cost">4 points</span></h2><p>Move one non-king piece to any empty, unfortified square. Pawns may only be teleported while on their own half and only to another square on their own half. Teleport counts as your move and ends your turn. It cannot expose your king or place the teleported piece where it immediately attacks the enemy king.</p></article>
       <article class="guide-card"><h2>Reinforce <span class="guide-cost">5 points</span></h2><p>Immediately promote one pawn beyond the halfway line to a knight or bishop, then make your normal move.</p></article>
       <article class="guide-card"><h2>Portal <span class="guide-cost">5 points</span></h2><p>Choose two empty squares. The portal pair remains active for three of its owner’s turns, including the turn it is created. During those turns, any White or Black piece entering either portal exits from the other when the exit is empty. Both directions work for both players. Creating the portal does not consume the normal move.</p></article>
       <article class="guide-card"><h2>Double Move <span class="guide-cost">6 points</span></h2><p>Make two normal chess moves in one turn. Neither move may capture the opposing king.</p></article>
@@ -285,22 +287,26 @@
       <article class="guide-card"><h2>Cardinal <span class="guide-cost">6 points · Bishop</span></h2><p>Every bishop additionally moves or captures one square orthogonally while retaining diagonal movement. Gives bishops close-range access to either color complex.</p></article>
       <article class="guide-card"><h2>Color Shift <span class="guide-cost">5 points · Bishop</span></h2><p>Every bishop may move exactly one square orthogonally only into an empty square; it cannot capture with this move. It changes square color and consumes the normal turn. Repositions a bishop onto the other color complex.</p></article>
       <article class="guide-card"><h2>Archbishop <span class="guide-cost">8 points · Bishop</span></h2><p>Every bishop additionally moves and captures like a knight while retaining diagonal movement. Produces powerful mixed sliding and leaping threats.</p></article>
-      <article class="guide-card"><h2>Bastion <span class="guide-cost">6 points · Rook</span></h2><p>Every rook may pass through exactly one friendly piece during a normal rook line and land on an empty square beyond it. It cannot jump an enemy, pass more than one piece, or capture while jumping. Helps rooks escape blocked files.</p></article>
+      <article class="guide-card"><h2>Bastion <span class="guide-cost">6 points · Rook</span></h2><p>Every rook may pass through exactly one friendly piece during a normal rook line and land on an empty square beyond it or capture an enemy piece there. It cannot jump an enemy or pass more than one piece. Helps rooks escape blocked files.</p></article>
       <article class="guide-card"><h2>Turret <span class="guide-cost">6 points · Rook</span></h2><p>Every rook additionally moves or captures one square diagonally while retaining normal rook movement. Adds close-range diagonal control.</p></article>
       <article class="guide-card"><h2>Chancellor <span class="guide-cost">9 points · Rook</span></h2><p>Every rook additionally moves and captures like a knight while retaining orthogonal movement. Creates a highly mobile compound attacker.</p></article>
-      <article class="guide-card"><h2>Phase Step <span class="guide-cost">7 points · Queen</span></h2><p>Every queen may pass through exactly one friendly piece on a normal queen line and land on an empty square beyond it. It cannot jump an enemy, pass more than one piece, or capture while jumping. Lets the queen escape friendly congestion.</p></article>
+      <article class="guide-card"><h2>Phase Step <span class="guide-cost">7 points · Queen</span></h2><p>Every queen may pass through exactly one friendly piece on a normal queen line and land on an empty square beyond it or capture an enemy piece there. It cannot jump an enemy or pass more than one piece. Lets the queen escape friendly congestion.</p></article>
       <article class="guide-card"><h2>Royal Step <span class="guide-cost">7 points · King</span></h2><p>The king additionally moves and captures like a knight, but may never land on an attacked square. It is not castling. Offers tactical escapes and surprise captures.</p></article>
       <article class="guide-card"><h2>Escape Route <span class="guide-cost">6 points · King</span></h2><p>The king additionally moves exactly two squares horizontally, vertically, or diagonally. It cannot begin in attack; the intermediate square must be empty and safe; the destination must be safe and may capture. It is not castling and moves no rook. Enables carefully screened long escapes.</p></article>
     </div><div class="guide-rule"><b>Core scoring:</b> pawn 1, knight 3, bishop 3, rook 5, queen 9. Games may end by checkmate or king capture. Stalemate is not declared while the player has a legal ability escape. Draws also include agreement, threefold repetition, the fifty-move rule, and insufficient material. You may use at most one ability per turn.</div>
   </main>
 </div>
 <div id="settingsScreen" class="content-screen screen">
-  <aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item abilities-nav-btn" type="button"><span class="home-nav-icon">★</span>Abilities Guide</button><button class="home-nav-item active" type="button"><span class="home-nav-icon">⚙</span>Settings</button><button class="home-nav-item members-nav-btn" type="button"><span class="home-nav-icon">♙</span>Members</button><button class="home-nav-item" disabled><span class="home-nav-icon">◫</span>Game history</button></nav></aside>
+  <aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item abilities-nav-btn" type="button"><span class="home-nav-icon">★</span>Abilities Guide</button><button class="home-nav-item active" type="button"><span class="home-nav-icon">⚙</span>Settings</button><button class="home-nav-item members-nav-btn" type="button"><span class="home-nav-icon">♙</span>Members</button><button class="home-nav-item history-nav-btn" type="button"><span class="home-nav-icon">◫</span>Game history</button></nav></aside>
   <main class="content-main"><h1 class="page-title">Settings</h1><p class="page-lead">Customize how Ability Chess looks and feels. Preferences are saved in this browser.</p><div class="settings-stack">
     <section class="settings-card"><h2>Board appearance</h2><div id="boardPresets" class="board-presets"></div><div class="custom-colors"><label class="color-field">Light squares <input id="lightColorInput" type="color"></label><label class="color-field">Dark squares <input id="darkColorInput" type="color"></label></div></section>
     <section class="settings-card"><h2>Gameplay</h2><div class="setting-row"><div class="setting-copy"><b>Enable premoves</b><span>Queue a move while waiting for the opponent.</span></div><label class="switch"><input id="premovesSetting" type="checkbox"><span></span></label></div><div class="setting-row"><div class="setting-copy"><b>Show legal move markers</b><span>Display dots and capture rings for selected pieces.</span></div><label class="switch"><input id="legalMarkersSetting" type="checkbox"><span></span></label></div></section>
-    <section class="settings-card"><h2>Sound and motion</h2><div class="setting-row"><div class="setting-copy"><b>Game sounds</b><span>Move, capture, and illegal-move audio.</span></div><label class="switch"><input id="soundSetting" type="checkbox"><span></span></label></div><div class="setting-row"><div class="setting-copy"><b>Move animations</b><span>Animate click moves, bot moves, and premoves.</span></div><label class="switch"><input id="animationSetting" type="checkbox"><span></span></label></div></section>
+    <section class="settings-card"><h2>Sound and motion</h2><div class="setting-row"><div class="setting-copy"><b>Game sounds</b><span>Move, capture, and illegal-move audio.</span></div><label class="switch"><input id="soundSetting" type="checkbox"><span></span></label></div><div class="setting-row"><div class="setting-copy"><b>Move animations</b><span>Animate click moves, bot moves, premoves, and move-list review.</span></div><label class="switch"><input id="animationSetting" type="checkbox"><span></span></label></div><div class="setting-row"><div class="setting-copy"><b>Piece animation speed</b><span>Choose how quickly pieces slide between squares.</span></div><select id="animationSpeedSetting" class="setting-select"><option value="120">Fast</option><option value="230">Normal</option><option value="380">Slow</option><option value="600">Very slow</option></select></div></section>
   </div><div class="settings-actions"><button id="resetSettingsBtn" type="button">Reset defaults</button><button class="page-play-btn" type="button">Back to Play</button></div></main>
+</div>
+<div id="historyScreen" class="history-screen screen">
+  <aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item abilities-nav-btn" type="button"><span class="home-nav-icon">★</span>Abilities Guide</button><button class="home-nav-item settings-nav-btn" type="button"><span class="home-nav-icon">⚙</span>Settings</button><button class="home-nav-item members-nav-btn" type="button"><span class="home-nav-icon">♙</span>Members</button><button class="home-nav-item history-nav-btn active" type="button"><span class="home-nav-icon">◫</span>Game history</button></nav></aside>
+  <main class="history-main"><div class="history-toolbar"><div><h1 class="page-title">Game History</h1><p class="page-lead">Completed games saved to your Ability Chess account.</p></div><button id="refreshHistoryBtn" type="button">Refresh</button></div><div id="historyList" class="history-list"><div class="history-empty">Sign in to view saved games.</div></div></main>
 </div>
 <div id="gameScreen" class="game-screen screen">
   <aside class="site-ribbon" aria-label="Site navigation">
@@ -309,7 +315,7 @@
       <button id="gamePlayNavBtn" class="home-nav-item active" type="button"><span class="home-nav-icon">▶</span>Play</button>
       <button class="home-nav-item abilities-nav-btn" type="button"><span class="home-nav-icon">★</span>Abilities Guide</button>
       <button class="home-nav-item settings-nav-btn" type="button"><span class="home-nav-icon">⚙</span>Settings</button>
-      <button class="home-nav-item members-nav-btn" type="button"><span class="home-nav-icon">♙</span>Members</button><button class="home-nav-item" type="button" disabled title="Coming later"><span class="home-nav-icon">◫</span>Game history</button>
+      <button class="home-nav-item members-nav-btn" type="button"><span class="home-nav-icon">♙</span>Members</button><button class="home-nav-item history-nav-btn" type="button"><span class="home-nav-icon">◫</span>Game history</button>
     </nav>
     <div class="home-sidebar-note">Return to the home screen to change game modes. Online multiplayer is coming later.</div>
   </aside>
@@ -330,6 +336,7 @@
         <button id="newGameBtn">New Game</button>
       </div>
     </div>
+    <div id="analysisBanner" class="analysis-banner">Analysis mode — use ← and → to replay the game.</div>
     <div class="clock-row"><div id="whiteClock" class="clock active"><span>White</span><span id="whiteClockTime" class="clock-time">10:00</span></div><div id="blackClock" class="clock"><span>Black</span><span id="blackClockTime" class="clock-time">10:00</span></div></div><div id="connectionStatus" class="connection-status connected" hidden>Connected</div>
     <div class="board-shell"><div id="board" class="board" role="grid" aria-label="Ability Chess board"></div><svg id="annotationLayer" class="annotation-layer" viewBox="0 0 8 8" preserveAspectRatio="none" aria-hidden="true"></svg></div>
   </div>
@@ -458,6 +465,7 @@
   const gameModeLabel = document.getElementById('gameModeLabel');
   const abilitiesScreen = document.getElementById('abilitiesScreen');
   const settingsScreen = document.getElementById('settingsScreen');
+  const historyScreen=document.getElementById('historyScreen'), historyList=document.getElementById('historyList'), refreshHistoryBtn=document.getElementById('refreshHistoryBtn');
   const baseTimeSlider = document.getElementById('baseTimeSlider');
   const incrementSlider = document.getElementById('incrementSlider');
   const baseTimeOutput = document.getElementById('baseTimeOutput');
@@ -492,6 +500,7 @@
   const legalMarkersSetting = document.getElementById('legalMarkersSetting');
   const soundSetting = document.getElementById('soundSetting');
   const animationSetting = document.getElementById('animationSetting');
+  const animationSpeedSetting = document.getElementById('animationSpeedSetting');
   const lightColorInput = document.getElementById('lightColorInput');
   const darkColorInput = document.getElementById('darkColorInput');
   const boardPresets = document.getElementById('boardPresets');
@@ -499,8 +508,11 @@
   const memberModal=document.getElementById('memberModal'), openMembersBtn=document.getElementById('openMembersBtn'), closeMemberBtn=document.getElementById('closeMemberBtn'), memberSignedOut=document.getElementById('memberSignedOut'), memberSignedIn=document.getElementById('memberSignedIn'), memberEmail=document.getElementById('memberEmail'), memberPassword=document.getElementById('memberPassword'), memberSignInBtn=document.getElementById('memberSignInBtn'), memberSignUpBtn=document.getElementById('memberSignUpBtn'), memberSignOutBtn=document.getElementById('memberSignOutBtn'), memberIdentity=document.getElementById('memberIdentity'), memberStats=document.getElementById('memberStats'), profileUsername=document.getElementById('profileUsername'), profileDisplayName=document.getElementById('profileDisplayName'), saveProfileBtn=document.getElementById('saveProfileBtn'), memberSearch=document.getElementById('memberSearch'), refreshMembersBtn=document.getElementById('refreshMembersBtn'), postOpenChallengeBtn=document.getElementById('postOpenChallengeBtn'), memberList=document.getElementById('memberList'), memberStatus=document.getElementById('memberStatus');
 
   let selectedGameMode = 'bot';
+  let historyViewIndex = null;
+  let analysisMode=false;
+  let lowTimeWarnings={w:new Set(),b:new Set()};
   let clockInterval = null;
-  const DEFAULT_SETTINGS = {light:'#f0d9b5',dark:'#b58863',premoves:true,legalMarkers:true,sound:true,animations:true};
+  const DEFAULT_SETTINGS = {light:'#f0d9b5',dark:'#b58863',premoves:true,legalMarkers:true,sound:true,animations:true,animationSpeed:230};
   let settings = {...DEFAULT_SETTINGS};
   try { settings={...DEFAULT_SETTINGS,...JSON.parse(localStorage.getItem('abilityChessSettings')||'{}')}; } catch {}
   const BOARD_PRESETS=[['Classic','#f0d9b5','#b58863'],['Green','#eeeed2','#769656'],['Blue','#dee3e6','#8ca2ad'],['Walnut','#e8c99b','#9b6542'],['Slate','#d7dce2','#687887']];
@@ -514,7 +526,7 @@
     { id:'swap', name:'Swap', cost:4, desc:'Choose two of your non-king pieces and exchange their squares, provided your king remains safe.' },
     { id:'recall', name:'Recall', cost:4, desc:'Return your most recently moved non-king piece to its previous square, if that square is empty.' },
     { id:'ambush', name:'Ambush', cost:4, desc:'Trap one of your non-king pieces. If captured before your next turn, the capturing piece is destroyed too.' },
-    { id:'teleport', name:'Teleport', cost:4, consumesMove:true, desc:'Move one non-king piece instantly to an empty square. Teleport counts as your move and ends your turn. It cannot expose your king or immediately attack the enemy king.' },
+    { id:'teleport', name:'Teleport', cost:4, consumesMove:true, desc:'Move one non-king piece instantly to an empty square. Pawns may teleport only from their own half to another square on their own half. Teleport counts as your move and ends your turn. It cannot expose your king or immediately attack the enemy king.' },
     { id:'reinforce', name:'Reinforce', cost:5, desc:'Promote one pawn that has crossed the halfway line immediately to a knight or bishop.' },
     { id:'portal', name:'Portal', cost:5, desc:'Choose two empty squares. The pair lasts for three of your turns, including this one. Any piece from either side entering either portal exits from the other if the exit is empty. Both directions work. You still make a normal move after placing it.' },
     { id:'fortify', name:'Fortify', cost:4, desc:'Choose a 2×2 area containing your king. Enemy abilities cannot affect your pieces in that area until your next turn.' },
@@ -531,10 +543,10 @@
     {id:'cardinal',name:'Cardinal',type:'b',cost:6,rule:'Bishops may additionally move or capture one square orthogonally.',restrictions:'Normal diagonal movement remains unchanged.'},
     {id:'color_shift',name:'Color Shift',type:'b',cost:5,rule:'Bishops may additionally move exactly one square orthogonally into an empty square.',restrictions:'This movement cannot capture.'},
     {id:'archbishop',name:'Archbishop',type:'b',cost:8,rule:'Bishops may additionally move and capture like knights.',restrictions:'Normal diagonal movement remains unchanged.'},
-    {id:'bastion',name:'Bastion',type:'r',cost:6,rule:'Rooks may pass through exactly one friendly piece on a normal rook line and land on an empty square beyond it.',restrictions:'Cannot jump an enemy, pass more than one piece, or capture while jumping.'},
+    {id:'bastion',name:'Bastion',type:'r',cost:6,rule:'Rooks may pass through exactly one friendly piece on a normal rook line and then move to an empty square or capture an enemy piece beyond it.',restrictions:'Cannot jump an enemy or pass more than one piece.'},
     {id:'turret',name:'Turret',type:'r',cost:6,rule:'Rooks may additionally move or capture one square diagonally.',restrictions:'Normal rook movement remains unchanged.'},
     {id:'chancellor',name:'Chancellor',type:'r',cost:9,rule:'Rooks may additionally move and capture like knights.',restrictions:'Normal orthogonal movement remains unchanged.'},
-    {id:'phase_step',name:'Phase Step',type:'q',cost:7,rule:'Queens may pass through exactly one friendly piece on a normal queen line and land on an empty square beyond it.',restrictions:'Cannot jump an enemy, pass more than one piece, or capture while jumping.'},
+    {id:'phase_step',name:'Phase Step',type:'q',cost:7,rule:'Queens may pass through exactly one friendly piece on a normal queen line and then move to an empty square or capture an enemy piece beyond it.',restrictions:'Cannot jump an enemy or pass more than one piece.'},
     {id:'royal_step',name:'Royal Step',type:'k',cost:7,rule:'The king may additionally move and capture like a knight.',restrictions:'The destination must be safe; this is not castling.'},
     {id:'escape_route',name:'Escape Route',type:'k',cost:6,rule:'The king may additionally move exactly two squares horizontally, vertically, or diagonally.',restrictions:'Cannot begin in attack; the empty intermediate square and destination must be safe; this is not castling.'}
   ];
@@ -683,6 +695,34 @@
     gain.connect(ctx.destination);
     osc.start(start);
     osc.stop(start + 0.19);
+  }
+
+  function playTimeWarning(seconds){
+    if(!settings.sound)return;
+    const ctx=getAudioContext();if(!ctx)return;
+    const start=ctx.currentTime+0.01;
+    const osc=ctx.createOscillator(), gain=ctx.createGain();
+    osc.type=seconds<=5?'square':'sine';
+    osc.frequency.setValueAtTime(seconds<=5?880:660,start);
+    gain.gain.setValueAtTime(0.0001,start);
+    gain.gain.exponentialRampToValueAtTime(seconds<=5?0.16:0.11,start+0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001,start+(seconds<=5?0.11:0.16));
+    osc.connect(gain);gain.connect(ctx.destination);osc.start(start);osc.stop(start+0.18);
+  }
+
+  function humanClockColors(){
+    if(!game)return[];
+    if(game.mode==='bot')return['w'];
+    if(game.mode==='online'&&game.playerColor)return[game.playerColor];
+    if(game.mode==='local')return['w','b'];
+    return[];
+  }
+
+  function checkLowTimeWarning(color,before,after){
+    if(!humanClockColors().includes(color))return;
+    const thresholds=[30,10,5,4,3,2,1];
+    const warned=lowTimeWarnings[color]||(lowTimeWarnings[color]=new Set());
+    for(const t of thresholds){if(before>t&&after<=t&&!warned.has(t)){warned.add(t);playTimeWarning(t);break;}}
   }
 
   function playFailureSound(){
@@ -961,7 +1001,7 @@
   }
 
   async function openMemberLobby(){memberModal.hidden=false;memberStatus.textContent='';renderMemberAuth();if(memberSession){if(Date.now()/1000>(memberSession.expires_at||0)-30)await refreshMemberToken();await loadMyProfile();renderMemberTabs();await loadMemberList();startMemberPolling();}}
-  function onlineState(){ const copy=JSON.parse(JSON.stringify(game)); delete copy.clockLastTick; delete copy.selected; delete copy.legalMoves; delete copy.turnLegalMoves; delete copy.activeAbility; delete copy.awaitingAbilityTarget; delete copy.abilitySelection; delete copy.selectedAsPremove; delete copy.premoveQueue; delete copy.endAnnounced; return copy; }
+  function onlineState(){ const copy=JSON.parse(JSON.stringify(game)); delete copy.clockLastTick; delete copy.selected; delete copy.legalMoves; delete copy.turnLegalMoves; delete copy.activeAbility; delete copy.awaitingAbilityTarget; delete copy.abilitySelection; delete copy.selectedAsPremove; delete copy.premoveQueue; delete copy.endAnnounced; delete copy.historySaved; return copy; }
   function restoreOnlineState(state){
     const previousGame=game;
     const previousSelection = game?.selectedAsPremove && game?.selected ? {...game.selected} : null;
@@ -980,7 +1020,7 @@
       const newCount=state?.board?.flat?.().filter(Boolean).length ?? oldCount;
       window.setTimeout(()=>newCount<oldCount ? playCaptureSound() : playMoveSound(),25);
     }
-    game=state; if(game.over && !previousGame?.over) game.endAnnounced=false; game.upgradeLimit=Number(game.upgradeLimit ?? 3); game.abilitiesEnabled=game.abilitiesEnabled!==false; game.upgradesEnabled=game.upgradesEnabled!==false; game.mode='online'; game.playerColor=keepColor; onlineSession.color=keepColor; game.drawOffer=game.drawOffer || null; game.rematchChallenge=game.rematchChallenge || null; game.clockLastTick=performance.now();
+    game=state; if(!Array.isArray(game.historySnapshots)||!game.historySnapshots.length) game.historySnapshots=[historySnapshot()]; historyViewIndex=null; if(game.over && !previousGame?.over) game.endAnnounced=false; game.upgradeLimit=Number(game.upgradeLimit ?? 3); game.abilitiesEnabled=game.abilitiesEnabled!==false; game.upgradesEnabled=game.upgradesEnabled!==false; game.mode='online'; game.playerColor=keepColor; onlineSession.color=keepColor; game.drawOffer=game.drawOffer || null; game.rematchChallenge=game.rematchChallenge || null; game.clockLastTick=performance.now();
     game.selected=null; game.selectedAsPremove=false; game.legalMoves=[]; game.turnLegalMoves=allLegalMoves(game,game.turn); game.premoveQueue=previousPremoveQueue; game.premove=previousPremoveQueue[0]||null;
     if(moveChanged && !game.over && inCheck(game, keepColor)) window.setTimeout(playCheckBuzz, 45);
     if(previousSelection){
@@ -995,7 +1035,7 @@
     // A remotely accepted rematch changes the synchronized game from over to active.
     // Close the old game-over menu immediately so the challenger can play.
     if(previousGame?.over && !game.over) resultModal.hidden=true; resultModal.style.display='none';
-    renderAbilities(); render(); if(game.over) showGameOverPopup(); else if(game.onlineStarted!==false) { startClockLoop(); schedulePremoveIfReady(); }
+    renderAbilities(); render(); if(game.over){ showGameOverPopup(); queueMicrotask(saveFinishedGameToHistory); } else if(game.onlineStarted!==false) { startClockLoop(); schedulePremoveIfReady(); }
   }
   async function syncOnlineState(){
     if(!onlineSession||onlineSyncing||!game||game.mode!=='online') return; onlineSyncing=true;
@@ -1078,6 +1118,31 @@
     finally{ startOnlineGameBtn.disabled=false; }
   }
 
+  function historySnapshot(move=null){
+    const snap=cloneState(game);
+    snap.move=move?JSON.parse(JSON.stringify(move)):null;
+    return snap;
+  }
+  function recordHistorySnapshot(move=null){
+    if(!game) return;
+    if(!Array.isArray(game.historySnapshots)) game.historySnapshots=[];
+    game.historySnapshots.push(historySnapshot(move));
+    historyViewIndex=null;
+  }
+  function navigateMoveHistory(delta){
+    if(!game||!Array.isArray(game.historySnapshots)||game.historySnapshots.length<2)return;
+    const len=game.historySnapshots.length;
+    const current=historyViewIndex===null?len-1:historyViewIndex;
+    const target=Math.max(0,Math.min(len-1,current+delta));
+    if(target===current)return;
+    if(settings.animations){
+      if(delta>0){const mv=game.historySnapshots[target]?.move;if(mv)queueMoveAnimation({from:mv.from,to:mv.portalExit||mv.to});}
+      else{const mv=game.historySnapshots[current]?.move;if(mv)queueMoveAnimation({from:mv.portalExit||mv.to,to:mv.from});}
+    }
+    historyViewIndex=target===len-1?null:target;
+    render();
+  }
+
   function newGame(){
     game = {
       board: makeInitialBoard(),
@@ -1120,12 +1185,16 @@
       halfmoveClock:0,
       positionCounts:{},
       log:[],
+      historySnapshots:[],
+      historyGameKey:crypto.randomUUID(),
+      historySaved:false,
       clocks:{w:Number(baseTimeSlider.value)*60,b:Number(baseTimeSlider.value)*60},
       initialTime:Number(baseTimeSlider.value)*60,
       increment:Number(incrementSlider.value),
       clockLastTick:performance.now()
     };
     recordPosition(game);
+    recordHistorySnapshot();
     if (game.mode === 'online') {
       game.lastMessage = 'Online play needs a server or realtime backend, so this offline file leaves it as a placeholder. Local and bot modes work.';
       game.mode = 'local';
@@ -1138,6 +1207,8 @@
     if (premoveTimer) { clearTimeout(premoveTimer); premoveTimer = null; }
     botThinkToken++;
     if (botMoveTimer) { clearTimeout(botMoveTimer); botMoveTimer = null; }
+    lowTimeWarnings={w:new Set(),b:new Set()};
+    analysisMode=false; gameScreen.classList.remove('analysis-mode');
     resultModal.hidden = true;
     startClockLoop();
     renderAbilities();
@@ -1190,7 +1261,7 @@
     const addMove=(move)=>{ if(!inBounds(move.to.r,move.to.c)) return; const key=`${move.to.r},${move.to.c}:${move.castle||''}:${move.enPassant?'e':''}`; if(seen.has(key)) return; seen.add(key); if(type==='p' && isPromotionRank(color, move.to.r)) move.promotionRequired=true; moves.push(move); };
     const addStep=(dr,dc,{emptyOnly=false,captureOnly=false,tag=null}={})=>{ const rr=r+dr,cc=c+dc;if(!inBounds(rr,cc))return;const tgt=pieceAt(state.board,rr,cc);if(emptyOnly&&tgt)return;if(captureOnly&&!tgt)return;if(tgt&&colorOf(tgt)===color)return;addMove({from:{r,c},to:{r:rr,c:cc},capture:!!tgt,upgradeMove:tag}); };
     const addSlide=(dirs)=>{ for(const[dr,dc]of dirs){let rr=r+dr,cc=c+dc;while(inBounds(rr,cc)){const tgt=pieceAt(state.board,rr,cc);if(!tgt)addMove({from:{r,c},to:{r:rr,c:cc}});else{if(colorOf(tgt)!==color)addMove({from:{r,c},to:{r:rr,c:cc},capture:true});break;}rr+=dr;cc+=dc;} } };
-    const addFriendlyJumpSlide=(dirs,tag)=>{ if(forAttack)return; for(const[dr,dc]of dirs){let rr=r+dr,cc=c+dc,passed=false;while(inBounds(rr,cc)){const tgt=pieceAt(state.board,rr,cc);if(!passed){if(!tgt){rr+=dr;cc+=dc;continue;}if(colorOf(tgt)!==color)break;passed=true;rr+=dr;cc+=dc;continue;}if(tgt)break;addMove({from:{r,c},to:{r:rr,c:cc},upgradeMove:tag,jumpedFriendly:true});rr+=dr;cc+=dc;} } };
+    const addFriendlyJumpSlide=(dirs,tag)=>{ for(const[dr,dc]of dirs){let rr=r+dr,cc=c+dc,passed=false;while(inBounds(rr,cc)){const tgt=pieceAt(state.board,rr,cc);if(!passed){if(!tgt){rr+=dr;cc+=dc;continue;}if(colorOf(tgt)!==color)break;passed=true;rr+=dr;cc+=dc;continue;}if(!tgt){addMove({from:{r,c},to:{r:rr,c:cc},upgradeMove:tag,jumpedFriendly:true});rr+=dr;cc+=dc;continue;}if(colorOf(tgt)!==color)addMove({from:{r,c},to:{r:rr,c:cc},capture:true,upgradeMove:tag,jumpedFriendly:true});break;} } };
     const knightSteps=[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
     if(type==='p'){
       const attackDirs=up==='veteran'?[dir,-dir]:[dir];
@@ -1664,6 +1735,41 @@
     return `${winner === 'w' ? 'White' : 'Black'} won`;
   }
 
+  function gameHistorySettings(){
+    return {baseSeconds:Number(game?.initialTime||0),baseMinutes:Number(game?.initialTime||0)/60,increment:Number(game?.increment||0),startingPoints:Number(game?.startingPoints||0),upgradeLimit:Number(game?.upgradeLimit??3),abilitiesEnabled:game?.abilitiesEnabled!==false,upgradesEnabled:game?.upgradesEnabled!==false};
+  }
+  function historyResultForCurrentPlayer(winner){
+    if(!winner)return'draw';
+    if(game.mode==='bot')return winner==='w'?'win':'loss';
+    if(game.mode==='online'&&game.playerColor)return winner===game.playerColor?'win':'loss';
+    return winner==='w'?'white_win':'black_win';
+  }
+  function opponentNameForHistory(){
+    if(game.mode==='bot')return'Ability Bot';
+    if(game.mode==='local')return'Local player';
+    return game.opponentName||visibleMemberChallenge?.other_display_name||visibleMemberChallenge?.other_username||'Online opponent';
+  }
+  async function saveFinishedGameToHistory(){
+    if(!memberSession?.access_token||!game?.over||game.historySaved)return;
+    game.historySaved=true;
+    try{
+      const key=game.historyGameKey||(game.historyGameKey=onlineSession?.id||crypto.randomUUID());
+      const replay={version:1,historySnapshots:game.historySnapshots||[],settings:gameHistorySettings(),playerColor:game.playerColor||null,mode:game.mode,final:{clocks:game.clocks||null,winner:game.winner??null,resultReason:game.resultReason||'',resultDetail:game.resultDetail||'',lastMessage:game.lastMessage||''}};
+      await memberRpc('ability_chess_save_game_history',{p_game_key:key,p_mode:game.mode,p_player_color:game.playerColor||(game.mode==='bot'?'w':null),p_result:historyResultForCurrentPlayer(game.winner),p_result_reason:game.resultReason||'',p_opponent_name:opponentNameForHistory(),p_settings:gameHistorySettings(),p_replay:replay});
+    }catch(e){game.historySaved=false;console.warn('Could not save game history',e);}
+  }
+  function historyResultLabel(row){return row.result==='win'?'Win':row.result==='loss'?'Loss':row.result==='draw'?'Draw':row.result==='white_win'?'White won':'Black won';}
+  function historySettingsText(cfg={}){const base=Number(cfg.baseMinutes??(Number(cfg.baseSeconds||0)/60));return `${Number.isInteger(base)?base:base.toFixed(1)}+${Number(cfg.increment||0)} · ${Number(cfg.startingPoints||0)} starting points · ${Number(cfg.upgradeLimit??3)} upgrade slots · ${cfg.abilitiesEnabled===false?'no abilities':'abilities'} · ${cfg.upgradesEnabled===false?'no upgrades':'upgrades'}`;}
+  async function loadGameHistory(){
+    historyList.replaceChildren();
+    if(!memberSession?.access_token){historyList.innerHTML='<div class="history-empty">Sign in to save and view completed games.<br><button class="history-signin-btn" type="button">Sign in</button></div>';historyList.querySelector('button')?.addEventListener('click',openMemberLobby);return;}
+    historyList.innerHTML='<div class="history-empty">Loading game history…</div>';
+    try{const rows=await memberRpc('ability_chess_list_game_history');historyList.replaceChildren();if(!rows?.length){historyList.innerHTML='<div class="history-empty">No completed games have been saved yet.</div>';return;}for(const row of rows){const card=document.createElement('article');card.className='history-card';const info=document.createElement('div');const result=historyResultLabel(row);const resultClass=row.result==='win'?'history-result-win':row.result==='loss'?'history-result-loss':'history-result-draw';const when=new Date(row.played_at).toLocaleString();info.innerHTML=`<div class="history-title ${resultClass}">${escapeHtml(result)}${row.opponent_name?` vs. ${escapeHtml(row.opponent_name)}`:''}</div><div class="history-meta">${escapeHtml(when)} · ${escapeHtml(row.mode||'game')} · ${escapeHtml(row.result_reason||'completed')}<br>${escapeHtml(historySettingsText(row.settings||{}))}</div>`;const btn=document.createElement('button');btn.type='button';btn.className='history-analysis-btn';btn.textContent='Analysis';btn.addEventListener('click',()=>openSavedGameAnalysis(row.game_id));card.append(info,btn);historyList.append(card);}}catch(e){historyList.innerHTML=`<div class="history-empty">${escapeHtml(e.message)}</div>`;}
+  }
+  async function openSavedGameAnalysis(gameId){
+    try{const replay=await memberRpc('ability_chess_get_game_replay',{p_game_id:gameId});if(!replay?.historySnapshots?.length)throw new Error('This replay is unavailable.');stopClockLoop();game=cloneState(replay.historySnapshots.at(-1));game.historySnapshots=replay.historySnapshots;game.clocks=replay.final?.clocks||{w:Number(replay.settings?.baseSeconds||0),b:Number(replay.settings?.baseSeconds||0)};game.initialTime=Number(replay.settings?.baseSeconds||0);game.increment=Number(replay.settings?.increment||0);game.startingPoints=Number(replay.settings?.startingPoints||0);game.mode='analysis';game.over=true;game.winner=replay.final?.winner??null;game.resultReason=replay.final?.resultReason||'';game.resultDetail=replay.final?.resultDetail||'';game.lastMessage=replay.final?.lastMessage||'Saved game analysis.';game.playerColor=replay.playerColor||null;game.selected=null;game.legalMoves=[];analysisMode=true;historyViewIndex=0;gameScreen.classList.add('analysis-mode');resultModal.hidden=true;resultModal.style.display='none';showScreen('game');gameModeLabel.innerHTML='Mode: <b>Analysis</b>';render();}catch(e){historyList.insertAdjacentHTML('afterbegin',`<div class="history-empty">${escapeHtml(e.message)}</div>`);}
+  }
+
   function endGame(winner, reason, detail){
     if (!game || game.over) return;
     game.over=true;
@@ -1687,6 +1793,7 @@
     renderClocks();
     render();
     showGameOverPopup();
+    queueMicrotask(saveFinishedGameToHistory);
     if(game.mode==='online') queueMicrotask(syncOnlineState);
   }
 
@@ -1931,6 +2038,15 @@
     render();
   }
 
+  function pawnOnOwnSide(color,r){ return color==='w' ? r>=4 : r<=3; }
+  function teleportPawnRestriction(piece,from,to){
+    if(typeOf(piece)!=='p') return null;
+    const color=colorOf(piece);
+    if(!pawnOnOwnSide(color,from.r)) return 'Pawns can only teleport while they are on their own side of the board.';
+    if(!pawnOnOwnSide(color,to.r)) return 'Pawns can only teleport to another square on their own side of the board.';
+    return null;
+  }
+
   function teleportWouldAttackEnemyKing(state, from, to){
     const temp = cloneState(state);
     const movingPiece = temp.board[from.r][from.c];
@@ -1946,6 +2062,7 @@
     const piece = pieceAt(game.board,r,c);
     if (!game.selected){
       if (!piece || colorOf(piece)!==game.turn || typeOf(piece)==='k') { game.lastMessage = 'Choose one of your non-king pieces.'; return; }
+      if(typeOf(piece)==='p' && !pawnOnOwnSide(game.turn,r)){ game.lastMessage='Pawns can only teleport while they are on their own side of the board.'; return; }
       game.selected = {r,c};
       game.lastMessage = 'Now click any empty square for the teleport destination.';
       return;
@@ -1953,6 +2070,8 @@
     if (pieceAt(game.board,r,c)) { game.lastMessage = 'Teleport destination must be empty.'; return; }
     if (isFortifiedAgainstAbility(game,r,c,game.turn)) { game.lastMessage='That square is protected by Fortify.'; return; }
     const from = game.selected;
+    const teleportRestriction=teleportPawnRestriction(pieceAt(game.board,from.r,from.c),from,{r,c});
+    if(teleportRestriction){ game.lastMessage=teleportRestriction; return; }
     if (teleportWouldAttackEnemyKing(game, from, {r,c})) {
       playFailureSound();
       game.lastMessage = 'Teleport cannot place a piece where it immediately attacks the enemy king.';
@@ -1973,6 +2092,7 @@
     game.abilityUsed = true;
     log(`${game.turn==='w'?'White':'Black'} teleported ${algebraic(from.r,from.c)} to ${algebraic(r,c)}.`);
     game.lastMove={from:{...from},to:{r,c}};
+    recordHistorySnapshot({from:{...from},to:{r,c},teleport:true});
     game.activeAbility = null;
     game.awaitingAbilityTarget = false;
     game.selected = null;
@@ -2143,6 +2263,7 @@
     log(`${game.turn==='w'?'White':'Black'}: ${algebraic(move.from.r,move.from.c)} → ${algebraic(move.to.r,move.to.c)}${portalText}${suffix}${promo}`);
     game.lastMoveByColor[game.turn]={piece,from:{...move.from},to:{...actualTo},resultPiece:piece[1]==='p'&&isPromotionRank(piece[0],move.to.r)?piece[0]+(move.promotion||'q'):piece};
     game.lastMove={from:{...move.from},to:{...actualTo}};
+    recordHistorySnapshot({...move,to:{...actualTo}});
 
     // Schedule sound independently of rendering/turn changes so bot and premove
     // audio cannot be swallowed by the following synchronous updates.
@@ -2183,7 +2304,7 @@
   }
 
   function onSquareClick(r,c){
-    if (!game || game.over) return;
+    if (!game || game.over || historyViewIndex!==null) return;
     clearAnnotations();
 
     if (isPremoveWindow()) {
@@ -2811,7 +2932,7 @@
     abilitiesEl.replaceChildren();
     for(const ab of ABILITIES){
       const button=document.createElement('button'); button.type='button'; button.className='ability'; if(ab.consumesMove) button.classList.add('move-consuming'); button.dataset.id=ab.id;
-      if(game?.abilitiesEnabled===false){button.setAttribute('aria-disabled','true');} button.setAttribute('aria-label',`${ab.name}, costs ${ab.cost} points. ${ab.desc}${game?.abilitiesEnabled===false?' Abilities are disabled for this game.':''}`);
+      if(game?.abilitiesEnabled===false){button.setAttribute('aria-disabled','true');} button.setAttribute('aria-label',`${ab.name}, costs ${ab.cost} points. ${ab.desc}${game?.abilitiesEnabled===false?' Abilities are disabled for this game.':''}`); button.title=ab.desc;
       const name=document.createElement('span'); name.className='name'; name.textContent=ab.name;
       const cost=document.createElement('span'); cost.className='cost'; cost.textContent=` ${ab.cost}`;
       const tip=document.createElement('span'); tip.className='ability-tooltip'; tip.textContent=ab.desc;
@@ -2899,23 +3020,23 @@
     warning.style.top=`${top}px`;
   }
 
-  function portalSquareOwnerAt(r,c){
-    return game?.portals?.w&&(sameSquare(game.portals.w.a,{r,c})||sameSquare(game.portals.w.b,{r,c})) ? 'w' : game?.portals?.b&&(sameSquare(game.portals.b.a,{r,c})||sameSquare(game.portals.b.b,{r,c})) ? 'b' : null;
+  function portalSquareOwnerAt(state,r,c){
+    return state?.portals?.w&&(sameSquare(state.portals.w.a,{r,c})||sameSquare(state.portals.w.b,{r,c})) ? 'w' : state?.portals?.b&&(sameSquare(state.portals.b.a,{r,c})||sameSquare(state.portals.b.b,{r,c})) ? 'b' : null;
   }
 
-  function appendSquareStatusMarkers(sq,r,c){
+  function appendSquareStatusMarkers(sq,r,c,state=game){
     const items=[];
-    const shielded=(game?.shielded?.w?.r===r&&game?.shielded?.w?.c===c)||(game?.shielded?.b?.r===r&&game?.shielded?.b?.c===c);
+    const shielded=(state?.shielded?.w?.r===r&&state?.shielded?.w?.c===c)||(state?.shielded?.b?.r===r&&state?.shielded?.b?.c===c);
     if(shielded){
       items.push({cls:'status-marker-shield',icon:'🛡',label:'Shielded piece',tooltip:'Shield: The next time this piece would be captured, the shield is used up instead. If this shielded piece moves, it loses its shield.'});
     }
-    const frozen=(game?.frozen?.w?.r===r&&game?.frozen?.w?.c===c)||(game?.frozen?.b?.r===r&&game?.frozen?.b?.c===c);
+    const frozen=(state?.frozen?.w?.r===r&&state?.frozen?.w?.c===c)||(state?.frozen?.b?.r===r&&state?.frozen?.b?.c===c);
     if(frozen){
       items.push({cls:'status-marker-freeze',icon:'❄',label:'Frozen piece',tooltip:"Freeze: This piece cannot move during its owner's next turn. A frozen piece also does not count as attacking while frozen."});
     }
-    const portalColor=portalSquareOwnerAt(r,c);
+    const portalColor=portalSquareOwnerAt(state,r,c);
     if(portalColor){
-      const remaining=Number(game?.portals?.[portalColor]?.turnsRemaining ?? 1);
+      const remaining=Number(state?.portals?.[portalColor]?.turnsRemaining ?? 1);
       items.push({cls:'status-marker-portal',icon:'🚪',label:'Portal square',tooltip:`Portal: Either player may move into either portal square and exit from the other. This ${portalColor==='w'?'white':'black'} portal has ${remaining} owner turn${remaining===1?'':'s'} remaining.`});
     }
     if(!items.length) return portalColor;
@@ -2956,46 +3077,48 @@
     const sel = game?.selected;
     const legal = game?.legalMoves || [];
     const queuedPremovesForDisplay=Array.isArray(game?.premoveQueue)?game.premoveQueue:(game?.premove?[game.premove]:[]);
-    const premoveDisplayState=game&&queuedPremovesForDisplay.length?premovePreviewState():null;
-    const displayBoard=premoveDisplayState?.board||game?.board;
+    const premoveDisplayState=game&&queuedPremovesForDisplay.length&&historyViewIndex===null?premovePreviewState():null;
+    const historyDisplayState=historyViewIndex!==null?game?.historySnapshots?.[historyViewIndex]:null;
+    const renderState=historyDisplayState||premoveDisplayState||game;
+    const displayBoard=renderState?.board;
     for (let displayR=0;displayR<8;displayR++){
       for (let displayC=0;displayC<8;displayC++){
         const r=boardIsFlipped()?7-displayR:displayR;
         const c=boardIsFlipped()?7-displayC:displayC;
         const sq = document.createElement('div');
         sq.className = 'sq ' + (((r+c)%2===0) ? 'light' : 'dark');
-        if (game?.lastMove && ((game.lastMove.from.r===r && game.lastMove.from.c===c) || (game.lastMove.to.r===r && game.lastMove.to.c===c))) sq.classList.add('last-move');
+        if (renderState?.lastMove && ((renderState.lastMove.from.r===r && renderState.lastMove.from.c===c) || (renderState.lastMove.to.r===r && renderState.lastMove.to.c===c))) sq.classList.add('last-move');
         const p = displayBoard?.[r]?.[c];
-        if(p&&typeOf(p)==='k'&&inCheck(game,colorOf(p)))sq.classList.add('king-in-check');
+        if(p&&typeOf(p)==='k'&&inCheck(renderState,colorOf(p)))sq.classList.add('king-in-check');
         sq.innerHTML = p ? pieceMarkup(p) : '';
-        if(p){const upId=upgradeFor(game,colorOf(p),typeOf(p));if(upId){const up=upgradeDefinition(upId);const marker=document.createElement('span');marker.className=`upgrade-marker upgrade-marker-${typeOf(p)}`;marker.textContent='▲';marker.tabIndex=0;marker.setAttribute('role','img');marker.setAttribute('aria-label',`${up.name} upgrade. ${up.rule}`);marker.title=`${up.name} upgrade`;const tip=document.createElement('span');tip.className='piece-upgrade-tooltip';tip.textContent=`${up.name}: ${up.rule} This upgrade affects every friendly ${PIECE_NAMES[up.type].toLowerCase()}.`;sq.append(marker,tip);}}
-        if (sel && sel.r===r && sel.c===c) sq.classList.add(game?.selectedAsPremove ? 'premove-selected' : 'selected');
+        if(p){const upId=upgradeFor(renderState,colorOf(p),typeOf(p));if(upId){const up=upgradeDefinition(upId);const marker=document.createElement('span');marker.className=`upgrade-marker upgrade-marker-${typeOf(p)}`;marker.textContent='▲';marker.tabIndex=0;marker.setAttribute('role','img');marker.setAttribute('aria-label',`${up.name} upgrade. ${up.rule}`);marker.title=`${up.name}: ${up.rule}`;const tip=document.createElement('span');tip.className='piece-upgrade-tooltip';tip.textContent=`${up.name}: ${up.rule} This upgrade affects every friendly ${PIECE_NAMES[up.type].toLowerCase()}.`;sq.append(marker,tip);}}
+        if (historyViewIndex===null && sel && sel.r===r && sel.c===c) sq.classList.add(game?.selectedAsPremove ? 'premove-selected' : 'selected');
         const queuedPremoves=queuedPremovesForDisplay;
-        if (queuedPremoves.some(pm=>pm.from.r===r&&pm.from.c===c)) sq.classList.add('premove-origin');
-        if (queuedPremoves.some(pm=>pm.to.r===r&&pm.to.c===c)) sq.classList.add('premove-destination');
+        if (historyViewIndex===null && queuedPremoves.some(pm=>pm.from.r===r&&pm.from.c===c)) sq.classList.add('premove-origin');
+        if (historyViewIndex===null && queuedPremoves.some(pm=>pm.to.r===r&&pm.to.c===c)) sq.classList.add('premove-destination');
         const legalMove = legal.find(m => m.to.r===r && m.to.c===c);
-        if (legalMove) sq.classList.add(legalMove.capture ? 'capture' : 'legal');
-        if (game?.shielded?.w?.r===r && game?.shielded?.w?.c===c) sq.classList.add('shielded');
-        if (game?.shielded?.b?.r===r && game?.shielded?.b?.c===c) sq.classList.add('shielded');
-        if (game?.frozen?.w?.r===r && game?.frozen?.w?.c===c) sq.classList.add('frozen');
-        if (game?.frozen?.b?.r===r && game?.frozen?.b?.c===c) sq.classList.add('frozen');
+        if (historyViewIndex===null && legalMove) sq.classList.add(legalMove.capture ? 'capture' : 'legal');
+        if (renderState?.shielded?.w?.r===r && renderState?.shielded?.w?.c===c) sq.classList.add('shielded');
+        if (renderState?.shielded?.b?.r===r && renderState?.shielded?.b?.c===c) sq.classList.add('shielded');
+        if (renderState?.frozen?.w?.r===r && renderState?.frozen?.w?.c===c) sq.classList.add('frozen');
+        if (renderState?.frozen?.b?.r===r && renderState?.frozen?.b?.c===c) sq.classList.add('frozen');
         const canSeeWhiteAmbush = game?.mode!=='online' || game?.playerColor==='w';
         const canSeeBlackAmbush = game?.mode!=='online' || game?.playerColor==='b';
         if (canSeeWhiteAmbush && game?.ambushed?.w?.r===r && game?.ambushed?.w?.c===c) sq.classList.add('ambushed');
         if (canSeeBlackAmbush && game?.ambushed?.b?.r===r && game?.ambushed?.b?.c===c) sq.classList.add('ambushed');
         if (squareInFortify(game,'w',r,c)||squareInFortify(game,'b',r,c)) sq.classList.add('fortified');
-        const portalColor = portalSquareOwnerAt(r,c);
+        const portalColor = portalSquareOwnerAt(renderState,r,c);
         if (portalColor) sq.classList.add('portal-square');
-        appendSquareStatusMarkers(sq,r,c);
+        appendSquareStatusMarkers(sq,r,c,renderState);
         if (game?.awaitingAbilityTarget && game.activeAbility==='bomb') {
           const own = p && colorOf(p)===game.turn;
           if (own && !bombRadiusHasKing(r,c)) sq.classList.add('bomb-target');
         }
         if (game?.awaitingAbilityTarget && game.activeAbility==='teleport') {
           if (game.selected) {
-            if (!p && !isFortifiedAgainstAbility(game,r,c,game.turn) && !teleportWouldAttackEnemyKing(game, game.selected, {r,c})) sq.classList.add('teleport-target');
+            if (!p && !isFortifiedAgainstAbility(game,r,c,game.turn) && !teleportPawnRestriction(pieceAt(game.board,game.selected.r,game.selected.c),game.selected,{r,c}) && !teleportWouldAttackEnemyKing(game, game.selected, {r,c})) sq.classList.add('teleport-target');
             if (game.selected.r===r && game.selected.c===c) sq.classList.add('selected');
-          } else if (p && colorOf(p)===game.turn && typeOf(p)!=='k') {
+          } else if (p && colorOf(p)===game.turn && typeOf(p)!=='k' && (typeOf(p)!=='p' || pawnOnOwnSide(game.turn,r))) {
             sq.classList.add('teleport-target');
           }
         }
@@ -3105,7 +3228,7 @@
     }
     playPendingMoveAnimation();
     renderAnnotations();
-    statusEl.textContent = game ? game.lastMessage : 'Press New Game to start.';
+    statusEl.textContent = historyViewIndex!==null ? `Reviewing move ${historyViewIndex} of ${Math.max(0,(game?.historySnapshots?.length||1)-1)}. Use ← and → to navigate.` : (game ? game.lastMessage : 'Press New Game to start.');
     logEl.replaceChildren();
     if (game && game.log.length) {
       for (const entry of game.log) {
@@ -3148,7 +3271,9 @@
     const now=performance.now();
     const elapsed=(now-(game.clockLastTick||now))/1000;
     game.clockLastTick=now;
-    game.clocks[game.turn]=Math.max(0,game.clocks[game.turn]-elapsed);
+    const clockColor=game.turn, beforeClock=game.clocks[clockColor];
+    game.clocks[clockColor]=Math.max(0,beforeClock-elapsed);
+    checkLowTimeWarning(clockColor,beforeClock,game.clocks[clockColor]);
     if(game.clocks[game.turn]<=0){
       const loser=game.turn, winner=other(loser);
       endGame(winner,'timeout',`${winner==='w'?'White':'Black'} wins on time.`);
@@ -3163,7 +3288,7 @@
   function saveSettings(){ localStorage.setItem('abilityChessSettings',JSON.stringify(settings)); applySettings(); }
   function applySettings(){
     document.documentElement.style.setProperty('--light',settings.light); document.documentElement.style.setProperty('--dark',settings.dark);
-    premovesSetting.checked=settings.premoves; legalMarkersSetting.checked=settings.legalMarkers; soundSetting.checked=settings.sound; animationSetting.checked=settings.animations;
+    premovesSetting.checked=settings.premoves; legalMarkersSetting.checked=settings.legalMarkers; soundSetting.checked=settings.sound; animationSetting.checked=settings.animations; animationSpeedSetting.value=String(settings.animationSpeed||230); document.documentElement.style.setProperty('--move-animation-ms',`${Number(settings.animationSpeed||230)}ms`);
     lightColorInput.value=settings.light; darkColorInput.value=settings.dark;
     document.querySelectorAll('.board-preset').forEach(b=>b.classList.toggle('selected',b.dataset.light===settings.light&&b.dataset.dark===settings.dark));
     if(!settings.premoves&&premoveQueue().length) cancelPremove('Premoves disabled.');
@@ -3171,8 +3296,8 @@
   }
   function buildBoardPresets(){ boardPresets.replaceChildren(); for(const [name,light,dark] of BOARD_PRESETS){const b=document.createElement('button');b.type='button';b.className='board-preset';b.title=name;b.dataset.light=light;b.dataset.dark=dark;b.innerHTML=`<i style="background:${light}"></i><i style="background:${dark}"></i>`;b.addEventListener('click',()=>{settings.light=light;settings.dark=dark;saveSettings();});boardPresets.appendChild(b);} }
   function showScreen(target){
-    homeScreen.classList.add('hidden'); gameScreen.classList.remove('active'); abilitiesScreen.classList.remove('active'); settingsScreen.classList.remove('active');
-    if(target==='home') homeScreen.classList.remove('hidden'); else if(target==='game') gameScreen.classList.add('active'); else if(target==='abilities') abilitiesScreen.classList.add('active'); else if(target==='settings') settingsScreen.classList.add('active');
+    homeScreen.classList.add('hidden'); gameScreen.classList.remove('active'); abilitiesScreen.classList.remove('active'); settingsScreen.classList.remove('active'); historyScreen.classList.remove('active');
+    if(target==='home') homeScreen.classList.remove('hidden'); else if(target==='game') gameScreen.classList.add('active'); else if(target==='abilities') abilitiesScreen.classList.add('active'); else if(target==='settings') settingsScreen.classList.add('active'); else if(target==='history'){historyScreen.classList.add('active');loadGameHistory();}
     window.scrollTo({top:0,behavior:'instant'});
   }
 
@@ -3332,6 +3457,8 @@
   cancelMemberChallengeToastBtn.addEventListener('click',()=>{if(visibleOutgoingMemberChallenge)cancelMemberChallenge(visibleOutgoingMemberChallenge.challenge_id);});
   dismissMemberChallengeToastBtn.addEventListener('click',()=>{memberChallengeToast.hidden=true;});
   document.querySelectorAll('.members-nav-btn').forEach(b=>b.addEventListener('click',openMemberLobby));
+  document.querySelectorAll('.history-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('history')));
+  refreshHistoryBtn?.addEventListener('click',loadGameHistory);
   closeMemberBtn.addEventListener('click',()=>{memberModal.hidden=true;});
   memberModal.addEventListener('click',e=>{if(e.target===memberModal)memberModal.hidden=true;});
   memberSignInBtn.addEventListener('click',async()=>{if(memberSignInBtn.disabled)return;memberSignInBtn.disabled=true;memberStatus.textContent='Signing in…';try{const data=await authRequest('token?grant_type=password',{email:memberEmail.value.trim(),password:memberPassword.value});data.expires_at=Math.floor(Date.now()/1000)+(data.expires_in||3600);saveMemberSession(data);memberStatus.textContent='Signed in. This device will keep you signed in.';await loadMyProfile();renderMemberTabs();await loadMemberList();startMemberPolling();}catch(e){memberStatus.textContent=e.message;}finally{memberSignInBtn.disabled=false;}});
@@ -3368,15 +3495,32 @@
   incrementSlider.addEventListener('input',()=>{incrementOutput.textContent=`${incrementSlider.value} sec`;});
   upgradeLimitSlider?.addEventListener('input',()=>{upgradeLimitOutput.textContent=`${upgradeLimitSlider.value} type${upgradeLimitSlider.value==='1'?'':'s'}`;});
   onlineUpgradeLimitSlider?.addEventListener('input',()=>{onlineUpgradeLimitOutput.textContent=`${onlineUpgradeLimitSlider.value} type${onlineUpgradeLimitSlider.value==='1'?'':'s'}`;});
+  document.addEventListener('keydown',e=>{
+    if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;
+    const tag=document.activeElement?.tagName;
+    if(['INPUT','TEXTAREA','SELECT'].includes(tag)||!gameScreen.classList.contains('active')||memberModal&&!memberModal.hidden||onlineModal&&!onlineModal.hidden)return;
+    e.preventDefault();
+    navigateMoveHistory(e.key==='ArrowLeft'?-1:1);
+  });
   premovesSetting.addEventListener('change',()=>{settings.premoves=premovesSetting.checked;saveSettings();});
   legalMarkersSetting.addEventListener('change',()=>{settings.legalMarkers=legalMarkersSetting.checked;saveSettings();});
   soundSetting.addEventListener('change',()=>{settings.sound=soundSetting.checked;saveSettings();});
   animationSetting.addEventListener('change',()=>{settings.animations=animationSetting.checked;saveSettings();});
+  animationSpeedSetting.addEventListener('change',()=>{settings.animationSpeed=Number(animationSpeedSetting.value)||230;saveSettings();});
   lightColorInput.addEventListener('input',()=>{settings.light=lightColorInput.value;saveSettings();});
   darkColorInput.addEventListener('input',()=>{settings.dark=darkColorInput.value;saveSettings();});
   resetSettingsBtn.addEventListener('click',()=>{settings={...DEFAULT_SETTINGS};saveSettings();});
+  function tooltipForHost(host){
+    if(!host) return null;
+    if(host.classList?.contains('upgrade-marker')){
+      const sibling=host.nextElementSibling;
+      if(sibling?.classList?.contains('piece-upgrade-tooltip')) return sibling;
+      return host.parentElement?.querySelector?.('.piece-upgrade-tooltip')||null;
+    }
+    return host.querySelector?.('.ability-tooltip,.upgrade-tooltip,.status-marker-tooltip,.piece-upgrade-tooltip')||null;
+  }
   function placeFloatingMenuTooltip(host){
-    const tip=host?.querySelector?.('.ability-tooltip,.upgrade-tooltip,.status-marker-tooltip,.piece-upgrade-tooltip');
+    const tip=tooltipForHost(host);
     if(!tip) return;
     document.querySelectorAll('.ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible,.status-marker-tooltip.tooltip-visible,.piece-upgrade-tooltip.tooltip-visible').forEach(other=>{if(other!==tip)other.classList.remove('tooltip-visible')});
     tip.classList.add('tooltip-visible');
@@ -3392,7 +3536,7 @@
     tip.style.left=`${Math.round(left)}px`; tip.style.top=`${Math.round(top)}px`;
   }
   function hideFloatingMenuTooltip(host){
-    host?.querySelector?.('.ability-tooltip,.upgrade-tooltip,.status-marker-tooltip,.piece-upgrade-tooltip')?.classList.remove('tooltip-visible');
+    tooltipForHost(host)?.classList.remove('tooltip-visible');
   }
   document.addEventListener('pointerover',event=>{
     const host=event.target.closest?.('.ability,.upgrade,.status-marker,.upgrade-marker');
