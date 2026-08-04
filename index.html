@@ -215,14 +215,24 @@
   .play-inline-status{min-height:18px;margin-top:8px;color:#c8d1da;font-size:12px}
   @media(max-width:950px){.play-hub-screen.active{grid-template-columns:1fr}.play-hub-screen>.site-ribbon{display:none}.play-hub-main{padding:18px}.play-hub-shell{grid-template-columns:1fr}.play-hub-preview{display:none}}
 
-  .minimal-home{display:block!important;min-height:100vh;background:radial-gradient(circle at 50% 15%,#252e37 0,#151a20 46%,#0e1115 100%)}
+  .minimal-home{display:grid!important;grid-template-columns:220px minmax(0,1fr);min-height:100vh;background:radial-gradient(circle at 50% 15%,#252e37 0,#151a20 46%,#0e1115 100%)}
   .minimal-home.hidden{display:none!important}.minimal-home-main{min-height:100vh;display:grid;place-items:center;padding:28px;box-sizing:border-box}.welcome-card{width:min(760px,100%);text-align:center}.welcome-brand{display:inline-flex;align-items:center;gap:10px;font-size:20px;font-weight:900;color:#f3f6f8}.welcome-card>h1{font-size:clamp(42px,7vw,72px);line-height:1;margin:28px 0 16px}.welcome-card>p{max-width:650px;margin:0 auto 28px;color:#bdc7d1;font-size:18px;line-height:1.6}.bot-launch-card{background:#20262d;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:24px;text-align:left;box-shadow:0 24px 60px rgba(0,0,0,.34)}.bot-launch-card h2{margin:0 0 3px}.bot-launch-card>div>p{margin:0 0 17px;color:var(--muted)}.bot-difficulty-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.bot-difficulty{display:grid;gap:3px;text-align:left;padding:14px;background:#151b21;border:1px solid #3c4854;border-radius:12px}.bot-difficulty span{font-size:11px;color:#aeb8c2}.bot-difficulty.selected{background:#344526;border-color:#88a95b}.bot-settings-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}.bot-settings-grid label{display:grid;gap:6px;color:#aeb8c2;font-size:11px}.bot-settings-grid input{width:100%;box-sizing:border-box;background:#10151a;color:#fff;border:1px solid #465363;border-radius:9px;padding:10px}.bot-settings-grid output{font-size:11px;color:#d7dee5}.welcome-play-button{width:100%;margin-top:15px;padding:15px;background:linear-gradient(135deg,#719246,#8bae54);border-color:#b4d17b;color:#10150b;font-size:17px;font-weight:900}.welcome-secondary{margin-top:14px;background:transparent;border:0;color:#c9d2db;text-decoration:underline}.site-ribbon{position:sticky!important;top:0!important;height:100vh!important;min-height:0!important;box-sizing:border-box;overflow:visible;align-self:start}.site-ribbon .sidebar-account{margin-top:auto}.content-screen,.play-hub-screen,.game-screen{align-items:start}.dedicated-profile-card{display:grid;grid-template-columns:auto 1fr;gap:18px;background:#20262d;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:26px}.profile-page-avatar{width:88px;height:88px;border-radius:16px;background:#384553;display:grid;place-items:center;font-size:38px;font-weight:900}.profile-page-handle{color:var(--muted);font-size:16px}.profile-page-stats{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.profile-stat{background:#151b21;border-radius:11px;padding:14px}.profile-stat b{display:block;font-size:23px}.profile-stat span{font-size:11px;color:var(--muted)}.profile-page-actions{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap}
+  @media(max-width:900px){.minimal-home{grid-template-columns:1fr!important}.minimal-home .site-ribbon{position:sticky!important;top:0!important;height:auto!important;z-index:20}.minimal-home-main{min-height:calc(100vh - 70px)}}
   @media(max-width:700px){.bot-difficulty-grid,.bot-settings-grid{grid-template-columns:1fr 1fr}.minimal-home-main{padding:16px}.welcome-card>p{font-size:15px}.dedicated-profile-card{grid-template-columns:1fr}.profile-page-stats{grid-template-columns:1fr 1fr}}
 
 </style>
 </head>
 <body>
 <div id="homeScreen" class="home-screen minimal-home screen">
+  <aside class="site-ribbon" aria-label="Site navigation">
+    <button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button>
+    <nav class="home-nav" aria-label="Main navigation">
+      <button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button>
+      <button class="home-nav-item abilities-nav-btn" type="button"><span class="home-nav-icon">★</span>Abilities Guide</button>
+      <button class="home-nav-item settings-nav-btn" type="button"><span class="home-nav-icon">⚙</span>Settings</button>
+      <button class="home-nav-item history-nav-btn" type="button"><span class="home-nav-icon">◫</span>Game history</button>
+    </nav>
+  </aside>
   <main class="minimal-home-main">
     <section class="welcome-card">
       <div class="welcome-brand"><span class="brand-mark">♞</span><span>Ability Chess</span></div>
