@@ -727,6 +727,7 @@
   }
 
   let memberSession=null, memberProfile=null, memberTab='members', memberPollTimer=null, memberChallengePollBusy=false, handledChallengeIds=new Set(), visibleMemberChallenge=null;
+  let memberRefreshPromise=null;
   let globalChallengeWatcherTimer=null, globalChallengeWatcherBusy=false;
   let pendingChallengeTarget=null, visibleOutgoingMemberChallenge=null;
   const notifiedChallengeStatuses=new Set();
@@ -764,10 +765,43 @@
     history.replaceState(null,'',window.location.pathname);
     return true;
   }
-  async function memberRpc(name,body={}){ const res=await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`,{method:'POST',headers:{...authHeaders(),'Cache-Control':'no-cache',Pragma:'no-cache'},cache:'no-store',body:JSON.stringify(body)}); const data=await res.json().catch(()=>null); if(res.status===401){ clearMemberSession(); throw new Error('Your session expired. Please sign in again.'); } if(!res.ok) throw new Error(data?.message||data?.hint||'Member request failed.'); return data; }
-  function saveMemberSession(session){ memberSession=session; localStorage.setItem('abilityChessMemberSession',JSON.stringify(session)); startGlobalChallengeWatcher(); }
+  async function memberRpc(name,body={},retried=false){
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`,{method:'POST',headers:{...authHeaders(),'Cache-Control':'no-cache',Pragma:'no-cache'},cache:'no-store',body:JSON.stringify(body)});
+    const data=await res.json().catch(()=>null);
+    if(res.status===401&&!retried&&memberSession?.refresh_token){
+      const refreshed=await refreshMemberToken();
+      if(refreshed)return memberRpc(name,body,true);
+    }
+    if(res.status===401)throw new Error('Your saved sign-in could not be refreshed. Please sign in again.');
+    if(!res.ok)throw new Error(data?.message||data?.hint||'Member request failed.');
+    return data;
+  }
+  function saveMemberSession(session){
+    const previous=memberSession||{};
+    memberSession={...previous,...session,refresh_token:session?.refresh_token||previous.refresh_token};
+    localStorage.setItem('abilityChessMemberSession',JSON.stringify(memberSession));
+    startGlobalChallengeWatcher();
+  }
   function clearMemberSession(){ memberSession=null; memberProfile=null; localStorage.removeItem('abilityChessMemberSession'); clearInterval(memberPollTimer); memberPollTimer=null; clearInterval(globalChallengeWatcherTimer); globalChallengeWatcherTimer=null; renderMemberAuth(); }
-  async function refreshMemberToken(){ if(!memberSession?.refresh_token)return false; try{const data=await authRequest('token?grant_type=refresh_token',{refresh_token:memberSession.refresh_token}); data.expires_at=Math.floor(Date.now()/1000)+(data.expires_in||3600); saveMemberSession(data);return true;}catch(e){console.warn('Member token refresh failed',e);return false;} }
+  async function refreshMemberToken(){
+    if(!memberSession?.refresh_token)return false;
+    if(memberRefreshPromise)return memberRefreshPromise;
+    memberRefreshPromise=(async()=>{
+      try{
+        const refreshToken=memberSession.refresh_token;
+        const data=await authRequest('token?grant_type=refresh_token',{refresh_token:refreshToken});
+        data.expires_at=Math.floor(Date.now()/1000)+(data.expires_in||3600);
+        saveMemberSession(data);
+        return true;
+      }catch(e){
+        console.warn('Member token refresh failed',e);
+        return false;
+      }finally{
+        memberRefreshPromise=null;
+      }
+    })();
+    return memberRefreshPromise;
+  }
   function renderMemberAuth(){ const signed=!!memberSession?.access_token; const recovering=sessionStorage.getItem('abilityChessRecoveryMode')==='1'; memberRecovery.hidden=!recovering; memberSignedOut.hidden=signed||recovering; memberSignedIn.hidden=!signed||recovering; openMembersBtn.textContent=signed&&!recovering?'Open member lobby':'Sign in for member challenges'; if(!signed||recovering){memberList.replaceChildren();return;} if(memberProfile){memberIdentity.textContent=`${memberProfile.display_name} (@${memberProfile.username})`;memberStats.textContent=`Rating ${memberProfile.rating} · ${memberProfile.games_played} games · ${memberProfile.wins}W ${memberProfile.losses}L ${memberProfile.draws}D`;profileUsername.value=memberProfile.username;profileDisplayName.value=memberProfile.display_name;} }
   async function loadMyProfile(){ if(!memberSession)return; try{const rows=await memberRpc('ability_chess_get_my_profile');memberProfile=rows?.[0]||null;renderMemberAuth();}catch(e){memberStatus.textContent=e.message;} }
   function memberChallengeSettings(){
@@ -3143,7 +3177,7 @@ ${portalTitle}` : portalTitle;
   document.querySelectorAll('.members-nav-btn').forEach(b=>b.addEventListener('click',openMemberLobby));
   closeMemberBtn.addEventListener('click',()=>{memberModal.hidden=true;});
   memberModal.addEventListener('click',e=>{if(e.target===memberModal)memberModal.hidden=true;});
-  memberSignInBtn.addEventListener('click',async()=>{memberStatus.textContent='Signing in…';try{const data=await authRequest('token?grant_type=password',{email:memberEmail.value.trim(),password:memberPassword.value});data.expires_at=Math.floor(Date.now()/1000)+(data.expires_in||3600);saveMemberSession(data);memberStatus.textContent='Signed in.';await loadMyProfile();renderMemberTabs();await loadMemberList();startMemberPolling();}catch(e){memberStatus.textContent=e.message;}});
+  memberSignInBtn.addEventListener('click',async()=>{if(memberSignInBtn.disabled)return;memberSignInBtn.disabled=true;memberStatus.textContent='Signing in…';try{const data=await authRequest('token?grant_type=password',{email:memberEmail.value.trim(),password:memberPassword.value});data.expires_at=Math.floor(Date.now()/1000)+(data.expires_in||3600);saveMemberSession(data);memberStatus.textContent='Signed in. This device will keep you signed in.';await loadMyProfile();renderMemberTabs();await loadMemberList();startMemberPolling();}catch(e){memberStatus.textContent=e.message;}finally{memberSignInBtn.disabled=false;}});
   memberSignUpBtn.addEventListener('click',async()=>{const email=memberEmail.value.trim();const password=memberPassword.value;if(!email){memberStatus.textContent='Enter your email address.';memberEmail.focus();return;}if(password.length<6){memberStatus.textContent='The password must contain at least 6 characters.';memberPassword.focus();return;}memberStatus.textContent='Creating account…';try{const data=await authRequest('signup',{email,password,data:{display_name:email.split('@')[0]}});if(!data.access_token){memberStatus.textContent='The account was created, but Supabase is still requiring email confirmation. In Supabase, turn off Authentication → Providers → Email → Confirm email, then create the account again or sign in if it is already confirmed.';return;}data.expires_at=Math.floor(Date.now()/1000)+(data.expires_in||3600);saveMemberSession(data);memberStatus.textContent='Account created. You are signed in.';await loadMyProfile();renderMemberTabs();await loadMemberList();startMemberPolling();}catch(e){memberStatus.textContent=e.message;}});
   memberForgotPasswordBtn.addEventListener('click',async()=>{const email=memberEmail.value.trim();if(!email){memberStatus.textContent='Enter your email address first.';memberEmail.focus();return;}memberStatus.textContent='Sending password-reset email…';try{const redirect=encodeURIComponent(appRedirectUrl());await authRequest(`recover?redirect_to=${redirect}`,{email});memberStatus.textContent='Password-reset email sent. Open its link on this device; it will return you here to choose a new password.';}catch(e){memberStatus.textContent=e.message;}});
   memberSavePasswordBtn.addEventListener('click',async()=>{const password=memberNewPassword.value;const confirm=memberConfirmPassword.value;if(password.length<6){memberStatus.textContent='The new password must contain at least 6 characters.';return;}if(password!==confirm){memberStatus.textContent='The passwords do not match.';return;}if(!memberSession?.access_token){memberStatus.textContent='This password-reset link is no longer valid. Request a new one.';return;}memberStatus.textContent='Saving new password…';try{const res=await fetch(`${SUPABASE_URL}/auth/v1/user`,{method:'PUT',headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${memberSession.access_token}`,'Content-Type':'application/json'},body:JSON.stringify({password})});const data=await res.json().catch(()=>null);if(!res.ok)throw new Error(data?.msg||data?.message||'Could not update the password.');sessionStorage.removeItem('abilityChessRecoveryMode');memberNewPassword.value='';memberConfirmPassword.value='';memberStatus.textContent='Password changed. You are now signed in.';renderMemberAuth();await loadMyProfile();renderMemberTabs();await loadMemberList();startMemberPolling();}catch(e){memberStatus.textContent=e.message;}});
