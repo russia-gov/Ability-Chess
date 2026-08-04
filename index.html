@@ -152,6 +152,16 @@
   .upgrade-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.upgrade{position:relative;text-align:left;padding:8px 9px;border:1px solid rgba(255,255,255,.12);border-radius:9px;background:#222a33;color:#eef2f7}.upgrade:hover:not(:disabled),.upgrade:focus-visible:not(:disabled){border-color:#a78bfa;background:#352b49}.upgrade.owned{border-color:#34d399;background:#14352c}.upgrade[aria-disabled="true"]{opacity:1;cursor:not-allowed;background:#171d24;border-color:#303b48;color:#8793a1}.upgrade[aria-disabled="true"] .upgrade-name,.upgrade[aria-disabled="true"] .upgrade-meta{opacity:.58}.upgrade-name{display:block;font-weight:800}.upgrade-meta{display:block;font-size:11px;color:#b8c0ca;margin-top:2px}.upgrade-tooltip,.piece-upgrade-tooltip{display:none;position:absolute;z-index:90;width:260px;max-width:min(260px,70vw);padding:10px;border:1px solid rgba(255,255,255,.16);border-radius:9px;background:#111820;color:#f8fafc;box-shadow:0 14px 36px rgba(0,0,0,.76);font-size:12px;line-height:1.45;pointer-events:none;white-space:normal}.upgrade-tooltip{left:4px;bottom:calc(100% + 7px)}.upgrade:hover .upgrade-tooltip,.upgrade:focus-visible .upgrade-tooltip{display:block}.upgrade-marker{position:absolute;right:3px;top:3px;width:14px;height:14px;border-radius:50%;background:#8b5cf6;border:2px solid #f5f3ff;box-shadow:0 1px 4px #000;z-index:7;font-size:9px;line-height:10px;text-align:center;color:white;font-weight:900}.sq:hover .piece-upgrade-tooltip,.sq:focus-within .piece-upgrade-tooltip{display:block}.piece-upgrade-tooltip{left:18px;top:18px}.sq{position:relative}.upgrade-guide-heading{grid-column:1/-1;margin:18px 0 0;font-size:28px}.upgrade-guide-intro{grid-column:1/-1;background:#171c22;border-left:4px solid #8b5cf6;padding:14px 16px;border-radius:10px;color:#cbd3db;line-height:1.5}
   @media(max-width:560px){.upgrade-buttons{grid-template-columns:1fr}}
 
+
+  /* Floating menu descriptions are viewport-positioned so scroll containers cannot clip them. */
+  .ability-tooltip,.upgrade-tooltip{position:fixed!important;left:0!important;top:0!important;bottom:auto!important;transform:none!important;z-index:30000!important;display:block!important;opacity:0!important;visibility:hidden!important;pointer-events:none!important;max-width:min(320px,calc(100vw - 24px))!important;width:280px!important}
+  .ability:hover .ability-tooltip,.ability:focus-visible .ability-tooltip,.upgrade:hover .upgrade-tooltip,.upgrade:focus-visible .upgrade-tooltip{opacity:0!important;visibility:hidden!important;transform:none!important}
+  .ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible{opacity:1!important;visibility:visible!important}
+  /* Only the small marker itself opens an upgraded-piece description. */
+  .sq:hover .piece-upgrade-tooltip,.sq:focus-within .piece-upgrade-tooltip{display:none}
+  .upgrade-marker:hover + .piece-upgrade-tooltip,.upgrade-marker:focus + .piece-upgrade-tooltip,.upgrade-marker:focus-visible + .piece-upgrade-tooltip{display:block}
+  .upgrade-marker{pointer-events:auto;cursor:help}
+  .piece-upgrade-tooltip{left:auto;right:20px;top:2px;z-index:120}
 </style>
 </head>
 <body>
@@ -238,7 +248,7 @@
       <article class="guide-card"><h2>Fortify <span class="guide-cost">4 points</span></h2><p>Protect a 2×2 area containing your king. Enemy abilities cannot affect your pieces in that area until your next turn.</p></article>
       <article class="guide-card"><h2>Teleport <span class="guide-cost">4 points</span></h2><p>Move one non-king piece to any empty, unfortified square. Teleport counts as your move and ends your turn. It cannot expose your king or place the teleported piece where it immediately attacks the enemy king.</p></article>
       <article class="guide-card"><h2>Reinforce <span class="guide-cost">5 points</span></h2><p>Immediately promote one pawn beyond the halfway line to a knight or bishop, then make your normal move.</p></article>
-      <article class="guide-card"><h2>Portal <span class="guide-cost">5 points</span></h2><p>Choose two empty squares. For this turn, a piece entering one portal exits from the other if the exit is empty.</p></article>
+      <article class="guide-card"><h2>Portal <span class="guide-cost">5 points</span></h2><p>Choose two empty squares. The portal pair remains active for three of its owner’s turns, including the turn it is created. During those turns, any White or Black piece entering either portal exits from the other when the exit is empty. Both directions work for both players. Creating the portal does not consume the normal move.</p></article>
       <article class="guide-card"><h2>Double Move <span class="guide-cost">6 points</span></h2><p>Make two normal chess moves in one turn. Neither move may capture the opposing king.</p></article>
       <h2 class="upgrade-guide-heading">Permanent movement upgrades</h2>
       <div class="upgrade-guide-intro"><b>Upgrades</b> permanently expand movement and differ from one-use abilities. Buying one costs material-bank points and consumes the entire turn. It affects every friendly piece of that type, including promoted pieces of that resulting type. Each player may upgrade at most three different piece types and may own only one named upgrade per type. Ownership remains even if every current piece of that type is captured. Purple markers identify upgraded pieces; hover over one to review its movement.</div>
@@ -453,7 +463,7 @@
     { id:'ambush', name:'Ambush', cost:4, desc:'Trap one of your non-king pieces. If captured before your next turn, the capturing piece is destroyed too.' },
     { id:'teleport', name:'Teleport', cost:4, consumesMove:true, desc:'Move one non-king piece instantly to an empty square. Teleport counts as your move and ends your turn. It cannot expose your king or immediately attack the enemy king.' },
     { id:'reinforce', name:'Reinforce', cost:5, desc:'Promote one pawn that has crossed the halfway line immediately to a knight or bishop.' },
-    { id:'portal', name:'Portal', cost:5, desc:'Choose two empty squares. This turn, a piece entering either portal exits from the other if it is empty.' },
+    { id:'portal', name:'Portal', cost:5, desc:'Choose two empty squares. The pair lasts for three of your turns, including this one. Any piece from either side entering either portal exits from the other if the exit is empty. Both directions work. You still make a normal move after placing it.' },
     { id:'fortify', name:'Fortify', cost:4, desc:'Choose a 2×2 area containing your king. Enemy abilities cannot affect your pieces in that area until your next turn.' },
     { id:'double', name:'Double Move', cost:6, consumesMove:true, desc:'Make two normal chess moves this turn. Neither move may capture the opposing king.' }
   ];
@@ -959,7 +969,7 @@
       frozen:{w:state.frozen?.w?{...state.frozen.w}:null,b:state.frozen?.b?{...state.frozen.b}:null},
       ambushed:{w:state.ambushed?.w?{...state.ambushed.w}:null,b:state.ambushed?.b?{...state.ambushed.b}:null},
       fortified:{w:state.fortified?.w?{squares:state.fortified.w.squares.map(x=>({...x}))}:null,b:state.fortified?.b?{squares:state.fortified.b.squares.map(x=>({...x}))}:null},
-      portals:{w:state.portals?.w?{a:{...state.portals.w.a},b:{...state.portals.w.b}}:null,b:state.portals?.b?{a:{...state.portals.b.a},b:{...state.portals.b.b}}:null},
+      portals:{w:state.portals?.w?{a:{...state.portals.w.a},b:{...state.portals.w.b},turnsRemaining:Number(state.portals.w.turnsRemaining ?? 1)}:null,b:state.portals?.b?{a:{...state.portals.b.a},b:{...state.portals.b.b},turnsRemaining:Number(state.portals.b.turnsRemaining ?? 1)}:null},
       lastMoveByColor:{w:state.lastMoveByColor?.w?JSON.parse(JSON.stringify(state.lastMoveByColor.w)):null,b:state.lastMoveByColor?.b?JSON.parse(JSON.stringify(state.lastMoveByColor.b)):null},
       lastMove:state.lastMove?JSON.parse(JSON.stringify(state.lastMove)):null
     };
@@ -1070,9 +1080,14 @@
   function isFortifiedAgainstAbility(state,r,c,byColor){ return squareInFortify(state,other(byColor),r,c); }
   function isFrozenPiece(state,r,c,color){ const f=state.frozen?.[color]; return !!f&&f.r===r&&f.c===c; }
   function portalExit(state,color,to){
-    const pair=state.portals?.[color]; if(!pair) return null;
-    if(sameSquare(pair.a,to)) return pair.b;
-    if(sameSquare(pair.b,to)) return pair.a;
+    // Either player may use either active portal pair, in either direction.
+    // `color` is retained in the signature for compatibility with bot-worker code.
+    for(const owner of ['w','b']){
+      const pair=state.portals?.[owner];
+      if(!pair || Number(pair.turnsRemaining ?? 1)<=0) continue;
+      if(sameSquare(pair.a,to)) return {...pair.b, portalOwner:owner};
+      if(sameSquare(pair.b,to)) return {...pair.a, portalOwner:owner};
+    }
     return null;
   }
 
@@ -1346,7 +1361,17 @@
     if (game.shielded[next]) game.shielded[next] = null;
     if (game.ambushed[next]) game.ambushed[next] = null;
     if (game.fortified[next]) game.fortified[next] = null;
-    if (game.portals[other(next)]) game.portals[other(next)] = null; // portals last only through their owner's turn
+    // A portal is usable on the creation turn and on the owner's next two turns.
+    // clearTurnFlagsForNextPlayer runs after the mover's turn has ended, so the
+    // mover is the color opposite `next`. Decrement only that portal.
+    const portalOwner = other(next);
+    if (game.portals[portalOwner]) {
+      game.portals[portalOwner].turnsRemaining = Number(game.portals[portalOwner].turnsRemaining ?? 1) - 1;
+      if (game.portals[portalOwner].turnsRemaining <= 0) {
+        game.portals[portalOwner] = null;
+        log(`${portalOwner==='w'?'White':'Black'}'s portal expired.`);
+      }
+    }
     game.activeAbility = null;
     game.awaitingAbilityTarget = false;
     game.abilitySelection = null;
@@ -1712,7 +1737,7 @@
   function applySwap(r,c){ const p=pieceAt(game.board,r,c); if(!game.abilitySelection){if(!p||colorOf(p)!==game.turn||typeOf(p)==='k'){game.lastMessage='Choose one of your non-king pieces.';return;} game.abilitySelection={r,c};game.lastMessage='Swap: choose the second non-king piece.';return;} const a=game.abilitySelection; if(!p||colorOf(p)!==game.turn||typeOf(p)==='k'||sameSquare(a,{r,c})){game.lastMessage='Choose a different non-king piece.';return;} const next=cloneState(game); [next.board[a.r][a.c],next.board[r][c]]=[next.board[r][c],next.board[a.r][a.c]]; if(inCheck(next,game.turn)){playFailureSound();game.lastMessage='That swap would leave your king under attack.';return;} game.board=next.board; if(game.shielded[game.turn]&&sameSquare(game.shielded[game.turn],a))game.shielded[game.turn]={r,c};else if(game.shielded[game.turn]&&sameSquare(game.shielded[game.turn],{r,c}))game.shielded[game.turn]=a; if(game.ambushed[game.turn]&&sameSquare(game.ambushed[game.turn],a))game.ambushed[game.turn]={r,c};else if(game.ambushed[game.turn]&&sameSquare(game.ambushed[game.turn],{r,c}))game.ambushed[game.turn]=a; completeAbility('swap',4,'Pieces swapped. Now make your normal move.'); }
   function applyRecall(){ const m=game.lastMoveByColor?.[game.turn]; if(!m||typeOf(m.piece)==='k'){game.lastMessage='No eligible piece can be recalled.';game.activeAbility=null;game.awaitingAbilityTarget=false;render();return;} const current=pieceAt(game.board,m.to.r,m.to.c); if(current!==m.resultPiece||pieceAt(game.board,m.from.r,m.from.c)){game.lastMessage='The recalled piece or its previous square is unavailable.';game.activeAbility=null;game.awaitingAbilityTarget=false;render();return;} const next=cloneState(game); next.board[m.from.r][m.from.c]=current; next.board[m.to.r][m.to.c]=null; if(inCheck(next,game.turn)){playFailureSound();game.lastMessage='Recall would leave your king under attack.';game.activeAbility=null;game.awaitingAbilityTarget=false;render();return;} game.board=next.board; completeAbility('recall',4,`Recalled ${current.toUpperCase()} to ${algebraic(m.from.r,m.from.c)}. Now make your normal move.`); }
   function applyReinforce(r,c){ const p=pieceAt(game.board,r,c); const crossed=p&&typeOf(p)==='p'&&colorOf(p)===game.turn&&((game.turn==='w'&&r<=3)||(game.turn==='b'&&r>=4)); if(!crossed){game.lastMessage='Choose one of your pawns that has crossed the halfway line.';return;} const ans=window.prompt('Reinforce to knight or bishop? Enter N or B.','N'); const t=String(ans||'N').trim().toLowerCase()[0]; game.board[r][c]=game.turn+(t==='b'?'b':'n'); completeAbility('reinforce',5,`Pawn reinforced as a ${t==='b'?'bishop':'knight'}. Now make your normal move.`); }
-  function applyPortal(r,c){ if(pieceAt(game.board,r,c)){game.lastMessage='Portal squares must be empty.';return;} if(isFortifiedAgainstAbility(game,r,c,game.turn)){game.lastMessage='That square is protected by Fortify.';return;} if(!game.abilitySelection){game.abilitySelection={r,c};game.lastMessage='Portal: choose the second empty square.';return;} if(sameSquare(game.abilitySelection,{r,c})){game.lastMessage='Choose a different empty square.';return;} game.portals[game.turn]={a:{...game.abilitySelection},b:{r,c}}; completeAbility('portal',5,'Portal pair active for this turn. Now make your normal move.'); }
+  function applyPortal(r,c){ if(pieceAt(game.board,r,c)){game.lastMessage='Portal squares must be empty.';return;} if(isFortifiedAgainstAbility(game,r,c,game.turn)){game.lastMessage='That square is protected by Fortify.';return;} if(!game.abilitySelection){game.abilitySelection={r,c};game.lastMessage='Portal: choose the second empty square.';return;} if(sameSquare(game.abilitySelection,{r,c})){game.lastMessage='Choose a different empty square.';return;} game.portals[game.turn]={a:{...game.abilitySelection},b:{r,c},turnsRemaining:3}; completeAbility('portal',5,'Portal pair active for three of your turns and usable by both players in either direction. Now make your normal move.'); }
   function applyFortify(r,c){ const king=findKing(game,game.turn); if(!king){return;} const candidates=[]; for(const top of [r-1,r])for(const left of [c-1,c]){const squares=[{r:top,c:left},{r:top,c:left+1},{r:top+1,c:left},{r:top+1,c:left+1}];if(squares.every(s=>inBounds(s.r,s.c))&&squares.some(s=>sameSquare(s,king)))candidates.push(squares);} if(!candidates.length){game.lastMessage='Choose a square in a 2×2 area that contains your king.';return;} game.fortified[game.turn]={squares:candidates[0]}; completeAbility('fortify',4,'Fortify active until your next turn. Now make your normal move.'); }
 
   function handleAbilityClick(r,c){
@@ -2528,7 +2553,7 @@
         if (game?.lastMove && ((game.lastMove.from.r===r && game.lastMove.from.c===c) || (game.lastMove.to.r===r && game.lastMove.to.c===c))) sq.classList.add('last-move');
         const p = game?.board?.[r]?.[c];
         sq.innerHTML = p ? pieceMarkup(p) : '';
-        if(p){const upId=upgradeFor(game,colorOf(p),typeOf(p));if(upId){const up=upgradeDefinition(upId);const marker=document.createElement('span');marker.className='upgrade-marker';marker.textContent='▲';marker.setAttribute('aria-label',`${up.name} upgrade`);const tip=document.createElement('span');tip.className='piece-upgrade-tooltip';tip.textContent=`${up.name}: ${up.rule} This upgrade affects every friendly ${PIECE_NAMES[up.type].toLowerCase()}.`;sq.append(marker,tip);sq.title=`${up.name} — ${up.rule}`;}}
+        if(p){const upId=upgradeFor(game,colorOf(p),typeOf(p));if(upId){const up=upgradeDefinition(upId);const marker=document.createElement('span');marker.className='upgrade-marker';marker.textContent='▲';marker.tabIndex=0;marker.setAttribute('role','img');marker.setAttribute('aria-label',`${up.name} upgrade. ${up.rule}`);marker.title=`${up.name} upgrade`;const tip=document.createElement('span');tip.className='piece-upgrade-tooltip';tip.textContent=`${up.name}: ${up.rule} This upgrade affects every friendly ${PIECE_NAMES[up.type].toLowerCase()}.`;sq.append(marker,tip);}}
         if (sel && sel.r===r && sel.c===c) sq.classList.add(game?.selectedAsPremove ? 'premove-selected' : 'selected');
         const queuedPremoves=Array.isArray(game?.premoveQueue)?game.premoveQueue:(game?.premove?[game.premove]:[]);
         if (queuedPremoves.some(pm=>pm.from.r===r&&pm.from.c===c)) sq.classList.add('premove-origin');
@@ -2544,7 +2569,14 @@
         if (canSeeWhiteAmbush && game?.ambushed?.w?.r===r && game?.ambushed?.w?.c===c) sq.classList.add('ambushed');
         if (canSeeBlackAmbush && game?.ambushed?.b?.r===r && game?.ambushed?.b?.c===c) sq.classList.add('ambushed');
         if (squareInFortify(game,'w',r,c)||squareInFortify(game,'b',r,c)) sq.classList.add('fortified');
-        if ((game?.portals?.w&&(sameSquare(game.portals.w.a,{r,c})||sameSquare(game.portals.w.b,{r,c})))||(game?.portals?.b&&(sameSquare(game.portals.b.a,{r,c})||sameSquare(game.portals.b.b,{r,c})))) sq.classList.add('portal-square');
+        const portalColor = game?.portals?.w&&(sameSquare(game.portals.w.a,{r,c})||sameSquare(game.portals.w.b,{r,c})) ? 'w' : game?.portals?.b&&(sameSquare(game.portals.b.a,{r,c})||sameSquare(game.portals.b.b,{r,c})) ? 'b' : null;
+        if (portalColor) {
+          sq.classList.add('portal-square');
+          const remaining=Number(game.portals[portalColor].turnsRemaining ?? 1);
+          const portalTitle=`${portalColor==='w'?'White':'Black'} portal — usable by both players in either direction — ${remaining} owner turn${remaining===1?'':'s'} remaining`;
+          sq.title=sq.title ? `${sq.title}
+${portalTitle}` : portalTitle;
+        }
         if (game?.awaitingAbilityTarget && game.activeAbility==='bomb') {
           const own = p && colorOf(p)===game.turn;
           if (own && !bombRadiusHasKing(r,c)) sq.classList.add('bomb-target');
@@ -2899,6 +2931,44 @@
   lightColorInput.addEventListener('input',()=>{settings.light=lightColorInput.value;saveSettings();});
   darkColorInput.addEventListener('input',()=>{settings.dark=darkColorInput.value;saveSettings();});
   resetSettingsBtn.addEventListener('click',()=>{settings={...DEFAULT_SETTINGS};saveSettings();});
+  function placeFloatingMenuTooltip(host){
+    const tip=host?.querySelector?.('.ability-tooltip,.upgrade-tooltip');
+    if(!tip) return;
+    document.querySelectorAll('.ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible').forEach(other=>{if(other!==tip)other.classList.remove('tooltip-visible')});
+    tip.classList.add('tooltip-visible');
+    tip.style.left='0px'; tip.style.top='0px';
+    const hostRect=host.getBoundingClientRect();
+    const tipRect=tip.getBoundingClientRect();
+    const margin=10;
+    let left=hostRect.left+(hostRect.width-tipRect.width)/2;
+    left=Math.max(margin,Math.min(left,window.innerWidth-tipRect.width-margin));
+    let top=hostRect.top-tipRect.height-8;
+    if(top<margin) top=hostRect.bottom+8;
+    top=Math.max(margin,Math.min(top,window.innerHeight-tipRect.height-margin));
+    tip.style.left=`${Math.round(left)}px`; tip.style.top=`${Math.round(top)}px`;
+  }
+  function hideFloatingMenuTooltip(host){
+    host?.querySelector?.('.ability-tooltip,.upgrade-tooltip')?.classList.remove('tooltip-visible');
+  }
+  document.addEventListener('pointerover',event=>{
+    const host=event.target.closest?.('.ability,.upgrade');
+    if(host && !host.contains(event.relatedTarget)) placeFloatingMenuTooltip(host);
+  });
+  document.addEventListener('pointerout',event=>{
+    const host=event.target.closest?.('.ability,.upgrade');
+    if(host && !host.contains(event.relatedTarget)) hideFloatingMenuTooltip(host);
+  });
+  document.addEventListener('focusin',event=>{
+    const host=event.target.closest?.('.ability,.upgrade');
+    if(host) placeFloatingMenuTooltip(host);
+  });
+  document.addEventListener('focusout',event=>{
+    const host=event.target.closest?.('.ability,.upgrade');
+    if(host && !host.contains(event.relatedTarget)) hideFloatingMenuTooltip(host);
+  });
+  window.addEventListener('scroll',()=>document.querySelectorAll('.ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible').forEach(t=>t.classList.remove('tooltip-visible')),true);
+  window.addEventListener('resize',()=>document.querySelectorAll('.ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible').forEach(t=>t.classList.remove('tooltip-visible')));
+
   importAuthRedirectSession();
   buildBoardPresets(); applySettings();
   renderAbilities();
