@@ -3775,7 +3775,7 @@
   cancelAbilityBtn.addEventListener('click', cancelAbility);
   homeBotBtn?.addEventListener('click', () => startFromHome('bot'));
   homeLocalBtn?.addEventListener('click', () => startFromHome('local'));
-  homeOnlineBtn.addEventListener('click',()=>{onlineModal.hidden=false;onlineSetup.hidden=false;onlineWaiting.hidden=true;onlineStatus.textContent='';joinCodeInput.value='';});
+  homeOnlineBtn?.addEventListener('click',()=>{onlineModal.hidden=false;onlineSetup.hidden=false;onlineWaiting.hidden=true;onlineStatus.textContent='';joinCodeInput.value='';});
   openMembersBtn.addEventListener('click',()=>{onlineModal.hidden=true;openMemberLobby();});
   acceptMemberChallengeToastBtn.addEventListener('click',()=>{if(visibleMemberChallenge)acceptMemberChallenge(visibleMemberChallenge.challenge_id);});
   declineMemberChallengeToastBtn.addEventListener('click',()=>{if(visibleMemberChallenge)declineMemberChallenge(visibleMemberChallenge.challenge_id);});
