@@ -156,12 +156,20 @@
   /* Floating menu descriptions are viewport-positioned so scroll containers cannot clip them. */
   .ability-tooltip,.upgrade-tooltip{position:fixed!important;left:0!important;top:0!important;bottom:auto!important;transform:none!important;z-index:30000!important;display:block!important;opacity:0!important;visibility:hidden!important;pointer-events:none!important;max-width:min(320px,calc(100vw - 24px))!important;width:280px!important}
   .ability:hover .ability-tooltip,.ability:focus-visible .ability-tooltip,.upgrade:hover .upgrade-tooltip,.upgrade:focus-visible .upgrade-tooltip{opacity:0!important;visibility:hidden!important;transform:none!important}
-  .ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible{opacity:1!important;visibility:visible!important}
+  .ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible{opacity:1!important;visibility:visible!important;display:block!important}
   /* Only the small marker itself opens an upgraded-piece description. */
   .sq:hover .piece-upgrade-tooltip,.sq:focus-within .piece-upgrade-tooltip{display:none}
   .upgrade-marker:hover + .piece-upgrade-tooltip,.upgrade-marker:focus + .piece-upgrade-tooltip,.upgrade-marker:focus-visible + .piece-upgrade-tooltip{display:block}
   .upgrade-marker{pointer-events:auto;cursor:help}
   .piece-upgrade-tooltip{left:auto;right:20px;top:2px;z-index:120}
+
+  .upgrade-replace-modal{position:fixed;inset:0;z-index:32000;display:grid;place-items:center;background:rgba(5,8,12,.78);backdrop-filter:blur(5px);padding:18px}
+  .upgrade-replace-modal[hidden]{display:none}
+  .upgrade-replace-card{width:min(470px,100%);background:#20262e;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:22px;box-shadow:0 22px 60px rgba(0,0,0,.55)}
+  .upgrade-replace-card h2{margin:0 0 8px}.upgrade-replace-card p{color:var(--muted);line-height:1.45}
+  .upgrade-replace-options{display:grid;gap:9px;margin:16px 0}.upgrade-replace-option{text-align:left;padding:12px;border-color:#66538f;background:#2b2539}.upgrade-replace-option:hover,.upgrade-replace-option:focus-visible{background:#3a2e51;border-color:#a78bfa}
+  .upgrade-replace-option strong,.upgrade-replace-option span{display:block}.upgrade-replace-option span{font-size:12px;color:#cbd3db;margin-top:3px}
+  .upgrade-replace-cancel{width:100%}
 </style>
 </head>
 <body>
@@ -251,10 +259,10 @@
       <article class="guide-card"><h2>Portal <span class="guide-cost">5 points</span></h2><p>Choose two empty squares. The portal pair remains active for three of its owner’s turns, including the turn it is created. During those turns, any White or Black piece entering either portal exits from the other when the exit is empty. Both directions work for both players. Creating the portal does not consume the normal move.</p></article>
       <article class="guide-card"><h2>Double Move <span class="guide-cost">6 points</span></h2><p>Make two normal chess moves in one turn. Neither move may capture the opposing king.</p></article>
       <h2 class="upgrade-guide-heading">Permanent movement upgrades</h2>
-      <div class="upgrade-guide-intro"><b>Upgrades</b> permanently expand movement and differ from one-use abilities. Buying one costs material-bank points and consumes the entire turn. It affects every friendly piece of that type, including promoted pieces of that resulting type. Each player may upgrade at most three different piece types and may own only one named upgrade per type. Ownership remains even if every current piece of that type is captured. Purple markers identify upgraded pieces; hover over one to review its movement.</div>
+      <div class="upgrade-guide-intro"><b>Upgrades</b> permanently expand movement and differ from one-use abilities. Buying one costs material-bank points and consumes the entire turn. It affects every friendly piece of that type, including promoted pieces of that resulting type. Each player may own upgrades for up to the game’s selected number of piece types and may have only one named upgrade active per type. A new purchase may replace an owned upgrade: choose the upgrade to remove, pay the new upgrade’s full cost, and consume the turn. There are no refunds. Ownership remains even if every current piece of that type is captured. Purple markers identify upgraded pieces; hover over one to review its movement.</div>
       <article class="guide-card"><h2>Vanguard <span class="guide-cost">4 points · Pawn</span></h2><p>Every pawn may move one square diagonally forward into an empty square without capturing. Normal captures remain unchanged. Useful for slipping around blocked files.</p></article>
       <article class="guide-card"><h2>Reverse Gear <span class="guide-cost">4 points · Pawn</span></h2><p>Every pawn may move one square directly backward into an empty square. It cannot capture backward or regain a two-square move. Promotion remains on its normal rank. Useful for reorganizing pawn structure.</p></article>
-      <article class="guide-card"><h2>Veteran <span class="guide-cost">6 points · Pawn</span></h2><p>Every pawn may move one empty square and capture diagonally toward either end. The original-direction two-square move and en passant remain unchanged; promotion occurs only on the original promotion rank. Creates flexible two-way pressure.</p></article>
+      <article class="guide-card"><h2>Veteran <span class="guide-cost">6 points · Pawn</span></h2><p>Every pawn may move one empty square and capture diagonally toward either end. The original-direction two-square move and en passant remain unchanged; promotion occurs only on the opponent-facing promotion rank; reaching the pawn’s own back rank never promotes it. Creates flexible two-way pressure.</p></article>
       <article class="guide-card"><h2>Lancer <span class="guide-cost">5 points · Knight</span></h2><p>Every knight additionally moves or captures one square diagonally. Standard knight moves remain. Helps knights operate in cramped positions.</p></article>
       <article class="guide-card"><h2>Charger <span class="guide-cost">6 points · Knight</span></h2><p>Every knight additionally moves or captures one square in its owner's normal forward direction. This is one ordinary move, not an extra step. Adds direct forward pressure.</p></article>
       <article class="guide-card"><h2>Cardinal <span class="guide-cost">6 points · Bishop</span></h2><p>Every bishop additionally moves or captures one square orthogonally while retaining diagonal movement. Gives bishops close-range access to either color complex.</p></article>
@@ -364,6 +372,15 @@
     <button id="closeMemberBtn" class="member-close" type="button">Close</button>
   </section>
 </div>
+
+<div id="upgradeReplaceModal" class="upgrade-replace-modal" hidden>
+  <section class="upgrade-replace-card" role="dialog" aria-modal="true" aria-labelledby="upgradeReplaceTitle">
+    <h2 id="upgradeReplaceTitle">Which upgrade would you like to replace?</h2>
+    <p id="upgradeReplaceText">Choose one of your current upgrades. The old upgrade will be removed permanently. The new upgrade still costs its full price and consumes your turn.</p>
+    <div id="upgradeReplaceOptions" class="upgrade-replace-options"></div>
+    <button id="upgradeReplaceCancelBtn" class="upgrade-replace-cancel" type="button">Cancel</button>
+  </section>
+</div>
 <div id="resultModal" class="result-modal" hidden role="dialog" aria-modal="true" aria-labelledby="resultTitle">
   <div class="result-card">
     <h2 id="resultTitle">Game over</h2>
@@ -417,6 +434,8 @@
   const incrementOutput = document.getElementById('incrementOutput');
   const upgradeLimitSlider=document.getElementById('upgradeLimitSlider'), upgradeLimitOutput=document.getElementById('upgradeLimitOutput'), abilitiesEnabledToggle=document.getElementById('abilitiesEnabledToggle'), upgradesEnabledToggle=document.getElementById('upgradesEnabledToggle');
   const abilitiesTabBtn=document.getElementById('abilitiesTabBtn'), upgradesTabBtn=document.getElementById('upgradesTabBtn'), abilitiesPanelSection=document.getElementById('abilitiesPanelSection'), upgradesPanelSection=document.getElementById('upgradesPanelSection');
+  const upgradeReplaceModal=document.getElementById('upgradeReplaceModal'), upgradeReplaceOptions=document.getElementById('upgradeReplaceOptions'), upgradeReplaceText=document.getElementById('upgradeReplaceText'), upgradeReplaceCancelBtn=document.getElementById('upgradeReplaceCancelBtn');
+  let pendingUpgradeReplacement=null;
   function showAbilityPanel(which){
     const showUpgrades=which==='upgrades';
     if(!abilitiesPanelSection||!upgradesPanelSection)return;
@@ -430,6 +449,9 @@
   }
   abilitiesTabBtn?.addEventListener('click',()=>showAbilityPanel('abilities'));
   upgradesTabBtn?.addEventListener('click',()=>showAbilityPanel('upgrades'));
+  upgradeReplaceCancelBtn?.addEventListener('click',closeUpgradeReplaceDialog);
+  upgradeReplaceModal?.addEventListener('click',e=>{if(e.target===upgradeReplaceModal)closeUpgradeReplaceDialog()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&upgradeReplaceModal&&!upgradeReplaceModal.hidden)closeUpgradeReplaceDialog()});
   const onlineUpgradeLimitSlider=document.getElementById('onlineUpgradeLimitSlider'), onlineUpgradeLimitOutput=document.getElementById('onlineUpgradeLimitOutput'), onlineAbilitiesEnabledToggle=document.getElementById('onlineAbilitiesEnabledToggle'), onlineUpgradesEnabledToggle=document.getElementById('onlineUpgradesEnabledToggle');
   const whiteClock = document.getElementById('whiteClock');
   const blackClock = document.getElementById('blackClock');
@@ -983,6 +1005,7 @@
   function pieceAt(board,r,c){ return inBounds(r,c) ? board[r][c] : null; }
   function colorOf(piece){ return piece ? piece[0] : null; }
   function typeOf(piece){ return piece ? piece[1] : null; }
+  function isPromotionRank(color, r){ return (color==='w' && r===0) || (color==='b' && r===7); }
 
   function isShieldedAgainstCapture(state, r, c, byColor){
     const target = state.shielded[other(byColor)];
@@ -994,7 +1017,7 @@
     const piece=pieceAt(state.board,r,c); if(!piece) return [];
     const color=colorOf(piece), type=typeOf(piece), up=upgradeFor(state,color,type), dir=color==='w'?-1:1;
     const moves=[], seen=new Set();
-    const addMove=(move)=>{ if(!inBounds(move.to.r,move.to.c)) return; const key=`${move.to.r},${move.to.c}:${move.castle||''}:${move.enPassant?'e':''}`; if(seen.has(key)) return; seen.add(key); if(type==='p'&&(move.to.r===0||move.to.r===7)) move.promotionRequired=true; moves.push(move); };
+    const addMove=(move)=>{ if(!inBounds(move.to.r,move.to.c)) return; const key=`${move.to.r},${move.to.c}:${move.castle||''}:${move.enPassant?'e':''}`; if(seen.has(key)) return; seen.add(key); if(type==='p' && isPromotionRank(color, move.to.r)) move.promotionRequired=true; moves.push(move); };
     const addStep=(dr,dc,{emptyOnly=false,captureOnly=false,tag=null}={})=>{ const rr=r+dr,cc=c+dc;if(!inBounds(rr,cc))return;const tgt=pieceAt(state.board,rr,cc);if(emptyOnly&&tgt)return;if(captureOnly&&!tgt)return;if(tgt&&colorOf(tgt)===color)return;addMove({from:{r,c},to:{r:rr,c:cc},capture:!!tgt,upgradeMove:tag}); };
     const addSlide=(dirs)=>{ for(const[dr,dc]of dirs){let rr=r+dr,cc=c+dc;while(inBounds(rr,cc)){const tgt=pieceAt(state.board,rr,cc);if(!tgt)addMove({from:{r,c},to:{r:rr,c:cc}});else{if(colorOf(tgt)!==color)addMove({from:{r,c},to:{r:rr,c:cc},capture:true});break;}rr+=dr;cc+=dc;} } };
     const addFriendlyJumpSlide=(dirs,tag)=>{ if(forAttack)return; for(const[dr,dc]of dirs){let rr=r+dr,cc=c+dc,passed=false;while(inBounds(rr,cc)){const tgt=pieceAt(state.board,rr,cc);if(!passed){if(!tgt){rr+=dr;cc+=dc;continue;}if(colorOf(tgt)!==color)break;passed=true;rr+=dr;cc+=dc;continue;}if(tgt)break;addMove({from:{r,c},to:{r:rr,c:cc},upgradeMove:tag,jumpedFriendly:true});rr+=dr;cc+=dc;} } };
@@ -1116,7 +1139,7 @@
       s.board[move.to.r][rookFromC] = null;
     }
 
-    if (piece[1] === 'p' && (move.to.r === 0 || move.to.r === 7)) {
+    if (piece[1] === 'p' && isPromotionRank(piece[0], move.to.r)) {
       const promotion = ['q','r','b','n'].includes(move.promotion) ? move.promotion : 'q';
       s.board[move.to.r][move.to.c] = piece[0] + promotion;
     }
@@ -1223,7 +1246,7 @@
     const queue=premoveQueue();
     queue.push({
       from:{...move.from}, to:{...move.to},
-      promotion:move.promotion || (piece[1]==='p' && (move.to.r===0 || move.to.r===7) ? 'q' : null)
+      promotion:move.promotion || (piece[1]==='p' && isPromotionRank(piece[0], move.to.r) ? 'q' : null)
     });
     syncPremoveAlias();
     game.selected = null;
@@ -1564,23 +1587,78 @@
   }
 
 
+  function replacementCandidatesFor(state,color,newUpgrade){
+    const owned=ensureUpgradeState(state)[color]||{};
+    const limit=Math.max(0,Number(state.upgradeLimit ?? 3));
+    if(owned[newUpgrade.type]) return [newUpgrade.type];
+    if(Object.keys(owned).length>=limit) return Object.keys(owned);
+    return [];
+  }
+
+  function closeUpgradeReplaceDialog(){
+    pendingUpgradeReplacement=null;
+    if(upgradeReplaceModal)upgradeReplaceModal.hidden=true;
+    if(upgradeReplaceOptions)upgradeReplaceOptions.replaceChildren();
+  }
+
+  function openUpgradeReplaceDialog(newUpgrade,color,candidates){
+    if(!upgradeReplaceModal||!upgradeReplaceOptions)return;
+    pendingUpgradeReplacement={upgradeId:newUpgrade.id,color};
+    upgradeReplaceOptions.replaceChildren();
+    if(upgradeReplaceText) upgradeReplaceText.textContent=`Choose which current upgrade to remove before purchasing ${newUpgrade.name} for ${PIECE_NAMES[newUpgrade.type]}s. The new upgrade costs ${newUpgrade.cost} points and consumes your turn. There is no refund for the replaced upgrade.`;
+    for(const type of candidates){
+      const oldId=game.upgrades[color]?.[type], oldUp=upgradeDefinition(oldId);if(!oldUp)continue;
+      const btn=document.createElement('button');btn.type='button';btn.className='upgrade-replace-option';
+      btn.innerHTML=`<strong>${oldUp.name}</strong><span>${PIECE_NAMES[type]} upgrade</span>`;
+      btn.addEventListener('click',()=>confirmUpgradeReplacement(type));
+      upgradeReplaceOptions.appendChild(btn);
+    }
+    upgradeReplaceModal.hidden=false;
+    upgradeReplaceOptions.querySelector('button')?.focus();
+  }
+
+  function completeUpgradePurchase(up,color,replacedType=null){
+    ensureUpgradeState(game);const owned=game.upgrades[color];
+    if(replacedType){
+      const oldId=owned[replacedType],oldUp=upgradeDefinition(oldId);
+      delete owned[replacedType];
+      log(`${color==='w'?'White':'Black'} replaced ${oldUp?.name||'an upgrade'} with ${up.name} for ${PIECE_NAMES[up.type]}s (${up.cost} points).`);
+    }else{
+      log(`${color==='w'?'White':'Black'} purchased ${up.name} for ${PIECE_NAMES[up.type]}s (${up.cost} points).`);
+    }
+    game.points[color]-=up.cost;owned[up.type]=up.id;
+    game.selected=null;game.selectedAsPremove=false;game.legalMoves=[];game.activeAbility=null;game.awaitingAbilityTarget=false;
+    game.premove=null;if(Array.isArray(game.premoveQueue))game.premoveQueue.length=0;
+    game.lastMessage=replacedType?`${up.name} purchased as a replacement. Turn complete.`:`${up.name} purchased. Turn complete.`;
+    closeUpgradeReplaceDialog();
+    finishTurn();
+  }
+
+  function confirmUpgradeReplacement(replacedType){
+    if(!pendingUpgradeReplacement||!game||game.over){closeUpgradeReplaceDialog();return;}
+    const {upgradeId,color}=pendingUpgradeReplacement,up=upgradeDefinition(upgradeId);ensureUpgradeState(game);
+    if(!up||game.turn!==color||(game.mode==='online'&&game.playerColor!==color)){closeUpgradeReplaceDialog();game.lastMessage='The position changed before the replacement was confirmed.';render();return;}
+    const candidates=replacementCandidatesFor(game,color,up);
+    if(!candidates.includes(replacedType)||!game.upgrades[color]?.[replacedType]){closeUpgradeReplaceDialog();game.lastMessage='That upgrade is no longer available to replace.';render();return;}
+    if(game.points[color]<up.cost){closeUpgradeReplaceDialog();game.lastMessage='Not enough points.';render();return;}
+    if(game.abilityUsed||game.awaitingAbilityTarget){closeUpgradeReplaceDialog();game.lastMessage='Finish or cancel the active ability first.';render();return;}
+    completeUpgradePurchase(up,color,replacedType);
+  }
+
   function purchaseUpgrade(id){
     if(!game||game.over)return;ensureUpgradeState(game);
     if(game.upgradesEnabled===false){game.lastMessage='Upgrades are disabled for this game.';render();return;}
     if(game.mode==='online'&&game.turn!==game.playerColor){game.lastMessage='Wait for your turn.';render();return;}
     const up=upgradeDefinition(id);if(!up)return;
-    const owned=game.upgrades[game.turn];
-    if(owned[up.type]){game.lastMessage=`${PIECE_NAMES[up.type]} already has an upgrade.`;render();return;}
+    const color=game.turn,owned=game.upgrades[color];
+    if(owned[up.type]===up.id){game.lastMessage=`${up.name} is already owned.`;render();return;}
     const limit=Math.max(0,Number(game.upgradeLimit ?? 3));
-    if(Object.keys(owned).length>=limit){game.lastMessage=`You already have upgrades for ${limit} piece type${limit===1?'':'s'}.`;render();return;}
-    if(game.points[game.turn]<up.cost){game.lastMessage='Not enough points.';render();return;}
+    if(limit<=0){game.lastMessage='Upgrades are unavailable because this game has no upgrade slots.';render();return;}
+    if(game.points[color]<up.cost){game.lastMessage='Not enough points.';render();return;}
     if(game.abilityUsed||game.awaitingAbilityTarget){game.lastMessage='Finish or cancel the active ability first.';render();return;}
-    game.points[game.turn]-=up.cost;owned[up.type]=up.id;
-    game.selected=null;game.selectedAsPremove=false;game.legalMoves=[];game.activeAbility=null;game.awaitingAbilityTarget=false;
-    game.premove=null;if(Array.isArray(game.premoveQueue))game.premoveQueue.length=0;
-    log(`${game.turn==='w'?'White':'Black'} purchased ${up.name} for ${PIECE_NAMES[up.type]}s (${up.cost} points).`);
-    game.lastMessage=`${up.name} purchased. Turn complete.`;
-    finishTurn();
+    const candidates=replacementCandidatesFor(game,color,up);
+    if(candidates.length){openUpgradeReplaceDialog(up,color,candidates);return;}
+    completeUpgradePurchase(up,color,null);
   }
 
   function abilityPanelViewerColor(){
@@ -1596,8 +1674,16 @@
     for(const type of['p','n','b','r','q','k']){
       const group=document.createElement('section');group.className='upgrade-group';const title=document.createElement('div');title.className='upgrade-group-title';title.textContent=PIECE_NAMES[type];const buttons=document.createElement('div');buttons.className='upgrade-buttons';
       for(const up of UPGRADES.filter(u=>u.type===type)){
-        const b=document.createElement('button');b.type='button';b.className='upgrade';const isOwned=owned[type]===up.id;let reason='';if(owned[type]&&!isOwned)reason=`${upgradeDefinition(owned[type])?.name||'another upgrade'} is already owned for this piece type`;else if(game.upgradesEnabled===false&&!isOwned)reason='upgrades are disabled for this game';else if(count>=limit&&!isOwned)reason=`all ${limit} upgrade slot${limit===1?' is':'s are'} occupied`;else if(game.points[actor]<up.cost&&!isOwned)reason='not enough material points';else if(game.turn!==actor&&!isOwned)reason='it is not your turn';else if(game.over&&!isOwned)reason='the game is over';
-        if(isOwned)b.classList.add('owned');if(isOwned||reason)b.setAttribute('aria-disabled','true');b.setAttribute('aria-label',`${up.name}, ${PIECE_NAMES[type]}, ${up.cost} points. ${upgradeTooltipText(up,reason)}`);b.innerHTML=`<span class="upgrade-name">${up.name}${isOwned?' ✓':''}</span><span class="upgrade-meta">${PIECE_NAMES[type]} · ${up.cost} points</span><span class="upgrade-tooltip">${upgradeTooltipText(up,reason)}</span>`;b.addEventListener('click',()=>{if(!isOwned&&!reason)purchaseUpgrade(up.id)});buttons.appendChild(b);
+        const b=document.createElement('button');b.type='button';b.className='upgrade';const isOwned=owned[type]===up.id;let reason='';if(game.upgradesEnabled===false&&!isOwned)reason='upgrades are disabled for this game';else if(limit<=0&&!isOwned)reason='this game has no upgrade slots';else if(game.points[actor]<up.cost&&!isOwned)reason='not enough material points';else if(game.turn!==actor&&!isOwned)reason='it is not your turn';else if(game.over&&!isOwned)reason='the game is over';
+        const replacementNeeded=!isOwned&&(!!owned[type]||count>=limit);const replacementNote=replacementNeeded?' Purchasing this will ask which owned upgrade to replace.':'';
+        if(isOwned)b.classList.add('owned');if(isOwned||reason)b.setAttribute('aria-disabled','true');const tipText=upgradeTooltipText(up,reason)+replacementNote;b.setAttribute('aria-label',`${up.name}, ${PIECE_NAMES[type]}, ${up.cost} points. ${tipText}`);b.setAttribute('title',tipText);b.innerHTML=`<span class="upgrade-name">${up.name}${isOwned?' ✓':''}</span><span class="upgrade-meta">${PIECE_NAMES[type]} · ${up.cost} points${replacementNeeded?' · replace':''}</span><span class="upgrade-tooltip">${tipText}</span>`;
+        // Keep the full floating description available for owned, unaffordable,
+        // replaceable, and otherwise unavailable upgrades as well as active ones.
+        b.addEventListener('mouseenter',()=>placeFloatingMenuTooltip(b));
+        b.addEventListener('mouseleave',()=>hideFloatingMenuTooltip(b));
+        b.addEventListener('focus',()=>placeFloatingMenuTooltip(b));
+        b.addEventListener('blur',()=>hideFloatingMenuTooltip(b));
+        b.addEventListener('click',()=>{if(!isOwned&&!reason)purchaseUpgrade(up.id)});buttons.appendChild(b);
       }group.append(title,buttons);host.appendChild(group);
     }
   }
@@ -1779,7 +1865,7 @@
   }
 
   function choosePromotion(move, piece){
-    if (piece?.[1] !== 'p' || (move.to.r !== 0 && move.to.r !== 7)) return move;
+    if (piece?.[1] !== 'p' || !isPromotionRank(piece[0], move.to.r)) return move;
     if (move.promotion && ['q','r','b','n'].includes(move.promotion)) return move;
     if (game.mode==='bot' && game.turn==='b') return {...move,promotion:'q'};
     const answer = window.prompt('Promote to: queen, rook, bishop, or knight? Enter Q, R, B, or N.', 'Q');
@@ -1818,11 +1904,11 @@
     const suffix = move.castle ? (move.castle==='k' ? ' (castles kingside)' : ' (castles queenside)')
       : move.enPassant ? ` x ${target} e.p.`
       : target ? ' x '+target : '';
-    const promo = piece[1]==='p' && (move.to.r===0 || move.to.r===7) ? `=${move.promotion.toUpperCase()}` : '';
+    const promo = piece[1]==='p' && isPromotionRank(piece[0], move.to.r) ? `=${(move.promotion||'q').toUpperCase()}` : '';
     const actualTo=move.portalExit||move.to;
     const portalText=move.portalExit?` via portal to ${algebraic(actualTo.r,actualTo.c)}`:'';
     log(`${game.turn==='w'?'White':'Black'}: ${algebraic(move.from.r,move.from.c)} → ${algebraic(move.to.r,move.to.c)}${portalText}${suffix}${promo}`);
-    game.lastMoveByColor[game.turn]={piece,from:{...move.from},to:{...actualTo},resultPiece:piece[1]==='p'&&(actualTo.r===0||actualTo.r===7)?piece[0]+(move.promotion||'q'):piece};
+    game.lastMoveByColor[game.turn]={piece,from:{...move.from},to:{...actualTo},resultPiece:piece[1]==='p'&&isPromotionRank(piece[0],move.to.r)?piece[0]+(move.promotion||'q'):piece};
     game.lastMove={from:{...move.from},to:{...actualTo}};
 
     // Schedule sound independently of rendering/turn changes so bot and premove
