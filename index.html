@@ -514,7 +514,18 @@
     if(!onlineSession||onlineSyncing) return;
     try{ const rows=await supabaseRpc('get_ability_chess_room',{p_room_id:onlineSession.id,p_seat_token:onlineSession.token}); const row=rows?.[0]; if(!row)return;
       const v=Number(row.room_version); if(v>onlineSession.version){ onlineSession.version=v; restoreOnlineState(row.state); }
-      if(row.opponent_joined && onlineSession.waiting){ onlineSession.waiting=false; onlineStatus.textContent='Opponent joined. Starting game…'; onlineModal.hidden=true; game.clockLastTick=performance.now(); startClockLoop(); render(); }
+      if(row.opponent_joined && onlineSession.waiting){
+        onlineSession.waiting=false;
+        onlineStatus.textContent='Opponent joined. Starting game…';
+        onlineModal.hidden=true;
+        game.playerColor=onlineSession.color;
+        gameModeLabel.innerHTML=`Mode: <b>Online — ${onlineSession.color==='w'?'White':'Black'}</b>`;
+        showScreen('game');
+        game.clockLastTick=performance.now();
+        startClockLoop();
+        render();
+        window.scrollTo({top:0,behavior:'instant'});
+      }
     }catch(e){onlineStatus.textContent=e.message;}
   }
   function startOnlinePolling(){ clearInterval(onlinePollTimer); onlinePollTimer=setInterval(pollOnlineRoom,600); }
