@@ -174,7 +174,7 @@
   .upgrade-replace-option strong,.upgrade-replace-option span{display:block}.upgrade-replace-option span{font-size:12px;color:#cbd3db;margin-top:3px}
   .upgrade-replace-cancel{width:100%}
 
-  .challenge-setup-modal{position:fixed;inset:0;z-index:22500;display:grid;place-items:center;background:rgba(5,8,12,.82);padding:18px}.challenge-setup-modal[hidden]{display:none}.challenge-setup-card{width:min(560px,96vw);max-height:92vh;overflow:auto;background:#20262e;border:1px solid rgba(255,255,255,.13);border-radius:18px;padding:22px;box-shadow:0 22px 60px rgba(0,0,0,.55)}.challenge-setup-card h2{margin:0 0 6px}.challenge-setup-target{color:#cbd3db;margin:0 0 16px}.challenge-setup-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}.challenge-status-toast .game-toast-actions{flex-wrap:wrap}
+  .challenge-setup-modal{position:fixed;inset:0;z-index:22500;display:grid;place-items:center;background:rgba(5,8,12,.82);padding:18px}.challenge-setup-modal[hidden]{display:none}.challenge-setup-card{width:min(560px,96vw);max-height:92vh;overflow:auto;background:#20262e;border:1px solid rgba(255,255,255,.13);border-radius:18px;padding:22px;box-shadow:0 22px 60px rgba(0,0,0,.55)}.challenge-setup-card h2{margin:0 0 6px}.challenge-setup-target{color:#cbd3db;margin:0 0 16px}.challenge-setup-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}.challenge-status-toast{border-color:#ffb84d;box-shadow:0 18px 55px rgba(0,0,0,.58),0 0 0 2px rgba(255,184,77,.18)}.challenge-status-toast .game-toast-actions{flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -348,7 +348,7 @@
   </main>
 </div>
 <div class="game-toast-stack" aria-live="polite">
-  <section id="drawOfferToast" class="game-toast" hidden><h3>Draw offer</h3><p>Your opponent has offered a draw.</p><div class="game-toast-actions"><button id="toastAcceptDrawBtn" class="game-toast-primary" type="button">Accept</button><button id="toastDeclineDrawBtn" type="button">Decline</button></div></section>
+  <section id="drawOfferToast" class="game-toast" hidden><h3 id="drawOfferToastTitle">Draw offer</h3><p id="drawOfferToastText">Your opponent has offered a draw.</p><div class="game-toast-actions"><button id="toastAcceptDrawBtn" class="game-toast-primary" type="button">Accept</button><button id="toastDeclineDrawBtn" type="button">Decline</button><button id="toastCancelDrawBtn" type="button" hidden>Cancel draw offer</button></div></section>
   <section id="rematchToast" class="game-toast" hidden><h3 id="rematchToastTitle">Rematch challenge</h3><p id="rematchToastText">Your opponent wants to play again.</p><div class="game-toast-actions"><button id="acceptRematchBtn" class="game-toast-primary" type="button">Accept</button><button id="declineRematchBtn" type="button">Decline</button><button id="cancelRematchBtn" type="button" hidden>Cancel challenge</button></div></section>
   <section id="memberChallengeToast" class="game-toast challenge-status-toast" hidden><h3 id="memberChallengeToastTitle">Member challenge</h3><p id="memberChallengeToastText">A member has challenged you to a game.</p><div class="game-toast-actions"><button id="acceptMemberChallengeToastBtn" class="game-toast-primary" type="button">Accept</button><button id="declineMemberChallengeToastBtn" type="button">Decline</button><button id="cancelMemberChallengeToastBtn" type="button" hidden>Cancel challenge</button><button id="dismissMemberChallengeToastBtn" type="button" hidden>Dismiss</button></div></section>
 </div>
@@ -425,7 +425,7 @@
   const offerDrawBtn = document.getElementById('offerDrawBtn');
   const acceptDrawBtn = document.getElementById('acceptDrawBtn');
   const declineDrawBtn = document.getElementById('declineDrawBtn');
-  const drawOfferToast=document.getElementById('drawOfferToast'), toastAcceptDrawBtn=document.getElementById('toastAcceptDrawBtn'), toastDeclineDrawBtn=document.getElementById('toastDeclineDrawBtn');
+  const drawOfferToast=document.getElementById('drawOfferToast'), drawOfferToastTitle=document.getElementById('drawOfferToastTitle'), drawOfferToastText=document.getElementById('drawOfferToastText'), toastAcceptDrawBtn=document.getElementById('toastAcceptDrawBtn'), toastDeclineDrawBtn=document.getElementById('toastDeclineDrawBtn'), toastCancelDrawBtn=document.getElementById('toastCancelDrawBtn');
   const memberChallengeToast=document.getElementById('memberChallengeToast'), memberChallengeToastText=document.getElementById('memberChallengeToastText'), acceptMemberChallengeToastBtn=document.getElementById('acceptMemberChallengeToastBtn'), declineMemberChallengeToastBtn=document.getElementById('declineMemberChallengeToastBtn');
   const rematchToast=document.getElementById('rematchToast'), rematchToastTitle=document.getElementById('rematchToastTitle'), rematchToastText=document.getElementById('rematchToastText'), acceptRematchBtn=document.getElementById('acceptRematchBtn'), declineRematchBtn=document.getElementById('declineRematchBtn'), cancelRematchBtn=document.getElementById('cancelRematchBtn');
   const resultModal = document.getElementById('resultModal');
@@ -726,7 +726,7 @@
     const data=await res.json().catch(()=>null); if(!res.ok) throw new Error(data?.message||data?.hint||'Online request failed.'); return data;
   }
 
-  let memberSession=null, memberProfile=null, memberTab='members', memberPollTimer=null, handledChallengeIds=new Set(), visibleMemberChallenge=null;
+  let memberSession=null, memberProfile=null, memberTab='members', memberPollTimer=null, memberChallengePollBusy=false, handledChallengeIds=new Set(), visibleMemberChallenge=null;
   let pendingChallengeTarget=null, visibleOutgoingMemberChallenge=null;
   const notifiedChallengeStatuses=new Set();
   try{ memberSession=JSON.parse(localStorage.getItem('abilityChessMemberSession')||'null'); }catch{}
@@ -776,7 +776,7 @@
   function challengeSummary(cfg){return `${Number(cfg.base||10)}+${Number(cfg.increment||0)} · ${Number(cfg.startingPoints||0)} starting points · abilities ${cfg.abilitiesEnabled===false?'off':'on'} · upgrades ${cfg.upgradesEnabled===false?'off':'on'} · ${Number(cfg.upgradeLimit??3)} upgrade slots`;}
   function updateMemberChallengeSetupOutputs(){challengeBaseTimeOutput.textContent=`${challengeBaseTimeSlider.value} min`;challengeIncrementOutput.textContent=`${challengeIncrementSlider.value} sec`;challengeStartingPointsOutput.textContent=`${challengeStartingPointsSlider.value} point${challengeStartingPointsSlider.value==='1'?'':'s'}`;challengeUpgradeLimitOutput.textContent=`${challengeUpgradeLimitSlider.value} type${challengeUpgradeLimitSlider.value==='1'?'':'s'}`;}
   function openMemberChallengeSetup(member=null){pendingChallengeTarget=member;challengeBaseTimeSlider.value=baseTimeSlider.value;challengeIncrementSlider.value=incrementSlider.value;challengeStartingPointsSlider.value=onlineStartingPointsSlider.value||0;challengeUpgradeLimitSlider.value=upgradeLimitSlider.value;challengeAbilitiesEnabledToggle.checked=abilitiesEnabledToggle.checked;challengeUpgradesEnabledToggle.checked=upgradesEnabledToggle.checked;document.querySelector('input[name="challengeHostColor"][value="w"]').checked=true;updateMemberChallengeSetupOutputs();memberChallengeSetupTarget.textContent=member?`Challenge ${member.display_name} (@${member.username}). Choose the rules before sending.`:'Choose the rules before posting this open challenge.';sendMemberChallengeBtn.textContent=member?'Send challenge':'Post open challenge';memberChallengeSetupModal.hidden=false;}
-  async function createMemberChallenge(challengedId=null){const cfg=memberChallengeSettings();memberStatus.textContent=challengedId?'Sending challenge…':'Posting open challenge…';sendMemberChallengeBtn.disabled=true;try{selectedGameMode='online';newGame();game.mode='online';game.onlineStarted=false;game.hostColor=cfg.hostColor;game.playerColor=cfg.hostColor;game.initialTime=cfg.base*60;game.increment=cfg.increment;game.startingPoints=cfg.startingPoints;game.clocks={w:cfg.base*60,b:cfg.base*60};game.points={w:cfg.startingPoints,b:cfg.startingPoints};game.upgradeLimit=cfg.upgradeLimit;game.abilitiesEnabled=cfg.abilitiesEnabled;game.upgradesEnabled=cfg.upgradesEnabled;stopClockLoop();await memberRpc('ability_chess_create_member_challenge',{p_game_state:onlineState(),p_settings:cfg,p_challenged_id:challengedId});memberChallengeSetupModal.hidden=true;pendingChallengeTarget=null;memberStatus.textContent=challengedId?'Challenge sent. You can cancel it from the notification or My challenges.':'Open challenge posted.';memberTab='mine';renderMemberTabs();await loadMemberList();startMemberPolling();await loadChallengeNotifications();}catch(e){memberStatus.textContent=e.message;}finally{sendMemberChallengeBtn.disabled=false;}}
+  async function createMemberChallenge(challengedId=null){const cfg=memberChallengeSettings();const target=pendingChallengeTarget;memberStatus.textContent=challengedId?'Sending challenge…':'Posting open challenge…';sendMemberChallengeBtn.disabled=true;try{selectedGameMode='online';newGame();game.mode='online';game.onlineStarted=false;game.hostColor=cfg.hostColor;game.playerColor=cfg.hostColor;game.initialTime=cfg.base*60;game.increment=cfg.increment;game.startingPoints=cfg.startingPoints;game.clocks={w:cfg.base*60,b:cfg.base*60};game.points={w:cfg.startingPoints,b:cfg.startingPoints};game.upgradeLimit=cfg.upgradeLimit;game.abilitiesEnabled=cfg.abilitiesEnabled;game.upgradesEnabled=cfg.upgradesEnabled;stopClockLoop();const rows=await memberRpc('ability_chess_create_member_challenge',{p_game_state:onlineState(),p_settings:cfg,p_challenged_id:challengedId});const created=rows?.[0];memberChallengeSetupModal.hidden=true;pendingChallengeTarget=null;memberStatus.textContent=challengedId?'Challenge sent. You can cancel it from the notification or My challenges.':'Open challenge posted.';if(challengedId&&created?.challenge_id){showMemberChallengeToast('outgoing',{challenge_id:created.challenge_id,direction:'outgoing',challenge_type:'direct',status:'pending',settings:cfg,other_user_id:challengedId,other_username:target?.username||'',other_display_name:target?.display_name||''});}memberTab='mine';renderMemberTabs();await loadMemberList();startMemberPolling();await loadChallengeNotifications();}catch(e){memberStatus.textContent=e.message;console.error('Could not create member challenge',e);}finally{sendMemberChallengeBtn.disabled=false;}}
   function memberButton(label,handler,cls=''){const b=document.createElement('button');b.type='button';b.textContent=label;if(cls)b.className=cls;b.addEventListener('click',handler);return b;}
   function memberRow(title,meta,actions=[]){const row=document.createElement('div');row.className='member-row';const copy=document.createElement('div');copy.innerHTML=`<div class="member-name">${escapeHtml(title)}</div><div class="member-meta">${escapeHtml(meta)}</div>`;const acts=document.createElement('div');acts.className='member-actions';actions.forEach(a=>acts.appendChild(a));row.append(copy,acts);return row;}
   function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
@@ -798,9 +798,9 @@
       break;
     }
   }
-  function startMemberPolling(){clearInterval(memberPollTimer);memberPollTimer=setInterval(()=>{if(memberSession)loadChallengeNotifications();},2500);}
+  function startMemberPolling(){clearInterval(memberPollTimer);const poll=async()=>{if(!memberSession||memberChallengePollBusy)return;memberChallengePollBusy=true;try{if(Date.now()/1000>(memberSession.expires_at||0)-45)await refreshMemberToken();if(memberSession)await loadChallengeNotifications();}finally{memberChallengePollBusy=false;}};poll();memberPollTimer=setInterval(poll,1800);}
   function showMemberChallengeToast(mode,challenge){acceptMemberChallengeToastBtn.hidden=mode!=='incoming';declineMemberChallengeToastBtn.hidden=mode!=='incoming';cancelMemberChallengeToastBtn.hidden=mode!=='outgoing';dismissMemberChallengeToastBtn.hidden=!['declined','cancelled','expired'].includes(mode);if(mode==='incoming'){const who=challenge.other_display_name?`${challenge.other_display_name} (@${challenge.other_username})`:`@${challenge.other_username||'A member'}`;memberChallengeToastTitle.textContent='Member challenge';memberChallengeToastText.textContent=`${who} challenged you. ${challengeSummary(challenge.settings||{})}.`;visibleMemberChallenge=challenge;visibleOutgoingMemberChallenge=null;}else if(mode==='outgoing'){const who=challenge.other_display_name?`${challenge.other_display_name} (@${challenge.other_username})`:'your opponent';memberChallengeToastTitle.textContent='Challenge sent';memberChallengeToastText.textContent=`Waiting for ${who}. ${challengeSummary(challenge.settings||{})}.`;visibleOutgoingMemberChallenge=challenge;visibleMemberChallenge=null;}else{memberChallengeToastTitle.textContent=mode==='declined'?'Challenge declined':mode==='expired'?'Challenge expired':'Challenge cancelled';memberChallengeToastText.textContent=mode==='declined'?'Your opponent declined the challenge.':mode==='expired'?'The challenge expired before it was accepted.':'The challenge was cancelled.';visibleMemberChallenge=null;visibleOutgoingMemberChallenge=null;}memberChallengeToast.hidden=false;}
-  async function loadChallengeNotifications(){try{const rows=await memberRpc('ability_chess_list_member_challenges');await detectAcceptedChallenges(rows||[]);if(onlineSession)return;const incoming=(rows||[]).find(c=>c.status==='pending'&&c.direction==='incoming'&&c.challenge_type==='direct');const outgoing=(rows||[]).find(c=>c.status==='pending'&&c.direction==='outgoing'&&c.challenge_type==='direct');const terminal=(rows||[]).find(c=>c.direction==='outgoing'&&['declined','cancelled','expired'].includes(c.status)&&!notifiedChallengeStatuses.has(`${c.challenge_id}:${c.status}`));const incomingCount=(rows||[]).filter(c=>c.status==='pending'&&(c.direction==='incoming'||c.direction==='open')).length;openMembersBtn.textContent=incomingCount?`Member challenges (${incomingCount})`:'Open member lobby';if(incoming)showMemberChallengeToast('incoming',incoming);else if(outgoing)showMemberChallengeToast('outgoing',outgoing);else if(terminal){notifiedChallengeStatuses.add(`${terminal.challenge_id}:${terminal.status}`);showMemberChallengeToast(terminal.status,terminal);}else{visibleMemberChallenge=null;visibleOutgoingMemberChallenge=null;memberChallengeToast.hidden=true;}}catch{}}
+  async function loadChallengeNotifications(){try{const rows=await memberRpc('ability_chess_list_member_challenges');await detectAcceptedChallenges(rows||[]);const activelyPlaying=!!(onlineSession&&game?.mode==='online'&&game.onlineStarted&&!game.over);if(activelyPlaying)return;const incoming=(rows||[]).find(c=>c.status==='pending'&&c.direction==='incoming'&&c.challenge_type==='direct');const outgoing=(rows||[]).find(c=>c.status==='pending'&&c.direction==='outgoing'&&c.challenge_type==='direct');const terminal=(rows||[]).find(c=>c.direction==='outgoing'&&['declined','cancelled','expired'].includes(c.status)&&!notifiedChallengeStatuses.has(`${c.challenge_id}:${c.status}`));const incomingCount=(rows||[]).filter(c=>c.status==='pending'&&(c.direction==='incoming'||c.direction==='open')).length;openMembersBtn.textContent=incomingCount?`Member challenges (${incomingCount})`:'Open member lobby';if(incoming)showMemberChallengeToast('incoming',incoming);else if(outgoing)showMemberChallengeToast('outgoing',outgoing);else if(terminal){notifiedChallengeStatuses.add(`${terminal.challenge_id}:${terminal.status}`);showMemberChallengeToast(terminal.status,terminal);}else{visibleMemberChallenge=null;visibleOutgoingMemberChallenge=null;memberChallengeToast.hidden=true;}}catch(e){console.error('Member challenge notification check failed',e);if(memberSession&&memberStatus)memberStatus.textContent=`Challenge notifications: ${e.message}`;}}
   async function openMemberLobby(){memberModal.hidden=false;memberStatus.textContent='';renderMemberAuth();if(memberSession){if(Date.now()/1000>(memberSession.expires_at||0)-30)await refreshMemberToken();await loadMyProfile();renderMemberTabs();await loadMemberList();startMemberPolling();}}
   function onlineState(){ const copy=JSON.parse(JSON.stringify(game)); delete copy.clockLastTick; delete copy.selected; delete copy.legalMoves; delete copy.turnLegalMoves; delete copy.activeAbility; delete copy.awaitingAbilityTarget; delete copy.abilitySelection; delete copy.selectedAsPremove; delete copy.premoveQueue; delete copy.endAnnounced; return copy; }
   function restoreOnlineState(state){
@@ -2657,7 +2657,19 @@
     offerDrawBtn.textContent=outgoing ? 'Cancel Draw Offer' : 'Offer Draw';
     acceptDrawBtn.hidden=game?.mode==='online' || !incoming;
     declineDrawBtn.hidden=game?.mode==='online' || !incoming;
-    drawOfferToast.hidden=!(game?.mode==='online' && incoming);
+    const showOnlineToast=game?.mode==='online' && (incoming || outgoing);
+    drawOfferToast.hidden=!showOnlineToast;
+    if(showOnlineToast){
+      drawOfferToastTitle.textContent=incoming?'Draw offer':'Draw offer sent';
+      drawOfferToastText.textContent=incoming?'Your opponent has offered a draw.':'Waiting for your opponent to respond.';
+      toastAcceptDrawBtn.hidden=!incoming;
+      toastDeclineDrawBtn.hidden=!incoming;
+      toastCancelDrawBtn.hidden=!outgoing;
+    } else {
+      toastAcceptDrawBtn.hidden=false;
+      toastDeclineDrawBtn.hidden=false;
+      toastCancelDrawBtn.hidden=true;
+    }
   }
 
   function renderRematchControls(){
@@ -3051,6 +3063,11 @@ ${portalTitle}` : portalTitle;
   });
   toastAcceptDrawBtn.addEventListener('click',()=>acceptDrawBtn.click());
   toastDeclineDrawBtn.addEventListener('click',()=>declineDrawBtn.click());
+  toastCancelDrawBtn.addEventListener('click',()=>{
+    if(!game || game.over) return;
+    const actor=drawActorColor();
+    if(actor && game.drawOffer===actor) offerDrawBtn.click();
+  });
   acceptRematchBtn.addEventListener('click',()=>{ if(game?.rematchChallenge && game.rematchChallenge.from!==game.playerColor) beginOnlineRematch(); });
   declineRematchBtn.addEventListener('click',()=>{ if(game?.rematchChallenge && game.rematchChallenge.from!==game.playerColor){ game.rematchChallenge=null; render(); queueMicrotask(syncOnlineState); } });
   cancelRematchBtn.addEventListener('click',()=>{ if(game?.rematchChallenge?.from===game.playerColor){ game.rematchChallenge=null; render(); queueMicrotask(syncOnlineState); } });
@@ -3150,6 +3167,8 @@ ${portalTitle}` : portalTitle;
   });
   window.addEventListener('scroll',()=>document.querySelectorAll('.ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible').forEach(t=>t.classList.remove('tooltip-visible')),true);
   window.addEventListener('resize',()=>document.querySelectorAll('.ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible').forEach(t=>t.classList.remove('tooltip-visible')));
+  window.addEventListener('focus',()=>{if(memberSession)loadChallengeNotifications();});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&memberSession)loadChallengeNotifications();});
 
   importAuthRedirectSession();
   buildBoardPresets(); applySettings();
