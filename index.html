@@ -336,7 +336,7 @@
         <button id="newGameBtn">New Game</button>
       </div>
     </div>
-    <div id="analysisBanner" class="analysis-banner">Analysis mode — use ← and → to replay the game. The move log and status icons update with each position.</div>
+    <div id="analysisBanner" class="analysis-banner">Analysis mode — use ← and → to replay. Select or drag a piece from any reviewed position to begin a private variation branch.</div>
     <div class="clock-row"><div id="whiteClock" class="clock active"><span>White</span><span id="whiteClockTime" class="clock-time">10:00</span></div><div id="blackClock" class="clock"><span>Black</span><span id="blackClockTime" class="clock-time">10:00</span></div></div><div id="connectionStatus" class="connection-status connected" hidden>Connected</div>
     <div class="board-shell"><div id="board" class="board" role="grid" aria-label="Ability Chess board"></div><svg id="annotationLayer" class="annotation-layer" viewBox="0 0 8 8" preserveAspectRatio="none" aria-hidden="true"></svg></div>
   </div>
@@ -1151,8 +1151,8 @@
     const target=Math.max(0,Math.min(len-1,current+delta));
     if(target===current)return;
     if(settings.animations){
-      if(delta>0){const mv=game.historySnapshots[target]?.move;if(mv)queueMoveAnimation({from:mv.from,to:mv.portalExit||mv.to});}
-      else{const mv=game.historySnapshots[current]?.move;if(mv)queueMoveAnimation({from:mv.portalExit||mv.to,to:mv.from});}
+      if(delta>0){const mv=game.historySnapshots[target]?.move;if(mv?.from&&(mv.portalExit||mv.to))queueMoveAnimation({from:mv.from,to:mv.portalExit||mv.to});}
+      else{const mv=game.historySnapshots[current]?.move;if(mv?.from&&(mv.portalExit||mv.to))queueMoveAnimation({from:mv.portalExit||mv.to,to:mv.from});}
     }
     historyViewIndex=target===len-1?null:target;
     render();
@@ -1782,7 +1782,7 @@
     try{const rows=await memberRpc('ability_chess_list_game_history');historyList.replaceChildren();if(!rows?.length){historyList.innerHTML='<div class="history-empty">No completed games have been saved yet.</div>';return;}for(const row of rows){const card=document.createElement('article');card.className='history-card';const info=document.createElement('div');const result=historyResultLabel(row);const resultClass=row.result==='win'?'history-result-win':row.result==='loss'?'history-result-loss':'history-result-draw';const when=new Date(row.played_at).toLocaleString();info.innerHTML=`<div class="history-title ${resultClass}">${escapeHtml(result)}${row.opponent_name?` vs. ${escapeHtml(row.opponent_name)}`:''}</div><div class="history-meta">${escapeHtml(when)} · ${escapeHtml(row.mode||'game')} · ${escapeHtml(row.result_reason||'completed')}<br>${escapeHtml(historySettingsText(row.settings||{}))}</div>`;const btn=document.createElement('button');btn.type='button';btn.className='history-analysis-btn';btn.textContent='Analysis';btn.addEventListener('click',()=>openSavedGameAnalysis(row.game_id));card.append(info,btn);historyList.append(card);}}catch(e){historyList.innerHTML=`<div class="history-empty">${escapeHtml(e.message)}</div>`;}
   }
   async function openSavedGameAnalysis(gameId){
-    try{const replay=await memberRpc('ability_chess_get_game_replay',{p_game_id:gameId});if(!replay?.historySnapshots?.length)throw new Error('This replay is unavailable.');stopClockLoop();game=cloneState(replay.historySnapshots.at(-1));game.historySnapshots=replay.historySnapshots;game.clocks=replay.final?.clocks||{w:Number(replay.settings?.baseSeconds||0),b:Number(replay.settings?.baseSeconds||0)};game.initialTime=Number(replay.settings?.baseSeconds||0);game.increment=Number(replay.settings?.increment||0);game.startingPoints=Number(replay.settings?.startingPoints||0);game.mode='analysis';game.over=true;game.winner=replay.final?.winner??null;game.resultReason=replay.final?.resultReason||'';game.resultDetail=replay.final?.resultDetail||'';game.lastMessage=replay.final?.lastMessage||'Saved game analysis.';game.playerColor=replay.playerColor||null;game.selected=null;game.legalMoves=[];analysisMode=true;historyViewIndex=0;gameScreen.classList.add('analysis-mode');resultModal.hidden=true;resultModal.style.display='none';showScreen('game');gameModeLabel.innerHTML='Mode: <b>Analysis</b>';render();}catch(e){historyList.insertAdjacentHTML('afterbegin',`<div class="history-empty">${escapeHtml(e.message)}</div>`);}
+    try{const replay=await memberRpc('ability_chess_get_game_replay',{p_game_id:gameId});if(!replay?.historySnapshots?.length)throw new Error('This replay is unavailable.');stopClockLoop();game=cloneState(replay.historySnapshots.at(-1));game.historySnapshots=replay.historySnapshots;game.clocks=replay.final?.clocks||{w:Number(replay.settings?.baseSeconds||0),b:Number(replay.settings?.baseSeconds||0)};game.initialTime=Number(replay.settings?.baseSeconds||0);game.increment=Number(replay.settings?.increment||0);game.startingPoints=Number(replay.settings?.startingPoints||0);game.mode='analysis';game.over=true;game.winner=replay.final?.winner??null;game.resultReason=replay.final?.resultReason||'';game.resultDetail=replay.final?.resultDetail||'';game.lastMessage=replay.final?.lastMessage||'Saved game analysis.';game.playerColor=replay.playerColor||null;game.selected=null;game.legalMoves=[];game.analysisPracticeActive=false;game.analysisOriginalSnapshots=replay.historySnapshots.map(cloneState);analysisMode=true;historyViewIndex=0;gameScreen.classList.add('analysis-mode');resultModal.hidden=true;resultModal.style.display='none';showScreen('game');gameModeLabel.innerHTML='Mode: <b>Analysis</b>';render();}catch(e){historyList.insertAdjacentHTML('afterbegin',`<div class="history-empty">${escapeHtml(e.message)}</div>`);}
   }
 
   function endGame(winner, reason, detail){
@@ -1984,6 +1984,7 @@
     game.selected=null;game.selectedAsPremove=false;game.legalMoves=[];game.activeAbility=null;game.awaitingAbilityTarget=false;
     game.premove=null;if(Array.isArray(game.premoveQueue))game.premoveQueue.length=0;
     game.lastMessage=replacedType?`${up.name} purchased as a replacement. Turn complete.`:`${up.name} purchased. Turn complete.`;
+    recordHistorySnapshot({action:'upgrade',upgradeId:up.id,upgradeName:up.name,color,replacedType:replacedType||null});
     closeUpgradeReplaceDialog();
     finishTurn();
   }
@@ -2323,8 +2324,46 @@
     }
   }
 
+  function beginAnalysisVariation(){
+    if(!game||game.mode!=='analysis'||game.analysisPracticeActive)return true;
+    const sourceSnapshots=Array.isArray(game.analysisOriginalSnapshots)&&game.analysisOriginalSnapshots.length?game.analysisOriginalSnapshots:game.historySnapshots;
+    const index=historyViewIndex===null?Math.max(0,(sourceSnapshots?.length||1)-1):historyViewIndex;
+    const source=sourceSnapshots?.[index];
+    if(!source)return false;
+    const branch=cloneState(source);
+    const preservedOriginal=sourceSnapshots.map(cloneState);
+    const branchSnapshots=sourceSnapshots.slice(0,index+1).map(cloneState);
+    game=branch;
+    game.mode='analysis';
+    game.analysisPracticeActive=true;
+    game.analysisOriginalSnapshots=preservedOriginal;
+    game.historySnapshots=branchSnapshots;
+    game.over=false;
+    game.winner=null;
+    game.resultReason='';
+    game.resultDetail='';
+    game.endAnnounced=false;
+    game.playerColor=null;
+    game.selected=null;
+    game.selectedAsPremove=false;
+    game.legalMoves=[];
+    game.premove=null;
+    game.premoveQueue=[];
+    game.clockLastTick=null;
+    historyViewIndex=null;
+    game.lastMessage=`Variation practice from turn ${index}. ${game.turn==='w'?'White':'Black'} to move.`;
+    evaluateGameStatus();
+    if(game.over){game.over=false;game.winner=null;game.resultReason='';game.resultDetail='';game.lastMessage='This position is terminal; choose an earlier position to practice a variation.';}
+    gameScreen.classList.add('analysis-mode');
+    gameModeLabel.innerHTML='Mode: <b>Analysis variation</b>';
+    render();
+    return !game.over;
+  }
+
   function onSquareClick(r,c){
-    if (!game || game.over || historyViewIndex!==null) return;
+    if (!game) return;
+    if(game.mode==='analysis'&&!game.analysisPracticeActive){if(!beginAnalysisVariation())return;}
+    if (game.over || historyViewIndex!==null) return;
     clearAnnotations();
 
     if (isPremoveWindow()) {
@@ -2381,6 +2420,7 @@
 
 
   function startDrag(r,c){
+    if(game?.mode==='analysis'&&!game.analysisPracticeActive){if(!beginAnalysisVariation())return false;}
     if (!canInteract()) return false;
     if (game.awaitingAbilityTarget && game.activeAbility) return false;
     clearAnnotations();
@@ -3250,7 +3290,7 @@
     }
     playPendingMoveAnimation();
     renderAnnotations();
-    statusEl.textContent = historyViewIndex!==null ? `Reviewing move ${historyViewIndex} of ${Math.max(0,(game?.historySnapshots?.length||1)-1)}. Use ← and → to navigate.` : (game ? game.lastMessage : 'Press New Game to start.');
+    statusEl.textContent = historyViewIndex!==null ? `Reviewing turn ${historyViewIndex} of ${Math.max(0,(game?.historySnapshots?.length||1)-1)}. Use ← and → to navigate, or move a piece to practice a variation.` : (game?.mode==='analysis'&&game?.analysisPracticeActive ? `Variation practice · ${game.lastMessage}` : (game ? game.lastMessage : 'Press New Game to start.'));
     logEl.replaceChildren();
     const logState=renderState||game;
     if (logState && Array.isArray(logState.log) && logState.log.length) {
@@ -3281,7 +3321,8 @@
       const active = panelState?.activeAbility === ab.id;
       el.classList.toggle('active', active);
       const viewerColor=abilityPanelViewerColor(panelState);
-      const disabled = !panelState || game?.mode==='analysis' || panelState.over || panelState.abilitiesEnabled===false || panelState.points[viewerColor] < ab.cost || panelState.abilityUsed || panelState.turn!==viewerColor;
+      const analysisLocked=game?.mode==='analysis'&&!game?.analysisPracticeActive;
+      const disabled = !panelState || analysisLocked || panelState.over || panelState.abilitiesEnabled===false || panelState.points[viewerColor] < ab.cost || panelState.abilityUsed || panelState.turn!==viewerColor;
       el.disabled = false;
       if(disabled && !active) el.setAttribute('aria-disabled','true'); else el.removeAttribute('aria-disabled');
     });
