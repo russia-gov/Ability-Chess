@@ -37,7 +37,7 @@
   .selected{outline:4px solid #44c2ff;outline-offset:-4px}
   .sq.last-move::before{content:'';position:absolute;inset:0;background:rgba(246,232,72,.58);z-index:1;pointer-events:none}
   .sq.king-in-check{box-shadow:inset 0 0 0 5px #ef4444,inset 0 0 24px rgba(239,68,68,.72)}
-  .premove-ghost{position:absolute;inset:7%;z-index:5;opacity:.58;pointer-events:none;filter:saturate(.85) drop-shadow(0 2px 2px rgba(0,0,0,.45))}
+  .premove-ghost{position:absolute;inset:0;display:grid;place-items:center;z-index:5;opacity:1;pointer-events:none;filter:none}
   .connection-status{display:inline-flex;align-items:center;gap:6px;margin-left:8px;font-size:11px;color:#aeb8c3;font-weight:700}.connection-status::before{content:'';width:8px;height:8px;border-radius:50%;background:#94a3b8}.connection-status.connected::before{background:#22c55e}.connection-status.reconnecting::before{background:#f59e0b;animation:pulse 1s infinite}.connection-status.disconnected::before{background:#ef4444}@keyframes pulse{50%{opacity:.35}}
   .legal::after{content:'';width:18%;height:18%;border-radius:50%;background:rgba(0,0,0,.35);position:absolute}
   .capture::after{content:'';position:absolute;inset:8%;border-radius:50%;border:4px solid rgba(180,0,0,.7)}
@@ -845,16 +845,38 @@
   async function acceptMemberChallenge(id){memberStatus.textContent='Accepting challenge…';try{const rows=await memberRpc('ability_chess_accept_member_challenge',{p_challenge_id:id});const row=rows?.[0];if(!row)throw new Error('Challenge could not be accepted.');visibleMemberChallenge=null;memberChallengeToast.hidden=true;onlineSession={id:row.room_id,code:row.room_code,token:row.seat_token,color:row.assigned_color,role:'guest',version:Number(row.room_version),waiting:false,memberChallenge:id};localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));selectedGameMode='online';newGame();restoreOnlineState(row.state||{});const cfg=row.room_settings||{};game.mode='online';game.onlineStarted=true;game.playerColor=row.assigned_color;game.hostColor=cfg.hostColor||other(row.assigned_color);game.initialTime=Number(cfg.base||10)*60;game.increment=Number(cfg.increment||0);game.startingPoints=Number(cfg.startingPoints||0);game.upgradeLimit=Math.max(0,Number(cfg.upgradeLimit??3));game.abilitiesEnabled=cfg.abilitiesEnabled!==false;game.upgradesEnabled=cfg.upgradesEnabled!==false;game.clocks={w:game.initialTime,b:game.initialTime};game.points={w:game.startingPoints,b:game.startingPoints};game.clockLastTick=performance.now();game.lastMessage='Member challenge started. White to move.';await syncOnlineState();memberModal.hidden=true;onlineModal.hidden=true;showScreen('game');gameModeLabel.innerHTML=`Mode: <b>Online — ${game.playerColor==='w'?'White':'Black'}</b>`;startOnlinePolling();startClockLoop();renderAbilities();render();}catch(e){memberStatus.textContent=e.message;}}
   async function cancelMemberChallenge(id){try{await memberRpc('ability_chess_cancel_member_challenge',{p_challenge_id:id});visibleOutgoingMemberChallenge=null;memberChallengeToast.hidden=true;memberStatus.textContent='Challenge cancelled.';if(!memberModal.hidden)await loadMemberList();await loadChallengeNotifications();}catch(e){memberStatus.textContent=e.message;}}
   async function declineMemberChallenge(id){try{await memberRpc('ability_chess_decline_member_challenge',{p_challenge_id:id});if(visibleMemberChallenge?.challenge_id===id){visibleMemberChallenge=null;memberChallengeToast.hidden=true;}memberStatus.textContent='Challenge declined.';if(!memberModal.hidden)await loadMemberList();}catch(e){memberStatus.textContent=e.message;}}
+  async function launchAcceptedOutgoingChallenge(c){
+    onlineSession={id:c.room_id,code:c.room_code,token:c.seat_token,color:c.assigned_color,role:'host',version:Number(c.room_version||0),waiting:false,memberChallenge:c.challenge_id};
+    localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));
+    const rows=await supabaseRpc('get_ability_chess_room',{p_room_id:onlineSession.id,p_seat_token:onlineSession.token});
+    const room=rows?.[0];
+    if(!room)throw new Error('The accepted challenge room could not be opened.');
+    onlineSession.version=Number(room.room_version||onlineSession.version||0);
+    localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));
+    selectedGameMode='online';
+    newGame();
+    restoreOnlineState(room.state||{});
+    game.mode='online';
+    game.onlineStarted=true;
+    game.playerColor=c.assigned_color;
+    game.hostColor=c.assigned_color;
+    game.clockLastTick=performance.now();
+    memberModal.hidden=true;
+    onlineModal.hidden=true;
+    memberChallengeToast.hidden=true;
+    visibleOutgoingMemberChallenge=null;
+    showScreen('game');
+    gameModeLabel.innerHTML=`Mode: <b>Online — ${game.playerColor==='w'?'White':'Black'}</b>`;
+    startOnlinePolling();
+    startClockLoop();
+    renderAbilities();
+    render();
+  }
   async function detectAcceptedChallenges(rows){
     for(const c of rows){
-      if(c.status!=='accepted'||c.direction!=='outgoing'||handledChallengeIds.has(c.challenge_id)||onlineSession)continue;
+      if(c.status!=='accepted'||c.direction!=='outgoing'||handledChallengeIds.has(c.challenge_id))continue;
       handledChallengeIds.add(c.challenge_id);
-      onlineSession={id:c.room_id,code:c.room_code,token:c.seat_token,color:c.assigned_color,role:'host',version:Number(c.room_version),waiting:false,memberChallenge:c.challenge_id};
-      localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));
-      memberModal.hidden=true;
-      onlineModal.hidden=true;
-      startOnlinePolling();
-      await pollOnlineRoom();
+      try{await launchAcceptedOutgoingChallenge(c);}catch(e){handledChallengeIds.delete(c.challenge_id);console.error('Could not launch accepted challenge',e);memberStatus.textContent=e.message;}
       break;
     }
   }
@@ -871,6 +893,14 @@
       if(incoming){
         showMemberChallengeToast('incoming',incoming);
         return;
+      }
+
+      // The private inbox is authoritative for received challenges. If the
+      // sender cancelled, the notification row is deleted and the receiver's
+      // popup must disappear before any outgoing/status UI is considered.
+      if(visibleMemberChallenge){
+        visibleMemberChallenge=null;
+        memberChallengeToast.hidden=true;
       }
 
       if(!memberSession?.access_token){
@@ -2184,8 +2214,8 @@
     if (!canInteract()) return false;
     if (game.awaitingAbilityTarget && game.activeAbility) return false;
     clearAnnotations();
-    const piece = pieceAt(game.board, r, c);
     const premove = isPremoveWindow();
+    const piece = premove ? premovePreviewPieceAt(r,c) : pieceAt(game.board, r, c);
     const allowedColor = premove ? humanPremoveColor() : game.turn;
     if (!piece || colorOf(piece)!==allowedColor) return false;
     const legal = premove ? premoveMovesFor(r,c) : legalMovesFor(game, r, c);
@@ -2816,6 +2846,9 @@
     boardEl.innerHTML = '';
     const sel = game?.selected;
     const legal = game?.legalMoves || [];
+    const queuedPremovesForDisplay=Array.isArray(game?.premoveQueue)?game.premoveQueue:(game?.premove?[game.premove]:[]);
+    const premoveDisplayState=game&&queuedPremovesForDisplay.length?premovePreviewState():null;
+    const displayBoard=premoveDisplayState?.board||game?.board;
     for (let displayR=0;displayR<8;displayR++){
       for (let displayC=0;displayC<8;displayC++){
         const r=boardIsFlipped()?7-displayR:displayR;
@@ -2823,12 +2856,12 @@
         const sq = document.createElement('div');
         sq.className = 'sq ' + (((r+c)%2===0) ? 'light' : 'dark');
         if (game?.lastMove && ((game.lastMove.from.r===r && game.lastMove.from.c===c) || (game.lastMove.to.r===r && game.lastMove.to.c===c))) sq.classList.add('last-move');
-        const p = game?.board?.[r]?.[c];
+        const p = displayBoard?.[r]?.[c];
         if(p&&typeOf(p)==='k'&&inCheck(game,colorOf(p)))sq.classList.add('king-in-check');
         sq.innerHTML = p ? pieceMarkup(p) : '';
         if(p){const upId=upgradeFor(game,colorOf(p),typeOf(p));if(upId){const up=upgradeDefinition(upId);const marker=document.createElement('span');marker.className=`upgrade-marker upgrade-marker-${typeOf(p)}`;marker.textContent='▲';marker.tabIndex=0;marker.setAttribute('role','img');marker.setAttribute('aria-label',`${up.name} upgrade. ${up.rule}`);marker.title=`${up.name} upgrade`;const tip=document.createElement('span');tip.className='piece-upgrade-tooltip';tip.textContent=`${up.name}: ${up.rule} This upgrade affects every friendly ${PIECE_NAMES[up.type].toLowerCase()}.`;sq.append(marker,tip);}}
         if (sel && sel.r===r && sel.c===c) sq.classList.add(game?.selectedAsPremove ? 'premove-selected' : 'selected');
-        const queuedPremoves=Array.isArray(game?.premoveQueue)?game.premoveQueue:(game?.premove?[game.premove]:[]);
+        const queuedPremoves=queuedPremovesForDisplay;
         if (queuedPremoves.some(pm=>pm.from.r===r&&pm.from.c===c)) sq.classList.add('premove-origin');
         if (queuedPremoves.some(pm=>pm.to.r===r&&pm.to.c===c)) sq.classList.add('premove-destination');
         const legalMove = legal.find(m => m.to.r===r && m.to.c===c);
@@ -2963,10 +2996,6 @@ ${portalTitle}` : portalTitle;
         sq.title = algebraic(r,c);
         sq.setAttribute('role', 'gridcell');
         sq.setAttribute('aria-label', `${algebraic(r,c)}${p ? `, ${p[0]==='w'?'white':'black'} ${({p:'pawn',n:'knight',b:'bishop',r:'rook',q:'queen',k:'king'})[p[1]]}` : ', empty'}`);
-        if(game && Array.isArray(game.premoveQueue)){
-          const idx=game.premoveQueue.findIndex(pm=>pm.to.r===r&&pm.to.c===c);
-          if(idx>=0){const preview=premovePreviewState();const gp=pieceAt(preview.board,r,c);if(gp){const ghost=document.createElement('div');ghost.className='premove-ghost';ghost.innerHTML=pieceMarkup(gp);sq.appendChild(ghost);}}
-        }
         boardEl.appendChild(sq);
       }
     }
