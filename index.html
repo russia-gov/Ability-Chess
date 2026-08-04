@@ -819,7 +819,7 @@
   async function pollPrivateChallengeInbox(){
     const key=memberChallengeInboxKey||await ensureChallengeInboxKey();
     if(!key)return [];
-    const res=await fetch(`${SUPABASE_URL}/rest/v1/rpc/ability_chess_poll_private_challenge_inbox`,{
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/rpc/ability_chess_poll_private_challenge_events`,{
       method:'POST',
       headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Cache-Control':'no-cache',Pragma:'no-cache'},
       cache:'no-store',
@@ -884,38 +884,45 @@
   function showMemberChallengeToast(mode,challenge){acceptMemberChallengeToastBtn.hidden=mode!=='incoming';declineMemberChallengeToastBtn.hidden=mode!=='incoming';cancelMemberChallengeToastBtn.hidden=mode!=='outgoing';dismissMemberChallengeToastBtn.hidden=!['declined','cancelled','expired'].includes(mode);if(mode==='incoming'){const who=challenge.other_display_name?`${challenge.other_display_name} (@${challenge.other_username})`:`@${challenge.other_username||'A member'}`;memberChallengeToastTitle.textContent='Member challenge';memberChallengeToastText.textContent=`${who} challenged you. ${challengeSummary(challenge.settings||{})}.`;visibleMemberChallenge=challenge;visibleOutgoingMemberChallenge=null;}else if(mode==='outgoing'){const who=challenge.other_display_name?`${challenge.other_display_name} (@${challenge.other_username})`:'your opponent';memberChallengeToastTitle.textContent='Challenge sent';memberChallengeToastText.textContent=`Waiting for ${who}. ${challengeSummary(challenge.settings||{})}.`;visibleOutgoingMemberChallenge=challenge;visibleMemberChallenge=null;}else{memberChallengeToastTitle.textContent=mode==='declined'?'Challenge declined':mode==='expired'?'Challenge expired':'Challenge cancelled';memberChallengeToastText.textContent=mode==='declined'?'Your opponent declined the challenge.':mode==='expired'?'The challenge expired before it was accepted.':'The challenge was cancelled.';visibleMemberChallenge=null;visibleOutgoingMemberChallenge=null;}memberChallengeToast.hidden=false;memberChallengeToast.style.removeProperty('display');memberChallengeToast.closest('.game-toast-stack')?.style.removeProperty('display');document.body.appendChild(memberChallengeToast.closest('.game-toast-stack'));}
   async function loadChallengeNotifications(retried=false){
     try{
-      const incomingRows=await pollPrivateChallengeInbox();
-      const incoming=incomingRows.find(c=>c.status==='pending');
-      const incomingCount=incomingRows.filter(c=>c.status==='pending').length;
+      const events=await pollPrivateChallengeInbox();
+
+      // Acceptance is delivered through the same private inbox that reliably
+      // delivers incoming challenges. The challenger no longer depends on the
+      // authenticated member-list poll to discover that the game has started.
+      const acceptedOutgoing=events.find(c=>c.status==='accepted'&&c.direction==='outgoing'&&!handledChallengeIds.has(c.challenge_id));
+      if(acceptedOutgoing){
+        handledChallengeIds.add(acceptedOutgoing.challenge_id);
+        try{
+          await launchAcceptedOutgoingChallenge(acceptedOutgoing);
+        }catch(e){
+          handledChallengeIds.delete(acceptedOutgoing.challenge_id);
+          throw e;
+        }
+        return;
+      }
+
+      const incoming=events.find(c=>c.status==='pending'&&c.direction==='incoming');
+      const incomingCount=events.filter(c=>c.status==='pending'&&c.direction==='incoming').length;
       openMembersBtn.textContent=incomingCount?`Member challenges (${incomingCount})`:(memberSession?'Open member lobby':'Sign in for member challenges');
 
-      // Incoming delivery is intentionally handled first and does not depend on a live access token.
       if(incoming){
         showMemberChallengeToast('incoming',incoming);
         return;
       }
 
-      // The private inbox is authoritative for received challenges. If the
-      // sender cancelled, the notification row is deleted and the receiver's
-      // popup must disappear before any outgoing/status UI is considered.
       if(visibleMemberChallenge){
         visibleMemberChallenge=null;
         memberChallengeToast.hidden=true;
       }
 
-      if(!memberSession?.access_token){
-        visibleMemberChallenge=null;
-        if(!visibleOutgoingMemberChallenge)memberChallengeToast.hidden=true;
-        return;
-      }
-
-      const rows=await memberRpc('ability_chess_list_member_challenges');
-      await detectAcceptedChallenges(rows||[]);
-      const outgoing=(rows||[]).find(c=>c.status==='pending'&&c.direction==='outgoing'&&c.challenge_type==='direct');
-      const terminal=(rows||[]).find(c=>c.direction==='outgoing'&&['declined','cancelled','expired'].includes(c.status)&&!notifiedChallengeStatuses.has(`${c.challenge_id}:${c.status}`));
+      const outgoing=events.find(c=>c.status==='pending'&&c.direction==='outgoing');
+      const terminal=events.find(c=>c.direction==='outgoing'&&['declined','cancelled','expired'].includes(c.status)&&!notifiedChallengeStatuses.has(`${c.challenge_id}:${c.status}`));
       if(outgoing){showMemberChallengeToast('outgoing',outgoing);return;}
       if(terminal){notifiedChallengeStatuses.add(`${terminal.challenge_id}:${terminal.status}`);showMemberChallengeToast(terminal.status,terminal);return;}
-      visibleMemberChallenge=null;visibleOutgoingMemberChallenge=null;memberChallengeToast.hidden=true;
+
+      visibleMemberChallenge=null;
+      visibleOutgoingMemberChallenge=null;
+      memberChallengeToast.hidden=true;
     }catch(e){
       console.error('Member challenge notification check failed',e);
       if(!retried&&memberSession?.refresh_token&&await refreshMemberToken()){
