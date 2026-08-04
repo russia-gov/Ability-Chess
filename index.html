@@ -764,7 +764,7 @@
     history.replaceState(null,'',window.location.pathname);
     return true;
   }
-  async function memberRpc(name,body={}){ const res=await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`,{method:'POST',headers:authHeaders(),body:JSON.stringify(body)}); const data=await res.json().catch(()=>null); if(res.status===401){ clearMemberSession(); throw new Error('Your session expired. Please sign in again.'); } if(!res.ok) throw new Error(data?.message||data?.hint||'Member request failed.'); return data; }
+  async function memberRpc(name,body={}){ const res=await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`,{method:'POST',headers:{...authHeaders(),'Cache-Control':'no-cache',Pragma:'no-cache'},cache:'no-store',body:JSON.stringify(body)}); const data=await res.json().catch(()=>null); if(res.status===401){ clearMemberSession(); throw new Error('Your session expired. Please sign in again.'); } if(!res.ok) throw new Error(data?.message||data?.hint||'Member request failed.'); return data; }
   function saveMemberSession(session){ memberSession=session; localStorage.setItem('abilityChessMemberSession',JSON.stringify(session)); startGlobalChallengeWatcher(); }
   function clearMemberSession(){ memberSession=null; memberProfile=null; localStorage.removeItem('abilityChessMemberSession'); clearInterval(memberPollTimer); memberPollTimer=null; clearInterval(globalChallengeWatcherTimer); globalChallengeWatcherTimer=null; renderMemberAuth(); }
   async function refreshMemberToken(){ if(!memberSession?.refresh_token)return false; try{const data=await authRequest('token?grant_type=refresh_token',{refresh_token:memberSession.refresh_token}); data.expires_at=Math.floor(Date.now()/1000)+(data.expires_in||3600); saveMemberSession(data);return true;}catch(e){console.warn('Member token refresh failed',e);return false;} }
@@ -777,7 +777,7 @@
   function challengeSummary(cfg){return `${Number(cfg.base||10)}+${Number(cfg.increment||0)} · ${Number(cfg.startingPoints||0)} starting points · abilities ${cfg.abilitiesEnabled===false?'off':'on'} · upgrades ${cfg.upgradesEnabled===false?'off':'on'} · ${Number(cfg.upgradeLimit??3)} upgrade slots`;}
   function updateMemberChallengeSetupOutputs(){challengeBaseTimeOutput.textContent=`${challengeBaseTimeSlider.value} min`;challengeIncrementOutput.textContent=`${challengeIncrementSlider.value} sec`;challengeStartingPointsOutput.textContent=`${challengeStartingPointsSlider.value} point${challengeStartingPointsSlider.value==='1'?'':'s'}`;challengeUpgradeLimitOutput.textContent=`${challengeUpgradeLimitSlider.value} type${challengeUpgradeLimitSlider.value==='1'?'':'s'}`;}
   function openMemberChallengeSetup(member=null){pendingChallengeTarget=member;challengeBaseTimeSlider.value=baseTimeSlider.value;challengeIncrementSlider.value=incrementSlider.value;challengeStartingPointsSlider.value=onlineStartingPointsSlider.value||0;challengeUpgradeLimitSlider.value=upgradeLimitSlider.value;challengeAbilitiesEnabledToggle.checked=abilitiesEnabledToggle.checked;challengeUpgradesEnabledToggle.checked=upgradesEnabledToggle.checked;document.querySelector('input[name="challengeHostColor"][value="w"]').checked=true;updateMemberChallengeSetupOutputs();memberChallengeSetupTarget.textContent=member?`Challenge ${member.display_name} (@${member.username}). Choose the rules before sending.`:'Choose the rules before posting this open challenge.';sendMemberChallengeBtn.textContent=member?'Send challenge':'Post open challenge';memberChallengeSetupModal.hidden=false;}
-  async function createMemberChallenge(challengedId=null){const cfg=memberChallengeSettings();const target=pendingChallengeTarget;memberStatus.textContent=challengedId?'Sending challenge…':'Posting open challenge…';sendMemberChallengeBtn.disabled=true;try{selectedGameMode='online';newGame();game.mode='online';game.onlineStarted=false;game.hostColor=cfg.hostColor;game.playerColor=cfg.hostColor;game.initialTime=cfg.base*60;game.increment=cfg.increment;game.startingPoints=cfg.startingPoints;game.clocks={w:cfg.base*60,b:cfg.base*60};game.points={w:cfg.startingPoints,b:cfg.startingPoints};game.upgradeLimit=cfg.upgradeLimit;game.abilitiesEnabled=cfg.abilitiesEnabled;game.upgradesEnabled=cfg.upgradesEnabled;stopClockLoop();const rows=await memberRpc('ability_chess_create_member_challenge',{p_game_state:onlineState(),p_settings:cfg,p_challenged_id:challengedId});const created=rows?.[0];memberChallengeSetupModal.hidden=true;pendingChallengeTarget=null;memberStatus.textContent=challengedId?'Challenge sent. You can cancel it from the notification or My challenges.':'Open challenge posted.';if(challengedId&&created?.challenge_id){showMemberChallengeToast('outgoing',{challenge_id:created.challenge_id,direction:'outgoing',challenge_type:'direct',status:'pending',settings:cfg,other_user_id:challengedId,other_username:target?.username||'',other_display_name:target?.display_name||''});}memberTab='mine';renderMemberTabs();await loadMemberList();startMemberPolling();await loadChallengeNotifications();}catch(e){memberStatus.textContent=e.message;console.error('Could not create member challenge',e);}finally{sendMemberChallengeBtn.disabled=false;}}
+  async function createMemberChallenge(challengedId=null){const cfg=memberChallengeSettings();const target=pendingChallengeTarget;if(!challengedId){memberStatus.textContent='Choose a specific member before sending a challenge.';memberChallengeSetupModal.hidden=true;pendingChallengeTarget=null;return;}memberStatus.textContent='Sending challenge…';sendMemberChallengeBtn.disabled=true;try{selectedGameMode='online';newGame();game.mode='online';game.onlineStarted=false;game.hostColor=cfg.hostColor;game.playerColor=cfg.hostColor;game.initialTime=cfg.base*60;game.increment=cfg.increment;game.startingPoints=cfg.startingPoints;game.clocks={w:cfg.base*60,b:cfg.base*60};game.points={w:cfg.startingPoints,b:cfg.startingPoints};game.upgradeLimit=cfg.upgradeLimit;game.abilitiesEnabled=cfg.abilitiesEnabled;game.upgradesEnabled=cfg.upgradesEnabled;stopClockLoop();const rows=await memberRpc('ability_chess_create_member_challenge',{p_game_state:onlineState(),p_settings:cfg,p_challenged_id:challengedId});const created=rows?.[0];memberChallengeSetupModal.hidden=true;pendingChallengeTarget=null;memberStatus.textContent=challengedId?'Challenge sent. You can cancel it from the notification or My challenges.':'Open challenge posted.';if(challengedId&&created?.challenge_id){showMemberChallengeToast('outgoing',{challenge_id:created.challenge_id,direction:'outgoing',challenge_type:'direct',status:'pending',settings:cfg,other_user_id:challengedId,other_username:target?.username||'',other_display_name:target?.display_name||''});}memberTab='mine';renderMemberTabs();await loadMemberList();startMemberPolling();await loadChallengeNotifications();}catch(e){memberStatus.textContent=e.message;console.error('Could not create member challenge',e);}finally{sendMemberChallengeBtn.disabled=false;}}
   function memberButton(label,handler,cls=''){const b=document.createElement('button');b.type='button';b.textContent=label;if(cls)b.className=cls;b.addEventListener('click',handler);return b;}
   function memberRow(title,meta,actions=[]){const row=document.createElement('div');row.className='member-row';const copy=document.createElement('div');copy.innerHTML=`<div class="member-name">${escapeHtml(title)}</div><div class="member-meta">${escapeHtml(meta)}</div>`;const acts=document.createElement('div');acts.className='member-actions';actions.forEach(a=>acts.appendChild(a));row.append(copy,acts);return row;}
   function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
@@ -801,18 +801,36 @@
   }
   function startMemberPolling(){startGlobalChallengeWatcher();clearInterval(memberPollTimer);const poll=async()=>{if(!memberSession||memberChallengePollBusy)return;memberChallengePollBusy=true;try{if(Date.now()/1000>(memberSession.expires_at||0)-45)await refreshMemberToken();if(memberSession)await loadChallengeNotifications();}finally{memberChallengePollBusy=false;}};poll();memberPollTimer=setInterval(poll,1800);}
   function showMemberChallengeToast(mode,challenge){acceptMemberChallengeToastBtn.hidden=mode!=='incoming';declineMemberChallengeToastBtn.hidden=mode!=='incoming';cancelMemberChallengeToastBtn.hidden=mode!=='outgoing';dismissMemberChallengeToastBtn.hidden=!['declined','cancelled','expired'].includes(mode);if(mode==='incoming'){const who=challenge.other_display_name?`${challenge.other_display_name} (@${challenge.other_username})`:`@${challenge.other_username||'A member'}`;memberChallengeToastTitle.textContent='Member challenge';memberChallengeToastText.textContent=`${who} challenged you. ${challengeSummary(challenge.settings||{})}.`;visibleMemberChallenge=challenge;visibleOutgoingMemberChallenge=null;}else if(mode==='outgoing'){const who=challenge.other_display_name?`${challenge.other_display_name} (@${challenge.other_username})`:'your opponent';memberChallengeToastTitle.textContent='Challenge sent';memberChallengeToastText.textContent=`Waiting for ${who}. ${challengeSummary(challenge.settings||{})}.`;visibleOutgoingMemberChallenge=challenge;visibleMemberChallenge=null;}else{memberChallengeToastTitle.textContent=mode==='declined'?'Challenge declined':mode==='expired'?'Challenge expired':'Challenge cancelled';memberChallengeToastText.textContent=mode==='declined'?'Your opponent declined the challenge.':mode==='expired'?'The challenge expired before it was accepted.':'The challenge was cancelled.';visibleMemberChallenge=null;visibleOutgoingMemberChallenge=null;}memberChallengeToast.hidden=false;memberChallengeToast.style.removeProperty('display');memberChallengeToast.closest('.game-toast-stack')?.style.removeProperty('display');document.body.appendChild(memberChallengeToast.closest('.game-toast-stack'));}
+  async function fetchIncomingChallengeInbox(){
+    const payload=await memberRpc('ability_chess_get_challenge_inbox');
+    const inbox=Array.isArray(payload)?payload[0]:payload;
+    if(!inbox||typeof inbox!=='object')throw new Error('Challenge inbox returned no data.');
+    const incoming=Array.isArray(inbox.incoming)?inbox.incoming:[];
+    return {userId:inbox.user_id||null,incoming};
+  }
   async function loadChallengeNotifications(retried=false){
     if(!memberSession?.access_token)return;
     try{
-      const incomingRows=await memberRpc('ability_chess_get_incoming_member_challenges');
+      let inbox;
+      try{
+        inbox=await fetchIncomingChallengeInbox();
+      }catch(primaryError){
+        console.warn('Primary challenge inbox failed; using compatibility endpoint.',primaryError);
+        const fallback=await memberRpc('ability_chess_get_incoming_member_challenges');
+        inbox={userId:null,incoming:Array.isArray(fallback)?fallback:[]};
+      }
       const rows=await memberRpc('ability_chess_list_member_challenges');
       await detectAcceptedChallenges(rows||[]);
-      const incoming=(incomingRows||[]).find(c=>c.status==='pending');
+      const incoming=(inbox.incoming||[]).find(c=>c.status==='pending');
       const outgoing=(rows||[]).find(c=>c.status==='pending'&&c.direction==='outgoing'&&c.challenge_type==='direct');
       const terminal=(rows||[]).find(c=>c.direction==='outgoing'&&['declined','cancelled','expired'].includes(c.status)&&!notifiedChallengeStatuses.has(`${c.challenge_id}:${c.status}`));
-      const incomingCount=(incomingRows||[]).filter(c=>c.status==='pending').length;
+      const incomingCount=(inbox.incoming||[]).filter(c=>c.status==='pending').length;
       openMembersBtn.textContent=incomingCount?`Member challenges (${incomingCount})`:'Open member lobby';
-      if(incoming){showMemberChallengeToast('incoming',incoming);return;}
+      if(incoming){
+        console.info('Incoming member challenge received',incoming.challenge_id,inbox.userId||'current member');
+        showMemberChallengeToast('incoming',incoming);
+        return;
+      }
       if(outgoing){showMemberChallengeToast('outgoing',outgoing);return;}
       if(terminal){notifiedChallengeStatuses.add(`${terminal.challenge_id}:${terminal.status}`);showMemberChallengeToast(terminal.status,terminal);return;}
       visibleMemberChallenge=null;visibleOutgoingMemberChallenge=null;memberChallengeToast.hidden=true;
@@ -822,6 +840,7 @@
       if(memberSession&&memberStatus)memberStatus.textContent=`Challenge notifications: ${e.message}`;
     }
   }
+
   function startGlobalChallengeWatcher(){
     clearInterval(globalChallengeWatcherTimer);
     const tick=async()=>{
@@ -833,7 +852,7 @@
       }finally{globalChallengeWatcherBusy=false;}
     };
     tick();
-    globalChallengeWatcherTimer=setInterval(tick,1000);
+    globalChallengeWatcherTimer=setInterval(tick,1200);
   }
 
   async function openMemberLobby(){memberModal.hidden=false;memberStatus.textContent='';renderMemberAuth();if(memberSession){if(Date.now()/1000>(memberSession.expires_at||0)-30)await refreshMemberToken();await loadMyProfile();renderMemberTabs();await loadMemberList();startMemberPolling();}}
@@ -3202,6 +3221,7 @@ ${portalTitle}` : portalTitle;
   });
   window.addEventListener('scroll',()=>document.querySelectorAll('.ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible').forEach(t=>t.classList.remove('tooltip-visible')),true);
   window.addEventListener('resize',()=>document.querySelectorAll('.ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible').forEach(t=>t.classList.remove('tooltip-visible')));
+  window.addEventListener('storage',event=>{if(event.key==='abilityChessMemberSession'){try{memberSession=JSON.parse(event.newValue||'null');}catch{memberSession=null;}if(memberSession){startGlobalChallengeWatcher();loadChallengeNotifications();}}});
   window.addEventListener('focus',()=>{if(memberSession){startGlobalChallengeWatcher();loadChallengeNotifications();}});
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&memberSession){startGlobalChallengeWatcher();loadChallengeNotifications();}});
 
