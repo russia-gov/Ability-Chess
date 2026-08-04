@@ -53,8 +53,8 @@
   .status-marker-shield{background:#f97316;color:#fff7ed;border-color:#fed7aa}
   .status-marker-portal{background:#7c3aed;color:#faf5ff;border-color:#ddd6fe}
   .status-marker-freeze{background:#2563eb;color:#eff6ff;border-color:#bfdbfe}
-  .status-marker-tooltip{display:none;position:absolute;left:calc(100% + 8px);top:-2px;width:230px;max-width:min(230px,60vw);padding:8px 10px;border-radius:9px;background:#111820;color:#f8fafc;border:1px solid rgba(255,255,255,.16);box-shadow:0 14px 36px rgba(0,0,0,.76);font-size:12px;line-height:1.4;text-align:left;white-space:normal;pointer-events:none;z-index:30100}
-  .status-marker:hover .status-marker-tooltip,.status-marker:focus-visible .status-marker-tooltip{display:block}
+  .status-marker-tooltip{display:block;position:fixed;left:0;top:0;width:230px;max-width:min(230px,calc(100vw - 24px));padding:8px 10px;border-radius:9px;background:#111820;color:#f8fafc;border:1px solid rgba(255,255,255,.16);box-shadow:0 14px 36px rgba(0,0,0,.76);font-size:12px;line-height:1.4;text-align:left;white-space:normal;pointer-events:none;z-index:2147483647;opacity:0;visibility:hidden}
+  .status-marker-tooltip.tooltip-visible{opacity:1;visibility:visible}
   .status-marker:focus-visible{outline:2px solid #fff;outline-offset:1px}
   .teleport-target{outline:4px dashed var(--accent);outline-offset:-4px}
   button,select{background:#2a3440;color:var(--text);border:1px solid #3d4b5c;border-radius:10px;padding:10px 12px;font-size:14px}
@@ -82,7 +82,7 @@
   button:focus-visible,select:focus-visible,.ability:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
   .ability{width:100%;text-align:left;color:var(--text);cursor:pointer}
   .ability:hover:not(:disabled){transform:translateY(-1px)}
-  .ability:disabled{opacity:1;cursor:not-allowed;background:#171d24;border-color:#303b48;color:#8793a1}.ability:disabled .name,.ability:disabled .cost{opacity:.58}.ability:disabled .ability-tooltip{opacity:1;color:#f8fafc}
+  .ability:disabled,.ability[aria-disabled="true"]{opacity:1;cursor:not-allowed;background:#171d24;border-color:#303b48;color:#8793a1}.ability:disabled .name,.ability:disabled .cost,.ability[aria-disabled="true"] .name,.ability[aria-disabled="true"] .cost{opacity:.58}.ability:disabled .ability-tooltip,.ability[aria-disabled="true"] .ability-tooltip{color:#f8fafc}
   .board-shell{position:relative;width:min(100%,640px);aspect-ratio:1/1;margin:0 auto}
   .annotation-layer{position:absolute;inset:0;width:100%;height:100%;z-index:6;pointer-events:none;overflow:visible}
   .sq.user-highlight::before{content:'';position:absolute;inset:0;background:rgba(239,68,68,.48);z-index:1;pointer-events:none}
@@ -168,7 +168,7 @@
   /* Floating menu descriptions are viewport-positioned so scroll containers cannot clip them. */
   .ability-tooltip,.upgrade-tooltip{position:fixed!important;left:0!important;top:0!important;bottom:auto!important;transform:none!important;z-index:30000!important;display:block!important;opacity:0!important;visibility:hidden!important;pointer-events:none!important;max-width:min(320px,calc(100vw - 24px))!important;width:280px!important}
   .ability:hover .ability-tooltip,.ability:focus-visible .ability-tooltip,.upgrade:hover .upgrade-tooltip,.upgrade:focus-visible .upgrade-tooltip{opacity:0!important;visibility:hidden!important;transform:none!important}
-  .ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible{opacity:1!important;visibility:visible!important;display:block!important}
+  .ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible,.status-marker-tooltip.tooltip-visible,.piece-upgrade-tooltip.tooltip-visible{opacity:1!important;visibility:visible!important;display:block!important}
   /* Only the small marker itself opens an upgraded-piece description. */
   .sq:hover .piece-upgrade-tooltip,.sq:focus-within .piece-upgrade-tooltip{display:none}
   .upgrade-marker:hover + .piece-upgrade-tooltip,.upgrade-marker:focus + .piece-upgrade-tooltip,.upgrade-marker:focus-visible + .piece-upgrade-tooltip{display:block}
@@ -184,6 +184,9 @@
   .upgrade-replace-cancel{width:100%}
 
   .challenge-setup-modal{position:fixed;inset:0;z-index:22500;display:grid;place-items:center;background:rgba(5,8,12,.82);padding:18px}.challenge-setup-modal[hidden]{display:none}.challenge-setup-card{width:min(560px,96vw);max-height:92vh;overflow:auto;background:#20262e;border:1px solid rgba(255,255,255,.13);border-radius:18px;padding:22px;box-shadow:0 22px 60px rgba(0,0,0,.55)}.challenge-setup-card h2{margin:0 0 6px}.challenge-setup-target{color:#cbd3db;margin:0 0 16px}.challenge-setup-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}.challenge-status-toast{border-color:#ffb84d;box-shadow:0 18px 55px rgba(0,0,0,.58),0 0 0 2px rgba(255,184,77,.18)}.challenge-status-toast .game-toast-actions{flex-wrap:wrap}
+
+  .piece-upgrade-tooltip{position:fixed!important;left:0!important;top:0!important;right:auto!important;display:block!important;opacity:0!important;visibility:hidden!important;z-index:2147483647!important;max-width:min(280px,calc(100vw - 24px))!important}
+  .piece-upgrade-tooltip.tooltip-visible{opacity:1!important;visibility:visible!important}
 </style>
 </head>
 <body>
@@ -991,7 +994,7 @@
     gameModeLabel.innerHTML=`Mode: <b>Online — ${keepColor==='w'?'White':'Black'}</b>`;
     // A remotely accepted rematch changes the synchronized game from over to active.
     // Close the old game-over menu immediately so the challenger can play.
-    if(previousGame?.over && !game.over) resultModal.hidden=true;
+    if(previousGame?.over && !game.over) resultModal.hidden=true; resultModal.style.display='none';
     renderAbilities(); render(); if(game.over) showGameOverPopup(); else if(game.onlineStarted!==false) { startClockLoop(); schedulePremoveIfReady(); }
   }
   async function syncOnlineState(){
@@ -1680,6 +1683,8 @@
     botThinkToken++;
     if (botMoveTimer) { clearTimeout(botMoveTimer); botMoveTimer=null; }
     stopClockLoop();
+    game.clockLastTick=null;
+    renderClocks();
     render();
     showGameOverPopup();
     if(game.mode==='online') queueMicrotask(syncOnlineState);
@@ -1697,6 +1702,7 @@
       resultDetail.textContent=game.resultReason ? `Draw by ${game.resultReason}.` : 'The game ended in a draw.';
     }
     resultModal.hidden=false;
+    resultModal.style.display='grid';
     window.setTimeout(()=>resultNewGameBtn.focus(),0);
   }
 
@@ -2733,7 +2739,7 @@
       const fallback=botBestNormalMove(cloneState(game),1).move;
       const resolved=resolveBotMove(fallback);
       if (resolved) makeMove(resolved,{source:'bot'});
-      else { evaluateGameStatus(); render(); }
+      else { evaluateGameStatus(); enforceFinishedGamePresentation(); render(); }
     }
   }
 
@@ -2748,8 +2754,20 @@
     return {depth:3,fast:false,useAbilities:true,useComplexAbilities:true,delay:220};
   }
 
+  function enforceFinishedGamePresentation(){
+    if(!game) return false;
+    if(!game.over) evaluateGameStatus();
+    if(!game.over) return false;
+    stopClockLoop();
+    if(botMoveTimer){clearTimeout(botMoveTimer);botMoveTimer=null;}
+    renderClocks();
+    showGameOverPopup();
+    return true;
+  }
+
   function maybeBotTurn(){
-    if (!game || game.over || game.mode!=='bot' || game.turn!=='b') return;
+    if (!game || game.mode!=='bot' || game.turn!=='b') return;
+    if(enforceFinishedGamePresentation()) return;
     const token=++botThinkToken;
     if (botMoveTimer) { clearTimeout(botMoveTimer); botMoveTimer=null; }
     const config=botTimingProfile();
@@ -2793,7 +2811,7 @@
     abilitiesEl.replaceChildren();
     for(const ab of ABILITIES){
       const button=document.createElement('button'); button.type='button'; button.className='ability'; if(ab.consumesMove) button.classList.add('move-consuming'); button.dataset.id=ab.id;
-      if(game?.abilitiesEnabled===false){button.disabled=true;button.setAttribute('aria-disabled','true');} button.setAttribute('aria-label',`${ab.name}, costs ${ab.cost} points. ${ab.desc}${game?.abilitiesEnabled===false?' Abilities are disabled for this game.':''}`);
+      if(game?.abilitiesEnabled===false){button.setAttribute('aria-disabled','true');} button.setAttribute('aria-label',`${ab.name}, costs ${ab.cost} points. ${ab.desc}${game?.abilitiesEnabled===false?' Abilities are disabled for this game.':''}`);
       const name=document.createElement('span'); name.className='name'; name.textContent=ab.name;
       const cost=document.createElement('span'); cost.className='cost'; cost.textContent=` ${ab.cost}`;
       const tip=document.createElement('span'); tip.className='ability-tooltip'; tip.textContent=ab.desc;
@@ -3116,7 +3134,8 @@
       el.classList.toggle('active', active);
       const viewerColor=abilityPanelViewerColor();
       const disabled = !game || game.over || game.abilitiesEnabled===false || game.points[viewerColor] < ab.cost || game.abilityUsed || game.turn!==viewerColor;
-      el.disabled = disabled && !active;
+      el.disabled = false;
+      if(disabled && !active) el.setAttribute('aria-disabled','true'); else el.removeAttribute('aria-disabled');
     });
   }
 
@@ -3238,7 +3257,7 @@
     game.startingPoints=startingPoints; game.points={w:startingPoints,b:startingPoints};
     game.upgradeLimit=upgradeLimit; game.abilitiesEnabled=abilitiesEnabled; game.upgradesEnabled=upgradesEnabled;
     game.rematchChallenge=null; game.lastMessage='Rematch started with the same settings. White to move.'; game.clockLastTick=performance.now();
-    resultModal.hidden=true; renderAbilities(); render(); startClockLoop(); queueMicrotask(syncOnlineState);
+    resultModal.hidden=true; resultModal.style.display='none'; renderAbilities(); render(); startClockLoop(); queueMicrotask(syncOnlineState);
   }
 
   function offerOnlineRematch(){
@@ -3285,7 +3304,7 @@
   resultNewGameBtn.addEventListener('click',()=>{
     getAudioContext();
     if(game?.mode==='online'){ offerOnlineRematch(); return; }
-    resultModal.hidden=true; newGame();
+    resultModal.hidden=true; resultModal.style.display='none'; newGame();
   });
   toastAcceptDrawBtn.addEventListener('click',()=>acceptDrawBtn.click());
   toastDeclineDrawBtn.addEventListener('click',()=>declineDrawBtn.click());
@@ -3297,11 +3316,11 @@
   acceptRematchBtn.addEventListener('click',()=>{ if(game?.rematchChallenge && game.rematchChallenge.from!==game.playerColor) beginOnlineRematch(); });
   declineRematchBtn.addEventListener('click',()=>{ if(game?.rematchChallenge && game.rematchChallenge.from!==game.playerColor){ game.rematchChallenge=null; render(); queueMicrotask(syncOnlineState); } });
   cancelRematchBtn.addEventListener('click',()=>{ if(game?.rematchChallenge?.from===game.playerColor){ game.rematchChallenge=null; render(); queueMicrotask(syncOnlineState); } });
-  resultHomeBtn.addEventListener('click',()=>{ resultModal.hidden=true; showHome(); });
+  resultHomeBtn.addEventListener('click',()=>{ resultModal.hidden=true; resultModal.style.display='none'; showHome(); });
   // Dismiss the game-over/rematch menu by clicking its shaded backdrop.
   // Clicks inside the card keep the menu open.
   resultModal.addEventListener('click',(event)=>{
-    if(event.target===resultModal) resultModal.hidden=true;
+    if(event.target===resultModal) resultModal.hidden=true; resultModal.style.display='none';
   });
   cancelAbilityBtn.addEventListener('click', cancelAbility);
   homeBotBtn.addEventListener('click', () => startFromHome('bot'));
@@ -3357,9 +3376,9 @@
   darkColorInput.addEventListener('input',()=>{settings.dark=darkColorInput.value;saveSettings();});
   resetSettingsBtn.addEventListener('click',()=>{settings={...DEFAULT_SETTINGS};saveSettings();});
   function placeFloatingMenuTooltip(host){
-    const tip=host?.querySelector?.('.ability-tooltip,.upgrade-tooltip');
+    const tip=host?.querySelector?.('.ability-tooltip,.upgrade-tooltip,.status-marker-tooltip,.piece-upgrade-tooltip');
     if(!tip) return;
-    document.querySelectorAll('.ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible').forEach(other=>{if(other!==tip)other.classList.remove('tooltip-visible')});
+    document.querySelectorAll('.ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible,.status-marker-tooltip.tooltip-visible,.piece-upgrade-tooltip.tooltip-visible').forEach(other=>{if(other!==tip)other.classList.remove('tooltip-visible')});
     tip.classList.add('tooltip-visible');
     tip.style.left='0px'; tip.style.top='0px';
     const hostRect=host.getBoundingClientRect();
@@ -3373,26 +3392,26 @@
     tip.style.left=`${Math.round(left)}px`; tip.style.top=`${Math.round(top)}px`;
   }
   function hideFloatingMenuTooltip(host){
-    host?.querySelector?.('.ability-tooltip,.upgrade-tooltip')?.classList.remove('tooltip-visible');
+    host?.querySelector?.('.ability-tooltip,.upgrade-tooltip,.status-marker-tooltip,.piece-upgrade-tooltip')?.classList.remove('tooltip-visible');
   }
   document.addEventListener('pointerover',event=>{
-    const host=event.target.closest?.('.ability,.upgrade');
+    const host=event.target.closest?.('.ability,.upgrade,.status-marker,.upgrade-marker');
     if(host && !host.contains(event.relatedTarget)) placeFloatingMenuTooltip(host);
   });
   document.addEventListener('pointerout',event=>{
-    const host=event.target.closest?.('.ability,.upgrade');
+    const host=event.target.closest?.('.ability,.upgrade,.status-marker,.upgrade-marker');
     if(host && !host.contains(event.relatedTarget)) hideFloatingMenuTooltip(host);
   });
   document.addEventListener('focusin',event=>{
-    const host=event.target.closest?.('.ability,.upgrade');
+    const host=event.target.closest?.('.ability,.upgrade,.status-marker,.upgrade-marker');
     if(host) placeFloatingMenuTooltip(host);
   });
   document.addEventListener('focusout',event=>{
-    const host=event.target.closest?.('.ability,.upgrade');
+    const host=event.target.closest?.('.ability,.upgrade,.status-marker,.upgrade-marker');
     if(host && !host.contains(event.relatedTarget)) hideFloatingMenuTooltip(host);
   });
-  window.addEventListener('scroll',()=>document.querySelectorAll('.ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible').forEach(t=>t.classList.remove('tooltip-visible')),true);
-  window.addEventListener('resize',()=>document.querySelectorAll('.ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible').forEach(t=>t.classList.remove('tooltip-visible')));
+  window.addEventListener('scroll',()=>document.querySelectorAll('.ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible,.status-marker-tooltip.tooltip-visible,.piece-upgrade-tooltip.tooltip-visible').forEach(t=>t.classList.remove('tooltip-visible')),true);
+  window.addEventListener('resize',()=>document.querySelectorAll('.ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible,.status-marker-tooltip.tooltip-visible,.piece-upgrade-tooltip.tooltip-visible').forEach(t=>t.classList.remove('tooltip-visible')));
   window.addEventListener('storage',event=>{if(event.key==='abilityChessMemberSession'){try{memberSession=JSON.parse(event.newValue||'null');}catch{memberSession=null;}if(memberSession||memberChallengeInboxKey){startGlobalChallengeWatcher();loadChallengeNotifications();}}});
   window.addEventListener('focus',()=>{if(memberSession||memberChallengeInboxKey){startGlobalChallengeWatcher();loadChallengeNotifications();}});
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&(memberSession||memberChallengeInboxKey)){startGlobalChallengeWatcher();loadChallengeNotifications();}});
