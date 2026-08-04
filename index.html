@@ -43,10 +43,19 @@
   .capture::after{content:'';position:absolute;inset:8%;border-radius:50%;border:4px solid rgba(180,0,0,.7)}
   .bomb-target{outline:4px solid var(--danger);outline-offset:-4px}
   .shielded{box-shadow: inset 0 0 0 4px rgba(104,211,145,.95)}
+  .shield-move-warning{position:fixed;z-index:30000;max-width:220px;padding:9px 11px;border-radius:10px;background:#431b1b;color:#fff;border:2px solid #ff6b6b;box-shadow:0 10px 28px rgba(0,0,0,.48);font-size:13px;font-weight:800;line-height:1.25;pointer-events:none}
   .frozen{box-shadow:inset 0 0 0 4px rgba(96,165,250,.95)}
   .ambushed{box-shadow:inset 0 0 0 4px rgba(245,158,11,.95)}
   .fortified::after{content:'';position:absolute;inset:5%;border:3px dashed rgba(168,85,247,.9);border-radius:8px;z-index:3;pointer-events:none}
   .portal-square{box-shadow:inset 0 0 0 4px rgba(34,211,238,.95)}
+  .status-marker-stack{position:absolute;left:2px;top:2px;display:flex;gap:2px;align-items:flex-start;z-index:9;pointer-events:auto}
+  .status-marker{position:relative;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:5px;border:1px solid rgba(255,255,255,.82);box-shadow:0 1px 4px rgba(0,0,0,.45);font-size:10px;line-height:1;background:rgba(17,24,32,.96);cursor:help;user-select:none}
+  .status-marker-shield{background:#f97316;color:#fff7ed;border-color:#fed7aa}
+  .status-marker-portal{background:#7c3aed;color:#faf5ff;border-color:#ddd6fe}
+  .status-marker-freeze{background:#2563eb;color:#eff6ff;border-color:#bfdbfe}
+  .status-marker-tooltip{display:none;position:absolute;left:calc(100% + 8px);top:-2px;width:230px;max-width:min(230px,60vw);padding:8px 10px;border-radius:9px;background:#111820;color:#f8fafc;border:1px solid rgba(255,255,255,.16);box-shadow:0 14px 36px rgba(0,0,0,.76);font-size:12px;line-height:1.4;text-align:left;white-space:normal;pointer-events:none;z-index:30100}
+  .status-marker:hover .status-marker-tooltip,.status-marker:focus-visible .status-marker-tooltip{display:block}
+  .status-marker:focus-visible{outline:2px solid #fff;outline-offset:1px}
   .teleport-target{outline:4px dashed var(--accent);outline-offset:-4px}
   button,select{background:#2a3440;color:var(--text);border:1px solid #3d4b5c;border-radius:10px;padding:10px 12px;font-size:14px}
   button:hover,select:hover{filter:brightness(1.08)}
@@ -252,7 +261,7 @@
   <aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item active" type="button"><span class="home-nav-icon">★</span>Abilities Guide</button><button class="home-nav-item settings-nav-btn" type="button"><span class="home-nav-icon">⚙</span>Settings</button><button class="home-nav-item members-nav-btn" type="button"><span class="home-nav-icon">♙</span>Members</button><button class="home-nav-item" disabled><span class="home-nav-icon">◫</span>Game history</button></nav></aside>
   <main class="content-main"><h1 class="page-title">Abilities Guide</h1><p class="page-lead">Captures earn points equal to the captured piece's standard value. Spend those points on one ability before making your normal move.</p>
     <div class="guide-grid">
-      <article class="guide-card"><h2>Shield <span class="guide-cost">3 points</span></h2><p>Protect one of your pieces from ordinary capture until your next turn begins. The piece may still move; Bomb is not an ordinary capture.</p></article>
+      <article class="guide-card"><h2>Shield <span class="guide-cost">3 points</span></h2><p>Protect one of your pieces from ordinary capture until your next turn begins. The shield is immediately lost if that piece moves. Bomb is not an ordinary capture.</p></article>
       <article class="guide-card"><h2>Freeze <span class="guide-cost">3 points</span></h2><p>Choose an enemy non-king piece. It cannot move during its owner’s next turn, but it can still be captured or affected by other abilities.</p></article>
       <article class="guide-card"><h2>Bomb <span class="guide-cost">4 points</span></h2><p>Destroy all pieces in a 3×3 area, including the initiating piece. Neither king may be in the blast, and Fortify blocks the effect.</p></article>
       <article class="guide-card"><h2>Swap <span class="guide-cost">4 points</span></h2><p>Exchange the squares of two of your non-king pieces. The swap cannot leave your king under attack.</p></article>
@@ -329,7 +338,7 @@
       <div id="whiteBank" class="bank"><b>White points:</b> <span id="whitePoints">0</span></div>
       <div id="blackBank" class="bank"><b>Black points:</b> <span id="blackPoints">0</span></div>
     </div>
-    <div class="legend">Shielded pieces cannot be captured until that side's next turn. Bomb destroys a 3×3 zone and the initiating piece, but it cannot be used if either king is in the blast. Checkmate and direct king capture are both winning outcomes, but the opposing king cannot be captured during Double Move. Purple markers indicate permanently upgraded pieces.</div>
+    <div class="legend">Shielded pieces cannot be captured until that side's next turn, but a shield is immediately lost when its piece moves. Bomb destroys a 3×3 zone and the initiating piece, but it cannot be used if either king is in the blast. Checkmate and direct king capture are both winning outcomes, but the opposing king cannot be captured during Double Move. Purple markers indicate permanently upgraded pieces.</div>
 
     <h2 style="margin-top:14px">Abilities &amp; Upgrades</h2>
     <div class="ability-tabs" role="tablist" aria-label="Abilities and upgrades">
@@ -1303,8 +1312,16 @@
       s.board[move.to.r][move.to.c] = piece[0] + promotion;
     }
 
+    // A shield protects a stationary piece only. Moving that piece consumes the shield.
     if (s.shielded[colorOf(piece)]?.r===move.from.r && s.shielded[colorOf(piece)]?.c===move.from.c) {
-      s.shielded[colorOf(piece)]={r:move.to.r,c:move.to.c};
+      s.shielded[colorOf(piece)]=null;
+    }
+    // Castling also moves the rook; a shielded rook loses its shield.
+    if (move.castle) {
+      const rookFromC = move.castle==='k' ? 7 : 0;
+      if (s.shielded[colorOf(piece)]?.r===move.from.r && s.shielded[colorOf(piece)]?.c===rookFromC) {
+        s.shielded[colorOf(piece)]=null;
+      }
     }
     if (s.ambushed[colorOf(piece)]?.r===move.from.r && s.ambushed[colorOf(piece)]?.c===move.from.c) {
       s.ambushed[colorOf(piece)]={r:move.to.r,c:move.to.c};
@@ -1313,7 +1330,6 @@
     const exit=portalExit(s,colorOf(piece),move.to);
     if(exit && !s.board[exit.r][exit.c] && s.board[move.to.r][move.to.c]){
       s.board[exit.r][exit.c]=s.board[move.to.r][move.to.c]; s.board[move.to.r][move.to.c]=null;
-      if(s.shielded[colorOf(piece)]?.r===move.to.r&&s.shielded[colorOf(piece)]?.c===move.to.c) s.shielded[colorOf(piece)]={...exit};
       if(s.ambushed[colorOf(piece)]?.r===move.to.r&&s.ambushed[colorOf(piece)]?.c===move.to.c) s.ambushed[colorOf(piece)]={...exit};
       move.portalExit={...exit};
     }
@@ -1941,7 +1957,7 @@
     revokeCastlingRights(temp, teleportedPiece, from);
     temp.board[r][c] = teleportedPiece;
     temp.board[from.r][from.c] = null;
-    if (temp.shielded[game.turn]?.r===from.r && temp.shielded[game.turn]?.c===from.c) temp.shielded[game.turn]={r,c};
+    if (temp.shielded[game.turn]?.r===from.r && temp.shielded[game.turn]?.c===from.c) temp.shielded[game.turn]=null;
     if (inCheck(temp, game.turn)) { playFailureSound(); game.lastMessage = 'That teleport would leave your king in check.'; return; }
     game.board = temp.board;
     game.castlingRights = temp.castlingRights;
@@ -2030,8 +2046,8 @@
   }
   function applyFreeze(r,c){ const p=pieceAt(game.board,r,c); if(!p||colorOf(p)===game.turn||typeOf(p)==='k'){game.lastMessage='Choose an enemy non-king piece.';return;} if(isFortifiedAgainstAbility(game,r,c,game.turn)){game.lastMessage='That piece is protected by Fortify.';return;} game.frozen[colorOf(p)]={r,c}; completeAbility('freeze',3,'Freeze active. Now make your normal move.'); }
   function applyAmbush(r,c){ const p=pieceAt(game.board,r,c); if(!p||colorOf(p)!==game.turn||typeOf(p)==='k'){game.lastMessage='Choose one of your non-king pieces.';return;} game.ambushed[game.turn]={r,c}; completeAbility('ambush',4,'Ambush set. Now make your normal move.'); }
-  function applySwap(r,c){ const p=pieceAt(game.board,r,c); if(!game.abilitySelection){if(!p||colorOf(p)!==game.turn||typeOf(p)==='k'){game.lastMessage='Choose one of your non-king pieces.';return;} game.abilitySelection={r,c};game.lastMessage='Swap: choose the second non-king piece.';return;} const a=game.abilitySelection; if(!p||colorOf(p)!==game.turn||typeOf(p)==='k'||sameSquare(a,{r,c})){game.lastMessage='Choose a different non-king piece.';return;} const next=cloneState(game); [next.board[a.r][a.c],next.board[r][c]]=[next.board[r][c],next.board[a.r][a.c]]; if(inCheck(next,game.turn)){playFailureSound();game.lastMessage='That swap would leave your king under attack.';return;} game.board=next.board; if(game.shielded[game.turn]&&sameSquare(game.shielded[game.turn],a))game.shielded[game.turn]={r,c};else if(game.shielded[game.turn]&&sameSquare(game.shielded[game.turn],{r,c}))game.shielded[game.turn]=a; if(game.ambushed[game.turn]&&sameSquare(game.ambushed[game.turn],a))game.ambushed[game.turn]={r,c};else if(game.ambushed[game.turn]&&sameSquare(game.ambushed[game.turn],{r,c}))game.ambushed[game.turn]=a; completeAbility('swap',4,'Pieces swapped. Now make your normal move.'); }
-  function applyRecall(){ const m=game.lastMoveByColor?.[game.turn]; if(!m||typeOf(m.piece)==='k'){game.lastMessage='No eligible piece can be recalled.';game.activeAbility=null;game.awaitingAbilityTarget=false;render();return;} const current=pieceAt(game.board,m.to.r,m.to.c); if(current!==m.resultPiece||pieceAt(game.board,m.from.r,m.from.c)){game.lastMessage='The recalled piece or its previous square is unavailable.';game.activeAbility=null;game.awaitingAbilityTarget=false;render();return;} const next=cloneState(game); next.board[m.from.r][m.from.c]=current; next.board[m.to.r][m.to.c]=null; if(inCheck(next,game.turn)){playFailureSound();game.lastMessage='Recall would leave your king under attack.';game.activeAbility=null;game.awaitingAbilityTarget=false;render();return;} game.board=next.board; completeAbility('recall',4,`Recalled ${current.toUpperCase()} to ${algebraic(m.from.r,m.from.c)}. Now make your normal move.`); }
+  function applySwap(r,c){ const p=pieceAt(game.board,r,c); if(!game.abilitySelection){if(!p||colorOf(p)!==game.turn||typeOf(p)==='k'){game.lastMessage='Choose one of your non-king pieces.';return;} game.abilitySelection={r,c};game.lastMessage='Swap: choose the second non-king piece.';return;} const a=game.abilitySelection; if(!p||colorOf(p)!==game.turn||typeOf(p)==='k'||sameSquare(a,{r,c})){game.lastMessage='Choose a different non-king piece.';return;} const next=cloneState(game); [next.board[a.r][a.c],next.board[r][c]]=[next.board[r][c],next.board[a.r][a.c]]; if(inCheck(next,game.turn)){playFailureSound();game.lastMessage='That swap would leave your king under attack.';return;} game.board=next.board; if(game.shielded[game.turn]&&(sameSquare(game.shielded[game.turn],a)||sameSquare(game.shielded[game.turn],{r,c})))game.shielded[game.turn]=null; if(game.ambushed[game.turn]&&sameSquare(game.ambushed[game.turn],a))game.ambushed[game.turn]={r,c};else if(game.ambushed[game.turn]&&sameSquare(game.ambushed[game.turn],{r,c}))game.ambushed[game.turn]=a; completeAbility('swap',4,'Pieces swapped. Now make your normal move.'); }
+  function applyRecall(){ const m=game.lastMoveByColor?.[game.turn]; if(!m||typeOf(m.piece)==='k'){game.lastMessage='No eligible piece can be recalled.';game.activeAbility=null;game.awaitingAbilityTarget=false;render();return;} const current=pieceAt(game.board,m.to.r,m.to.c); if(current!==m.resultPiece||pieceAt(game.board,m.from.r,m.from.c)){game.lastMessage='The recalled piece or its previous square is unavailable.';game.activeAbility=null;game.awaitingAbilityTarget=false;render();return;} const next=cloneState(game); next.board[m.from.r][m.from.c]=current; next.board[m.to.r][m.to.c]=null; if(inCheck(next,game.turn)){playFailureSound();game.lastMessage='Recall would leave your king under attack.';game.activeAbility=null;game.awaitingAbilityTarget=false;render();return;} game.board=next.board; if(game.shielded[game.turn]&&sameSquare(game.shielded[game.turn],m.to))game.shielded[game.turn]=null; completeAbility('recall',4,`Recalled ${current.toUpperCase()} to ${algebraic(m.from.r,m.from.c)}. Now make your normal move.`); }
   function applyReinforce(r,c){ const p=pieceAt(game.board,r,c); const crossed=p&&typeOf(p)==='p'&&colorOf(p)===game.turn&&((game.turn==='w'&&r<=3)||(game.turn==='b'&&r>=4)); if(!crossed){game.lastMessage='Choose one of your pawns that has crossed the halfway line.';return;} const ans=window.prompt('Reinforce to knight or bishop? Enter N or B.','N'); const t=String(ans||'N').trim().toLowerCase()[0]; game.board[r][c]=game.turn+(t==='b'?'b':'n'); completeAbility('reinforce',5,`Pawn reinforced as a ${t==='b'?'bishop':'knight'}. Now make your normal move.`); }
   function applyPortal(r,c){ if(pieceAt(game.board,r,c)){game.lastMessage='Portal squares must be empty.';return;} if(isFortifiedAgainstAbility(game,r,c,game.turn)){game.lastMessage='That square is protected by Fortify.';return;} if(!game.abilitySelection){game.abilitySelection={r,c};game.lastMessage='Portal: choose the second empty square.';return;} if(sameSquare(game.abilitySelection,{r,c})){game.lastMessage='Choose a different empty square.';return;} game.portals[game.turn]={a:{...game.abilitySelection},b:{r,c},turnsRemaining:3}; completeAbility('portal',5,'Portal pair active for three of your turns and usable by both players in either direction. Now make your normal move.'); }
   function applyFortify(r,c){ const king=findKing(game,game.turn); if(!king){return;} const candidates=[]; for(const top of [r-1,r])for(const left of [c-1,c]){const squares=[{r:top,c:left},{r:top,c:left+1},{r:top+1,c:left},{r:top+1,c:left+1}];if(squares.every(s=>inBounds(s.r,s.c))&&squares.some(s=>sameSquare(s,king)))candidates.push(squares);} if(!candidates.length){game.lastMessage='Choose a square in a 2×2 area that contains your king.';return;} game.fortified[game.turn]={squares:candidates[0]}; completeAbility('fortify',4,'Fortify active until your next turn. Now make your normal move.'); }
@@ -2837,6 +2853,74 @@
   function boardIsFlipped(){ return !!(game?.mode==='online' && game?.playerColor==='b'); }
   function displayPoint(square){ return boardIsFlipped() ? {x:7-square.c+.5,y:7-square.r+.5} : {x:square.c+.5,y:square.r+.5}; }
 
+  let shieldMoveWarningEl=null;
+  function hideShieldMoveWarning(){
+    shieldMoveWarningEl?.remove();
+    shieldMoveWarningEl=null;
+  }
+  function renderShieldMoveWarning(){
+    hideShieldMoveWarning();
+    if(!game?.selected || game.selectedAsPremove || game.awaitingAbilityTarget) return;
+    const shield=game.shielded?.[game.turn];
+    if(!shield || !sameSquare(shield,game.selected)) return;
+    const square=boardEl.querySelector(`.sq[data-r="${game.selected.r}"][data-c="${game.selected.c}"]`);
+    if(!square) return;
+    const warning=document.createElement('div');
+    warning.className='shield-move-warning';
+    warning.textContent='Warning, this piece will lose its shield if moved';
+    document.body.appendChild(warning);
+    shieldMoveWarningEl=warning;
+    const rect=square.getBoundingClientRect();
+    const gap=8;
+    let left=rect.right+gap;
+    let top=rect.top+(rect.height-warning.offsetHeight)/2;
+    if(left+warning.offsetWidth>window.innerWidth-8) left=rect.left-warning.offsetWidth-gap;
+    if(left<8) left=Math.max(8,rect.left+(rect.width-warning.offsetWidth)/2);
+    top=Math.max(8,Math.min(top,window.innerHeight-warning.offsetHeight-8));
+    warning.style.left=`${left}px`;
+    warning.style.top=`${top}px`;
+  }
+
+  function portalSquareOwnerAt(r,c){
+    return game?.portals?.w&&(sameSquare(game.portals.w.a,{r,c})||sameSquare(game.portals.w.b,{r,c})) ? 'w' : game?.portals?.b&&(sameSquare(game.portals.b.a,{r,c})||sameSquare(game.portals.b.b,{r,c})) ? 'b' : null;
+  }
+
+  function appendSquareStatusMarkers(sq,r,c){
+    const items=[];
+    const shielded=(game?.shielded?.w?.r===r&&game?.shielded?.w?.c===c)||(game?.shielded?.b?.r===r&&game?.shielded?.b?.c===c);
+    if(shielded){
+      items.push({cls:'status-marker-shield',icon:'🛡',label:'Shielded piece',tooltip:'Shield: The next time this piece would be captured, the shield is used up instead. If this shielded piece moves, it loses its shield.'});
+    }
+    const frozen=(game?.frozen?.w?.r===r&&game?.frozen?.w?.c===c)||(game?.frozen?.b?.r===r&&game?.frozen?.b?.c===c);
+    if(frozen){
+      items.push({cls:'status-marker-freeze',icon:'❄',label:'Frozen piece',tooltip:"Freeze: This piece cannot move during its owner's next turn. A frozen piece also does not count as attacking while frozen."});
+    }
+    const portalColor=portalSquareOwnerAt(r,c);
+    if(portalColor){
+      const remaining=Number(game?.portals?.[portalColor]?.turnsRemaining ?? 1);
+      items.push({cls:'status-marker-portal',icon:'🚪',label:'Portal square',tooltip:`Portal: Either player may move into either portal square and exit from the other. This ${portalColor==='w'?'white':'black'} portal has ${remaining} owner turn${remaining===1?'':'s'} remaining.`});
+    }
+    if(!items.length) return portalColor;
+    const stack=document.createElement('div');
+    stack.className='status-marker-stack';
+    for(const item of items){
+      const badge=document.createElement('span');
+      badge.className=`status-marker ${item.cls}`;
+      badge.tabIndex=0;
+      badge.setAttribute('role','img');
+      badge.setAttribute('aria-label',item.label);
+      badge.title=item.label;
+      badge.textContent=item.icon;
+      const tip=document.createElement('span');
+      tip.className='status-marker-tooltip';
+      tip.textContent=item.tooltip;
+      badge.appendChild(tip);
+      stack.appendChild(badge);
+    }
+    sq.appendChild(stack);
+    return portalColor;
+  }
+
   function render(){
     if(game) ensureUpgradeState(game);
     if(game && game.selectedAbility==='disarm') game.selectedAbility=null;
@@ -2882,14 +2966,9 @@
         if (canSeeWhiteAmbush && game?.ambushed?.w?.r===r && game?.ambushed?.w?.c===c) sq.classList.add('ambushed');
         if (canSeeBlackAmbush && game?.ambushed?.b?.r===r && game?.ambushed?.b?.c===c) sq.classList.add('ambushed');
         if (squareInFortify(game,'w',r,c)||squareInFortify(game,'b',r,c)) sq.classList.add('fortified');
-        const portalColor = game?.portals?.w&&(sameSquare(game.portals.w.a,{r,c})||sameSquare(game.portals.w.b,{r,c})) ? 'w' : game?.portals?.b&&(sameSquare(game.portals.b.a,{r,c})||sameSquare(game.portals.b.b,{r,c})) ? 'b' : null;
-        if (portalColor) {
-          sq.classList.add('portal-square');
-          const remaining=Number(game.portals[portalColor].turnsRemaining ?? 1);
-          const portalTitle=`${portalColor==='w'?'White':'Black'} portal — usable by both players in either direction — ${remaining} owner turn${remaining===1?'':'s'} remaining`;
-          sq.title=sq.title ? `${sq.title}
-${portalTitle}` : portalTitle;
-        }
+        const portalColor = portalSquareOwnerAt(r,c);
+        if (portalColor) sq.classList.add('portal-square');
+        appendSquareStatusMarkers(sq,r,c);
         if (game?.awaitingAbilityTarget && game.activeAbility==='bomb') {
           const own = p && colorOf(p)===game.turn;
           if (own && !bombRadiusHasKing(r,c)) sq.classList.add('bomb-target');
@@ -3030,6 +3109,7 @@ ${portalTitle}` : portalTitle;
       empty.textContent = 'No moves yet.';
       logEl.appendChild(empty);
     }
+    requestAnimationFrame(renderShieldMoveWarning);
     document.querySelectorAll('.ability').forEach(el => {
       const ab = ABILITIES.find(a => a.id===el.dataset.id);
       const active = game?.activeAbility === ab.id;
@@ -3334,6 +3414,9 @@ ${portalTitle}` : portalTitle;
   newGame();
   showHome();
 })();
+  window.addEventListener('resize',()=>{ if(shieldMoveWarningEl) renderShieldMoveWarning(); });
+  window.addEventListener('scroll',()=>{ if(shieldMoveWarningEl) renderShieldMoveWarning(); },true);
+
 </script>
 </body>
 </html>
