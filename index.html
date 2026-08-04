@@ -187,6 +187,9 @@
 
   .piece-upgrade-tooltip{position:fixed!important;left:0!important;top:0!important;right:auto!important;display:block!important;opacity:0!important;visibility:hidden!important;z-index:2147483647!important;max-width:min(280px,calc(100vw - 24px))!important}
   .piece-upgrade-tooltip.tooltip-visible{opacity:1!important;visibility:visible!important}
+  .piece-hover-floating-tooltip{position:fixed;left:0;top:0;width:280px;max-width:min(280px,calc(100vw - 24px));padding:10px;border:1px solid rgba(255,255,255,.16);border-radius:9px;background:#111820;color:#f8fafc;box-shadow:0 14px 36px rgba(0,0,0,.76);font-size:12px;line-height:1.45;text-align:left;white-space:normal;pointer-events:none;z-index:2147483647;opacity:0;visibility:hidden}
+  .piece-hover-floating-tooltip.tooltip-visible{opacity:1;visibility:visible}
+
 
   .history-screen{display:none;min-height:100vh;background:var(--bg)}.history-screen.active{display:grid;grid-template-columns:250px 1fr}.history-main{padding:42px;overflow:auto}.history-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}.history-list{display:grid;gap:12px;max-width:980px}.history-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:16px 18px;background:#171c22;border:1px solid #354150;border-radius:13px}.history-title{font-weight:900;font-size:17px}.history-meta{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.45}.history-result-win{color:#68d391}.history-result-loss{color:#ff7b7b}.history-result-draw{color:#f6c76e}.history-empty{max-width:760px;padding:24px;background:#171c22;border:1px solid #354150;border-radius:13px;color:var(--muted)}.analysis-banner{display:none;margin:0 0 10px;padding:9px 12px;border-radius:10px;background:#2c2440;border:1px solid #7657a8;color:#e9ddff;font-weight:800}.game-screen.analysis-mode .analysis-banner{display:block}.game-screen.analysis-mode #offerDrawBtn,.game-screen.analysis-mode #acceptDrawBtn,.game-screen.analysis-mode #declineDrawBtn,.game-screen.analysis-mode #resignBtn{display:none}.game-screen.analysis-mode .clock{opacity:.75}.history-analysis-btn{background:#302746;border-color:#7657a8}.history-signin-btn{margin-top:14px}@media(max-width:760px){.history-screen.active{grid-template-columns:1fr}.history-screen .site-ribbon{display:none}.history-main{padding:24px 16px}.history-card{grid-template-columns:1fr}}
 
@@ -922,8 +925,16 @@
     })();
     return memberRefreshPromise;
   }
-  function renderMemberAuth(){ updateSidebarAccounts(); const signed=!!memberSession?.access_token; const recovering=sessionStorage.getItem('abilityChessRecoveryMode')==='1'; memberRecovery.hidden=!recovering; memberSignedOut.hidden=signed||recovering; memberSignedIn.hidden=!signed||recovering; openMembersBtn.textContent=signed&&!recovering?'Profile & account':'Profile & account'; if(!signed||recovering){memberList.replaceChildren();return;} if(memberProfile){memberIdentity.innerHTML=`${escapeHtml(memberProfile.display_name)} (@${escapeHtml(memberProfile.username)})${memberProfile.is_owner?'<span class="owner-tag">Owner</span>':''}`;memberStats.textContent=`Rating ${memberProfile.rating} · ${memberProfile.games_played} games · ${memberProfile.wins}W ${memberProfile.losses}L ${memberProfile.draws}D`;profileUsername.value=memberProfile.username;profileDisplayName.value=memberProfile.display_name;} }
-  async function loadMyProfile(){ if(!memberSession)return; try{const rows=await memberRpc('ability_chess_get_my_profile');memberProfile=rows?.[0]||null;renderMemberAuth();}catch(e){memberStatus.textContent=e.message;} }
+  function renderMemberAuth(){ updateSidebarAccounts(); const signed=!!memberSession?.access_token; const recovering=sessionStorage.getItem('abilityChessRecoveryMode')==='1'; memberRecovery.hidden=!recovering; memberSignedOut.hidden=signed||recovering; memberSignedIn.hidden=!signed||recovering; openMembersBtn.textContent=signed&&!recovering?'Profile & account':'Profile & account'; if(!signed||recovering){memberList.replaceChildren();return;} if(memberProfile){memberIdentity.innerHTML=`${escapeHtml(memberProfile.display_name)} (@${escapeHtml(memberProfile.username)})${memberProfile.is_owner?'<span class="owner-tag">Owner</span>':''}`;memberStats.textContent=`Bullet ${memberProfile.bullet_rating??1200} · Blitz ${memberProfile.blitz_rating??1200} · Rapid ${memberProfile.rapid_rating??1200} · ${memberProfile.games_played} games · ${memberProfile.wins}W ${memberProfile.losses}L ${memberProfile.draws}D`;profileUsername.value=memberProfile.username;profileDisplayName.value=memberProfile.display_name;} }
+  function ratingCategoryFor(baseSeconds,incrementSeconds){
+    const estimated=Number(baseSeconds||0)+40*Number(incrementSeconds||0);
+    return estimated<180?'bullet':estimated<600?'blitz':'rapid';
+  }
+  function currentRatingForCategory(category){
+    const key=`${category||'rapid'}_rating`;
+    return Number(memberProfile?.[key]??memberProfile?.rating??1200);
+  }
+  async function loadMyProfile(){ if(!memberSession)return; try{const rows=await memberRpc('ability_chess_get_my_profile');memberProfile=rows?.[0]||null;try{const ratings=await memberRpc('ability_chess_get_my_ratings');if(memberProfile&&ratings?.[0])Object.assign(memberProfile,ratings[0]);}catch{}renderMemberAuth();}catch(e){memberStatus.textContent=e.message;} }
   async function ensureChallengeInboxKey(){
     if(memberChallengeInboxKey)return memberChallengeInboxKey;
     if(!memberSession?.access_token)return null;
@@ -949,18 +960,18 @@
   }
   function memberChallengeSettings(){
     const hostColor=document.querySelector('input[name="challengeHostColor"]:checked')?.value||'w';
-    return {base:Number(challengeBaseTimeSlider.value),increment:Number(challengeIncrementSlider.value),startingPoints:Number(challengeStartingPointsSlider.value),upgradeLimit:Number(challengeUpgradeLimitSlider.value),abilitiesEnabled:challengeAbilitiesEnabledToggle.checked,upgradesEnabled:challengeUpgradesEnabledToggle.checked,rated:document.getElementById('challengeRatedEnabledToggle')?.checked!==false,hostRating:Number(memberProfile?.rating||1200),guestRating:Number(pendingChallengeTarget?.rating||1200),hostColor};
+    const base=Number(challengeBaseTimeSlider.value),increment=Number(challengeIncrementSlider.value),ratingCategory=ratingCategoryFor(base*60,increment);return {base,increment,ratingCategory,startingPoints:Number(challengeStartingPointsSlider.value),upgradeLimit:Number(challengeUpgradeLimitSlider.value),abilitiesEnabled:challengeAbilitiesEnabledToggle.checked,upgradesEnabled:challengeUpgradesEnabledToggle.checked,rated:document.getElementById('challengeRatedEnabledToggle')?.checked!==false,hostRating:currentRatingForCategory(ratingCategory),guestRating:Number(pendingChallengeTarget?.[`${ratingCategory}_rating`]??pendingChallengeTarget?.rating??1200),hostColor};
   }
-  function challengeSummary(cfg){return `${cfg.rated?'Rated':'Unrated'} · ${Number(cfg.base||10)}+${Number(cfg.increment||0)} · ${Number(cfg.startingPoints||0)} starting points · abilities ${cfg.abilitiesEnabled===false?'off':'on'} · upgrades ${cfg.upgradesEnabled===false?'off':'on'} · ${Number(cfg.upgradeLimit??3)} upgrade slots`;}
+  function challengeSummary(cfg){return `${cfg.rated?`Rated ${String(cfg.ratingCategory||'rapid').replace(/^./,c=>c.toUpperCase())}`:'Unrated'} · ${Number(cfg.base||10)}+${Number(cfg.increment||0)} · ${Number(cfg.startingPoints||0)} starting points · abilities ${cfg.abilitiesEnabled===false?'off':'on'} · upgrades ${cfg.upgradesEnabled===false?'off':'on'} · ${Number(cfg.upgradeLimit??3)} upgrade slots`;}
   function updateMemberChallengeSetupOutputs(){challengeBaseTimeOutput.textContent=`${challengeBaseTimeSlider.value} min`;challengeIncrementOutput.textContent=`${challengeIncrementSlider.value} sec`;challengeStartingPointsOutput.textContent=`${challengeStartingPointsSlider.value} point${challengeStartingPointsSlider.value==='1'?'':'s'}`;challengeUpgradeLimitOutput.textContent=`${challengeUpgradeLimitSlider.value} type${challengeUpgradeLimitSlider.value==='1'?'':'s'}`;}
   function openMemberChallengeSetup(member=null){pendingChallengeTarget=member;challengeBaseTimeSlider.value=baseTimeSlider.value;challengeIncrementSlider.value=incrementSlider.value;challengeStartingPointsSlider.value=onlineStartingPointsSlider.value||0;challengeUpgradeLimitSlider.value=upgradeLimitSlider.value;challengeAbilitiesEnabledToggle.checked=abilitiesEnabledToggle.checked;challengeUpgradesEnabledToggle.checked=upgradesEnabledToggle.checked;document.getElementById('challengeRatedEnabledToggle').checked=true;document.querySelector('input[name="challengeHostColor"][value="w"]').checked=true;updateMemberChallengeSetupOutputs();memberChallengeSetupTarget.textContent=member?`Challenge ${member.display_name} (@${member.username}). Choose the rules before sending.`:'Choose the rules before posting this open challenge.';sendMemberChallengeBtn.textContent=member?'Send challenge':'Post open challenge';memberChallengeSetupModal.hidden=false;}
-  async function createMemberChallenge(challengedId=null){const cfg=memberChallengeSettings();const target=pendingChallengeTarget;if(!challengedId){memberStatus.textContent='Choose a specific member before sending a challenge.';memberChallengeSetupModal.hidden=true;pendingChallengeTarget=null;return;}memberStatus.textContent='Sending challenge…';sendMemberChallengeBtn.disabled=true;try{selectedGameMode='online';newGame();game.mode='online';game.onlineStarted=false;game.hostColor=cfg.hostColor;game.playerColor=cfg.hostColor;game.initialTime=cfg.base*60;game.increment=cfg.increment;game.startingPoints=cfg.startingPoints;game.clocks={w:cfg.base*60,b:cfg.base*60};game.points={w:cfg.startingPoints,b:cfg.startingPoints};game.upgradeLimit=cfg.upgradeLimit;game.abilitiesEnabled=cfg.abilitiesEnabled;game.upgradesEnabled=cfg.upgradesEnabled;game.rated=!!cfg.rated;game.myRating=Number(memberProfile?.rating||1200);game.opponentRating=Number(target?.rating||cfg.guestRating||1200);stopClockLoop();const rows=await memberRpc('ability_chess_create_member_challenge',{p_game_state:onlineState(),p_settings:cfg,p_challenged_id:challengedId});const created=rows?.[0];memberChallengeSetupModal.hidden=true;pendingChallengeTarget=null;memberStatus.textContent=challengedId?'Challenge sent. You can cancel it from the notification or My challenges.':'Open challenge posted.';if(challengedId&&created?.challenge_id){showMemberChallengeToast('outgoing',{challenge_id:created.challenge_id,direction:'outgoing',challenge_type:'direct',status:'pending',settings:cfg,other_user_id:challengedId,other_username:target?.username||'',other_display_name:target?.display_name||''});}memberTab='mine';renderMemberTabs();await loadMemberList();startMemberPolling();await loadChallengeNotifications();}catch(e){memberStatus.textContent=e.message;console.error('Could not create member challenge',e);}finally{sendMemberChallengeBtn.disabled=false;}}
+  async function createMemberChallenge(challengedId=null){const cfg=memberChallengeSettings();const target=pendingChallengeTarget;if(!challengedId){memberStatus.textContent='Choose a specific member before sending a challenge.';memberChallengeSetupModal.hidden=true;pendingChallengeTarget=null;return;}memberStatus.textContent='Sending challenge…';sendMemberChallengeBtn.disabled=true;try{selectedGameMode='online';newGame();game.mode='online';game.onlineStarted=false;game.hostColor=cfg.hostColor;game.playerColor=cfg.hostColor;game.initialTime=cfg.base*60;game.increment=cfg.increment;game.startingPoints=cfg.startingPoints;game.clocks={w:cfg.base*60,b:cfg.base*60};game.points={w:cfg.startingPoints,b:cfg.startingPoints};game.upgradeLimit=cfg.upgradeLimit;game.abilitiesEnabled=cfg.abilitiesEnabled;game.upgradesEnabled=cfg.upgradesEnabled;game.rated=!!cfg.rated;game.ratingCategory=cfg.ratingCategory||ratingCategoryFor(game.initialTime,game.increment);game.myRating=currentRatingForCategory(game.ratingCategory);game.opponentRating=Number(cfg.guestRating||target?.[`${game.ratingCategory}_rating`]||target?.rating||1200);stopClockLoop();const rows=await memberRpc('ability_chess_create_member_challenge',{p_game_state:onlineState(),p_settings:cfg,p_challenged_id:challengedId});const created=rows?.[0];memberChallengeSetupModal.hidden=true;pendingChallengeTarget=null;memberStatus.textContent=challengedId?'Challenge sent. You can cancel it from the notification or My challenges.':'Open challenge posted.';if(challengedId&&created?.challenge_id){showMemberChallengeToast('outgoing',{challenge_id:created.challenge_id,direction:'outgoing',challenge_type:'direct',status:'pending',settings:cfg,other_user_id:challengedId,other_username:target?.username||'',other_display_name:target?.display_name||''});}memberTab='mine';renderMemberTabs();await loadMemberList();startMemberPolling();await loadChallengeNotifications();}catch(e){memberStatus.textContent=e.message;console.error('Could not create member challenge',e);}finally{sendMemberChallengeBtn.disabled=false;}}
   function memberButton(label,handler,cls=''){const b=document.createElement('button');b.type='button';b.textContent=label;if(cls)b.className=cls;b.addEventListener('click',handler);return b;}
   function memberRow(title,meta,actions=[],isOwner=false){const row=document.createElement('div');row.className='member-row';const copy=document.createElement('div');copy.innerHTML=`<div class="member-name">${escapeHtml(title)}${isOwner?'<span class="owner-tag">Owner</span>':''}</div><div class="member-meta">${escapeHtml(meta)}</div>`;const acts=document.createElement('div');acts.className='member-actions';actions.forEach(a=>acts.appendChild(a));row.append(copy,acts);return row;}
   function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
   function renderMemberTabs(){document.querySelectorAll('.member-tab').forEach(b=>b.classList.toggle('active',b.dataset.memberTab===memberTab));memberSearch.hidden=memberTab!=='members';postOpenChallengeBtn.hidden=memberTab==='members';}
   async function loadMemberList(){ if(!memberSession)return; if(!memberList.children.length)memberList.innerHTML='<div class="member-empty">Loading…</div>'; try{if(memberTab==='members'){const rows=await memberRpc('ability_chess_list_members',{p_search:memberSearch.value.trim()});memberList.replaceChildren();for(const m of rows||[]){const challenge=memberButton('Challenge',()=>openMemberChallengeSetup(m));memberList.appendChild(memberRow(`${m.display_name} (@${m.username})`,`${m.is_online?'Online · ':''}Rating ${m.rating} · ${m.games_played} games`,[challenge],!!m.is_owner));}if(!rows?.length)memberList.innerHTML='<div class="member-empty">No matching members.</div>';}else{const rows=await memberRpc('ability_chess_list_member_challenges');const filtered=(rows||[]).filter(c=>memberTab==='open'?(c.challenge_type==='open'&&c.direction==='open'&&c.status==='pending'):(c.direction!=='open'||c.status==='accepted'));memberList.replaceChildren();for(const c of filtered){const who=c.other_display_name?`${c.other_display_name} (@${c.other_username})`:(c.challenge_type==='open'?'Open challenge':'Waiting for opponent');const settings=c.settings||{};const meta=`${c.challenge_type==='open'?'Open':'Direct'} · ${challengeSummary(settings)} · ${c.status}`;const actions=[];if(c.status==='pending'&&(c.direction==='incoming'||c.direction==='open')) actions.push(memberButton('Accept',()=>acceptMemberChallenge(c.challenge_id)));if(c.status==='pending'&&c.direction==='incoming') actions.push(memberButton('Decline',()=>declineMemberChallenge(c.challenge_id)));if(c.status==='pending'&&c.direction==='outgoing') actions.push(memberButton('Cancel',()=>cancelMemberChallenge(c.challenge_id)));memberList.appendChild(memberRow(who,meta,actions));}if(!filtered.length)memberList.innerHTML='<div class="member-empty">No challenges here yet.</div>';await detectAcceptedChallenges(rows||[]);} }catch(e){memberList.innerHTML=`<div class="member-empty">${escapeHtml(e.message)}</div>`;} }
-  async function acceptMemberChallenge(id){memberStatus.textContent='Accepting challenge…';try{const rows=await memberRpc('ability_chess_accept_member_challenge',{p_challenge_id:id});const row=rows?.[0];if(!row)throw new Error('Challenge could not be accepted.');visibleMemberChallenge=null;memberChallengeToast.hidden=true;onlineSession={id:row.room_id,code:row.room_code,token:row.seat_token,color:row.assigned_color,role:'guest',version:Number(row.room_version),waiting:false,memberChallenge:id};localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));selectedGameMode='online';newGame();restoreOnlineState(row.state||{});const cfg=row.room_settings||{};game.mode='online';game.onlineStarted=true;game.playerColor=row.assigned_color;game.hostColor=cfg.hostColor||other(row.assigned_color);game.initialTime=Number(cfg.base||10)*60;game.increment=Number(cfg.increment||0);game.startingPoints=Number(cfg.startingPoints||0);game.upgradeLimit=Math.max(0,Number(cfg.upgradeLimit??3));game.abilitiesEnabled=cfg.abilitiesEnabled!==false;game.upgradesEnabled=cfg.upgradesEnabled!==false;game.rated=!!cfg.rated;game.myRating=Number(memberProfile?.rating||1200);game.opponentRating=Number(cfg.hostRating||1200);game.clocks={w:game.initialTime,b:game.initialTime};game.points={w:game.startingPoints,b:game.startingPoints};game.clockLastTick=performance.now();game.lastMessage='Member challenge started. White to move.';await syncOnlineState();memberModal.hidden=true;onlineModal.hidden=true;showScreen('game');gameModeLabel.innerHTML=`Mode: <b>Online — ${game.playerColor==='w'?'White':'Black'} · ${game.rated?'Rated':'Unrated'}</b>`;startOnlinePolling();startClockLoop();renderAbilities();render();}catch(e){memberStatus.textContent=e.message;}}
+  async function acceptMemberChallenge(id){memberStatus.textContent='Accepting challenge…';try{const rows=await memberRpc('ability_chess_accept_member_challenge',{p_challenge_id:id});const row=rows?.[0];if(!row)throw new Error('Challenge could not be accepted.');visibleMemberChallenge=null;memberChallengeToast.hidden=true;onlineSession={id:row.room_id,code:row.room_code,token:row.seat_token,color:row.assigned_color,role:'guest',version:Number(row.room_version),waiting:false,memberChallenge:id};localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));selectedGameMode='online';newGame();restoreOnlineState(row.state||{});const cfg=row.room_settings||{};game.mode='online';game.onlineStarted=true;game.playerColor=row.assigned_color;game.hostColor=cfg.hostColor||other(row.assigned_color);game.initialTime=Number(cfg.base||10)*60;game.increment=Number(cfg.increment||0);game.startingPoints=Number(cfg.startingPoints||0);game.upgradeLimit=Math.max(0,Number(cfg.upgradeLimit??3));game.abilitiesEnabled=cfg.abilitiesEnabled!==false;game.upgradesEnabled=cfg.upgradesEnabled!==false;game.rated=!!cfg.rated;game.ratingCategory=cfg.ratingCategory||ratingCategoryFor(game.initialTime,game.increment);game.myRating=currentRatingForCategory(game.ratingCategory);game.opponentRating=Number(cfg.hostRating||1200);game.clocks={w:game.initialTime,b:game.initialTime};game.points={w:game.startingPoints,b:game.startingPoints};game.clockLastTick=performance.now();game.lastMessage='Member challenge started. White to move.';await syncOnlineState();memberModal.hidden=true;onlineModal.hidden=true;showScreen('game');gameModeLabel.innerHTML=`Mode: <b>Online — ${game.playerColor==='w'?'White':'Black'} · ${game.rated?`Rated ${(game.ratingCategory||'rapid').replace(/^./,c=>c.toUpperCase())}`:'Unrated'}</b>`;startOnlinePolling();startClockLoop();renderAbilities();render();}catch(e){memberStatus.textContent=e.message;}}
   async function cancelMemberChallenge(id){try{await memberRpc('ability_chess_cancel_member_challenge',{p_challenge_id:id});visibleOutgoingMemberChallenge=null;memberChallengeToast.hidden=true;memberStatus.textContent='Challenge cancelled.';if(!memberModal.hidden)await loadMemberList();await loadChallengeNotifications();}catch(e){memberStatus.textContent=e.message;}}
   async function declineMemberChallenge(id){try{await memberRpc('ability_chess_decline_member_challenge',{p_challenge_id:id});if(visibleMemberChallenge?.challenge_id===id){visibleMemberChallenge=null;memberChallengeToast.hidden=true;}memberStatus.textContent='Challenge declined.';if(!memberModal.hidden)await loadMemberList();}catch(e){memberStatus.textContent=e.message;}}
   async function launchAcceptedOutgoingChallenge(c){
@@ -985,7 +996,7 @@
     memberChallengeToast.hidden=true;
     visibleOutgoingMemberChallenge=null;
     showScreen('game');
-    gameModeLabel.innerHTML=`Mode: <b>Online — ${game.playerColor==='w'?'White':'Black'} · ${game.rated?'Rated':'Unrated'}</b>`;
+    gameModeLabel.innerHTML=`Mode: <b>Online — ${game.playerColor==='w'?'White':'Black'} · ${game.rated?`Rated ${(game.ratingCategory||'rapid').replace(/^./,c=>c.toUpperCase())}`:'Unrated'}</b>`;
     startOnlinePolling();
     startClockLoop();
     renderAbilities();
@@ -1071,7 +1082,7 @@
   function markOnlineMutation(){
     if(game?.mode==='online') onlineLocalRevision++;
   }
-  function onlineState(){ const copy=JSON.parse(JSON.stringify(game)); delete copy.clockLastTick; delete copy.selected; delete copy.legalMoves; delete copy.turnLegalMoves; delete copy.activeAbility; delete copy.awaitingAbilityTarget; delete copy.abilitySelection; delete copy.selectedAsPremove; delete copy.premoveQueue; delete copy.endAnnounced; delete copy.historySaved; delete copy.myRating; delete copy.opponentRating; delete copy.ratingBefore; delete copy.ratingAfter; delete copy.ratingChange; return copy; }
+  function onlineState(){ const copy=JSON.parse(JSON.stringify(game)); copy.syncActionId=crypto.randomUUID(); copy.syncSentAt=Date.now(); delete copy.clockLastTick; delete copy.selected; delete copy.legalMoves; delete copy.turnLegalMoves; delete copy.activeAbility; delete copy.awaitingAbilityTarget; delete copy.abilitySelection; delete copy.selectedAsPremove; delete copy.premoveQueue; delete copy.endAnnounced; delete copy.historySaved; delete copy.myRating; delete copy.opponentRating; delete copy.ratingBefore; delete copy.ratingAfter; delete copy.ratingChange; return copy; }
   function restoreOnlineState(state){
     const previousGame=game;
     const localMyRating=Number(previousGame?.myRating);
@@ -1092,7 +1103,7 @@
       const newCount=state?.board?.flat?.().filter(Boolean).length ?? oldCount;
       window.setTimeout(()=>newCount<oldCount ? playCaptureSound() : playMoveSound(),25);
     }
-    game=state; onlineLocalRevision=0; if(!Array.isArray(game.historySnapshots)||!game.historySnapshots.length) game.historySnapshots=[historySnapshot()]; historyViewIndex=null; if(game.over && !previousGame?.over) game.endAnnounced=false; game.upgradeLimit=Number(game.upgradeLimit ?? 3); game.abilitiesEnabled=game.abilitiesEnabled!==false; game.upgradesEnabled=game.upgradesEnabled!==false; game.mode='online'; game.playerColor=keepColor; if(Number.isFinite(localMyRating))game.myRating=localMyRating;if(Number.isFinite(localOpponentRating))game.opponentRating=localOpponentRating; onlineSession.color=keepColor; game.drawOffer=game.drawOffer || null; game.rematchChallenge=game.rematchChallenge || null; game.clockLastTick=performance.now();
+    game=state; onlineLocalRevision=0; if(!Array.isArray(game.historySnapshots)||!game.historySnapshots.length) game.historySnapshots=[historySnapshot()]; historyViewIndex=null; if(game.over && !previousGame?.over) game.endAnnounced=false; game.upgradeLimit=Number(game.upgradeLimit ?? 3); game.abilitiesEnabled=game.abilitiesEnabled!==false; game.upgradesEnabled=game.upgradesEnabled!==false; game.mode='online'; game.playerColor=keepColor; game.ratingCategory=game.ratingCategory||ratingCategoryFor(game.initialTime,game.increment);if(Number.isFinite(localMyRating))game.myRating=localMyRating;else game.myRating=currentRatingForCategory(game.ratingCategory);if(Number.isFinite(localOpponentRating))game.opponentRating=localOpponentRating; onlineSession.color=keepColor; game.drawOffer=game.drawOffer || null; game.rematchChallenge=game.rematchChallenge || null; game.clockLastTick=performance.now();
     game.selected=null; game.selectedAsPremove=false; game.legalMoves=[]; game.turnLegalMoves=allLegalMoves(game,game.turn); game.premoveQueue=previousPremoveQueue; game.premove=previousPremoveQueue[0]||null;
     if(moveChanged && !game.over && inCheck(game, keepColor)) window.setTimeout(playCheckBuzz, 45);
     if(previousSelection){
@@ -1103,7 +1114,7 @@
         game.legalMoves=game.selectedAsPremove ? premoveMovesFor(previousSelection.r,previousSelection.c) : game.turnLegalMoves.filter(m=>m.from.r===previousSelection.r&&m.from.c===previousSelection.c);
       }
     }
-    gameModeLabel.innerHTML=`Mode: <b>Online — ${keepColor==='w'?'White':'Black'} · ${game.rated?'Rated':'Unrated'}</b>`;
+    gameModeLabel.innerHTML=`Mode: <b>Online — ${keepColor==='w'?'White':'Black'} · ${game.rated?`Rated ${(game.ratingCategory||'rapid').replace(/^./,c=>c.toUpperCase())}`:'Unrated'}</b>`;
     // A remotely accepted rematch changes the synchronized game from over to active.
     // Close the old game-over menu immediately so the challenger can play.
     if(previousGame?.over && !game.over) resultModal.hidden=true; resultModal.style.display='none';
@@ -1239,6 +1250,69 @@
     }catch(e){ onlineStatus.textContent=e.message; }
     finally{ startOnlineGameBtn.disabled=false; }
   }
+
+
+  const ACTIVE_GAME_STORAGE_KEY='abilityChessActiveGameV2';
+  let activeGamePersistTimer=null;
+  function activeGamePayload(){
+    if(!game || game.over || !['bot','online'].includes(game.mode)) return null;
+    if(game.mode==='online' && !onlineSession) return null;
+    try{
+      if(game.clockLastTick && !game.over) updateClockNow();
+      const state=JSON.parse(JSON.stringify(game));
+      delete state.selected; delete state.legalMoves; delete state.turnLegalMoves;
+      delete state.selectedAsPremove; delete state.awaitingAbilityTarget; delete state.abilitySelection;
+      delete state.activeAbility; delete state.clockLastTick; delete state.endAnnounced;
+      return {version:2,savedAt:Date.now(),mode:game.mode,botDifficulty:selectedBotDifficulty||'medium',state,onlineSession:game.mode==='online'?onlineSession:null};
+    }catch{return null;}
+  }
+  function persistActiveGameNow(){
+    clearTimeout(activeGamePersistTimer); activeGamePersistTimer=null;
+    const payload=activeGamePayload();
+    if(payload) localStorage.setItem(ACTIVE_GAME_STORAGE_KEY,JSON.stringify(payload));
+    else localStorage.removeItem(ACTIVE_GAME_STORAGE_KEY);
+  }
+  function scheduleActiveGamePersist(){
+    if(!game || game.over || !['bot','online'].includes(game.mode)) return;
+    clearTimeout(activeGamePersistTimer);
+    activeGamePersistTimer=setTimeout(persistActiveGameNow,120);
+  }
+  function clearActiveGamePersistence(){clearTimeout(activeGamePersistTimer);activeGamePersistTimer=null;localStorage.removeItem(ACTIVE_GAME_STORAGE_KEY);}
+  function restoreBotSnapshot(payload){
+    const state=payload?.state;
+    if(!state||!Array.isArray(state.board)) return false;
+    selectedGameMode='bot'; selectedBotDifficulty=payload.botDifficulty||'medium';
+    game=state; game.mode='bot'; game.over=!!game.over; game.selected=null; game.selectedAsPremove=false; game.legalMoves=[];
+    game.turnLegalMoves=allLegalMoves(game,game.turn); game.clockLastTick=performance.now(); historyViewIndex=null;
+    if(!Array.isArray(game.historySnapshots)||!game.historySnapshots.length) game.historySnapshots=[historySnapshot()];
+    lowTimeWarnings={w:new Set(),b:new Set()}; analysisMode=false; gameScreen.classList.remove('analysis-mode');
+    resultModal.hidden=true; resultModal.style.display='none';
+    showScreen('game'); gameModeLabel.innerHTML=`Mode: <b>Bot — ${selectedBotDifficulty[0].toUpperCase()+selectedBotDifficulty.slice(1)}</b>`;
+    renderAbilities(); render(); startClockLoop(); maybeBotTurn(); return true;
+  }
+  async function restorePersistedActiveGame(){
+    let payload=null;
+    try{payload=JSON.parse(localStorage.getItem(ACTIVE_GAME_STORAGE_KEY)||'null');}catch{}
+    if(!payload||payload.version!==2||!payload.state||payload.state.over){clearActiveGamePersistence();return false;}
+    if(payload.mode==='bot') return restoreBotSnapshot(payload);
+    if(payload.mode==='online'){
+      const savedSession=payload.onlineSession||JSON.parse(localStorage.getItem('abilityChessOnline')||'null');
+      if(!savedSession?.id||!savedSession?.token){clearActiveGamePersistence();return false;}
+      try{
+        onlineSession=savedSession; selectedGameMode='online';
+        const rows=await supabaseRpc('get_ability_chess_room',{p_room_id:onlineSession.id,p_seat_token:onlineSession.token});
+        const row=rows?.[0]; if(!row) throw new Error('Online game not found');
+        onlineSession.version=Number(row.room_version||onlineSession.version||0);
+        localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));
+        game=payload.state; restoreOnlineState(row.state||payload.state);
+        game.mode='online'; game.onlineStarted=true; game.clockLastTick=performance.now();
+        showScreen('game'); startOnlinePolling(); if(!game.over)startClockLoop(); renderAbilities(); render();
+        return true;
+      }catch(e){console.warn('Could not restore online game',e);onlineSession=null;localStorage.removeItem('abilityChessOnline');clearActiveGamePersistence();return false;}
+    }
+    return false;
+  }
+  window.addEventListener('beforeunload',persistActiveGameNow);
 
   function historySnapshot(move=null){
     const snap=cloneState(game);
@@ -1893,7 +1967,7 @@
   }
 
   function gameHistorySettings(){
-    return {baseSeconds:Number(game?.initialTime||0),baseMinutes:Number(game?.initialTime||0)/60,increment:Number(game?.increment||0),startingPoints:Number(game?.startingPoints||0),upgradeLimit:Number(game?.upgradeLimit??3),abilitiesEnabled:game?.abilitiesEnabled!==false,upgradesEnabled:game?.upgradesEnabled!==false,rated:!!game?.rated,ratingBefore:game?.ratingBefore??null,ratingAfter:game?.ratingAfter??null,ratingChange:game?.ratingChange??null};
+    return {baseSeconds:Number(game?.initialTime||0),baseMinutes:Number(game?.initialTime||0)/60,increment:Number(game?.increment||0),startingPoints:Number(game?.startingPoints||0),upgradeLimit:Number(game?.upgradeLimit??3),abilitiesEnabled:game?.abilitiesEnabled!==false,upgradesEnabled:game?.upgradesEnabled!==false,rated:!!game?.rated,ratingCategory:game?.ratingCategory||ratingCategoryFor(Number(game?.initialTime||0),Number(game?.increment||0)),ratingBefore:game?.ratingBefore??null,ratingAfter:game?.ratingAfter??null,ratingChange:game?.ratingChange??null};
   }
   function historyResultForCurrentPlayer(winner){
     if(!winner)return'draw';
@@ -1912,13 +1986,13 @@
     game.historySaved=true;
     try{
       const key=game.historyGameKey||(game.historyGameKey=onlineSession?.id||crypto.randomUUID());
-      if(game.mode==='online'&&game.rated){const ratingRows=await memberRpc('ability_chess_apply_rating_result',{p_game_key:key,p_result:historyResultForCurrentPlayer(game.winner),p_opponent_rating:Number(game.opponentRating||1200)});const rr=ratingRows?.[0];if(rr){game.ratingBefore=Number(rr.rating_before);game.ratingAfter=Number(rr.rating_after);game.ratingChange=Number(rr.rating_change);if(resultDetail&&!resultModal.hidden)resultDetail.textContent+=` Rating ${game.ratingChange>=0?'+':''}${game.ratingChange} (${game.ratingAfter}).`;await loadMyProfile();}}
+      if(game.mode==='online'&&game.rated){const ratingRows=await memberRpc('ability_chess_apply_category_rating_result',{p_game_key:key,p_result:historyResultForCurrentPlayer(game.winner),p_opponent_rating:Number(game.opponentRating||1200),p_rating_category:game.ratingCategory||ratingCategoryFor(game.initialTime,game.increment)});const rr=ratingRows?.[0];if(rr){game.ratingBefore=Number(rr.rating_before);game.ratingAfter=Number(rr.rating_after);game.ratingChange=Number(rr.rating_change);if(resultDetail&&!resultModal.hidden)resultDetail.textContent+=` ${(game.ratingCategory||'rapid').replace(/^./,c=>c.toUpperCase())} ${game.ratingChange>=0?'+':''}${game.ratingChange} (${game.ratingAfter}).`;await loadMyProfile();}}
       const replay={version:1,historySnapshots:game.historySnapshots||[],settings:gameHistorySettings(),playerColor:game.playerColor||null,mode:game.mode,final:{clocks:game.clocks||null,winner:game.winner??null,resultReason:game.resultReason||'',resultDetail:game.resultDetail||'',lastMessage:game.lastMessage||''}};
       await memberRpc('ability_chess_save_game_history',{p_game_key:key,p_mode:game.mode,p_player_color:game.playerColor||(game.mode==='bot'?'w':null),p_result:historyResultForCurrentPlayer(game.winner),p_result_reason:game.resultReason||'',p_opponent_name:opponentNameForHistory(),p_settings:gameHistorySettings(),p_replay:replay});
     }catch(e){game.historySaved=false;console.warn('Could not save game history',e);}
   }
   function historyResultLabel(row){return row.result==='win'?'Win':row.result==='loss'?'Loss':row.result==='draw'?'Draw':row.result==='white_win'?'White won':'Black won';}
-  function historySettingsText(cfg={}){const base=Number(cfg.baseMinutes??(Number(cfg.baseSeconds||0)/60));return `${cfg.rated?'Rated':'Unrated'} · ${Number.isInteger(base)?base:base.toFixed(1)}+${Number(cfg.increment||0)} · ${Number(cfg.startingPoints||0)} starting points · ${Number(cfg.upgradeLimit??3)} upgrade slots · ${cfg.abilitiesEnabled===false?'no abilities':'abilities'} · ${cfg.upgradesEnabled===false?'no upgrades':'upgrades'}${Number.isFinite(Number(cfg.ratingChange))?` · rating ${Number(cfg.ratingChange)>=0?'+':''}${Number(cfg.ratingChange)}`:''}`;}
+  function historySettingsText(cfg={}){const base=Number(cfg.baseMinutes??(Number(cfg.baseSeconds||0)/60));return `${cfg.rated?`Rated ${String(cfg.ratingCategory||'rapid').replace(/^./,c=>c.toUpperCase())}`:'Unrated'} · ${Number.isInteger(base)?base:base.toFixed(1)}+${Number(cfg.increment||0)} · ${Number(cfg.startingPoints||0)} starting points · ${Number(cfg.upgradeLimit??3)} upgrade slots · ${cfg.abilitiesEnabled===false?'no abilities':'abilities'} · ${cfg.upgradesEnabled===false?'no upgrades':'upgrades'}${Number.isFinite(Number(cfg.ratingChange))?` · rating ${Number(cfg.ratingChange)>=0?'+':''}${Number(cfg.ratingChange)}`:''}`;}
   async function loadGameHistory(){
     historyList.replaceChildren();
     if(!memberSession?.access_token){historyList.innerHTML='<div class="history-empty">Sign in to save and view completed games.<br><button class="history-signin-btn" type="button">Sign in</button></div>';historyList.querySelector('button')?.addEventListener('click',openMemberLobby);return;}
@@ -1977,6 +2051,7 @@
       game.startingPoints=Number(replay.settings?.startingPoints||game.startingPoints||0);
       game.mode='analysis';
       game.over=true;
+    clearActiveGamePersistence();
       game.winner=replay.final?.winner??null;
       game.resultReason=replay.final?.resultReason||'';
       game.resultDetail=replay.final?.resultDetail||'';
@@ -2400,6 +2475,7 @@
     game.legalMoves = [];
     log(`${who==='w'?'White':'Black'} used Bomb at ${algebraic(r,c)}: ${destroyed.join(', ')}`);
     game.lastMessage = 'Bomb used. Now make your normal move.';
+    if(game.mode==='online'){ markOnlineMutation(); queueMicrotask(syncOnlineState); }
   }
 
   function applyShield(r,c){
@@ -2413,11 +2489,15 @@
     game.selected = null;
     log(`${game.turn==='w'?'White':'Black'} shielded ${piece} on ${algebraic(r,c)}.`);
     game.lastMessage = 'Shield used. Now make your normal move.';
+    if(game.mode==='online'){ markOnlineMutation(); queueMicrotask(syncOnlineState); }
   }
 
   function completeAbility(id,cost,message){
     game.points[game.turn]-=cost; game.abilityUsed=true; game.activeAbility=null; game.awaitingAbilityTarget=false; game.abilitySelection=null;
     game.selected=null; game.legalMoves=[]; log(`${game.turn==='w'?'White':'Black'} used ${ABILITIES.find(a=>a.id===id)?.name||id}.`); game.lastMessage=message; render();
+    // Ability effects must be published immediately. Waiting for the following
+    // piece move allowed the two clients to temporarily or permanently diverge.
+    if(game.mode==='online'){ markOnlineMutation(); queueMicrotask(syncOnlineState); }
   }
   function applyFreeze(r,c){ const p=pieceAt(game.board,r,c); if(!p||colorOf(p)===game.turn||typeOf(p)==='k'){game.lastMessage='Choose an enemy non-king piece.';return;} if(isFortifiedAgainstAbility(game,r,c,game.turn)){game.lastMessage='That piece is protected by Fortify.';return;} game.frozen[colorOf(p)]={r,c}; completeAbility('freeze',3,'Freeze active. Now make your normal move.'); }
   function applyAmbush(r,c){ const p=pieceAt(game.board,r,c); if(!p||colorOf(p)!==game.turn||typeOf(p)==='k'){game.lastMessage='Choose one of your non-king pieces.';return;} game.ambushed[game.turn]={r,c}; completeAbility('ambush',4,'Ambush set. Now make your normal move.'); }
@@ -3339,6 +3419,7 @@
   }
 
   function render(){
+    scheduleActiveGamePersist();
     if(game) ensureUpgradeState(game);
     if(game && game.selectedAbility==='disarm') game.selectedAbility=null;
     const sidebarState=analysisDisplayState();
@@ -3654,7 +3735,7 @@
     onlineBaseTimeOutput.textContent=`${cfg.base} min`;onlineIncrementOutput.textContent=`${cfg.increment} sec`;onlineStartingPointsOutput.textContent=`${cfg.startingPoints} points`;onlineUpgradeLimitOutput.textContent=`${cfg.upgradeLimit} types`;
   }
   function liveSeekQueueKey(cfg){
-    return [Number(cfg.base),Number(cfg.increment),Number(cfg.startingPoints),Number(cfg.upgradeLimit),cfg.abilitiesEnabled!==false?1:0,cfg.upgradesEnabled!==false?1:0,cfg.rated?1:0].join(':');
+    return [Number(cfg.base),Number(cfg.increment),Number(cfg.startingPoints),Number(cfg.upgradeLimit),cfg.abilitiesEnabled!==false?1:0,cfg.upgradesEnabled!==false?1:0,cfg.rated?1:0,ratingCategoryFor(Number(cfg.base)*60,Number(cfg.increment))].join(':');
   }
   function stopLiveSeekPolling(){clearInterval(liveSeekPollTimer);liveSeekPollTimer=null;}
   function setSeekUi(waiting,message,target){
@@ -3667,13 +3748,13 @@
   function prepareLiveSeekState(cfg){
     selectedGameMode='online';newGame();game.mode='online';game.onlineStarted=true;game.hostColor='w';game.playerColor='w';
     game.initialTime=Number(cfg.base)*60;game.increment=Number(cfg.increment);game.startingPoints=Number(cfg.startingPoints);game.upgradeLimit=Number(cfg.upgradeLimit);
-    game.abilitiesEnabled=cfg.abilitiesEnabled!==false;game.upgradesEnabled=cfg.upgradesEnabled!==false;game.rated=!!cfg.rated;game.myRating=Number(memberProfile?.rating||1200);game.clocks={w:game.initialTime,b:game.initialTime};game.points={w:game.startingPoints,b:game.startingPoints};
+    game.abilitiesEnabled=cfg.abilitiesEnabled!==false;game.upgradesEnabled=cfg.upgradesEnabled!==false;game.rated=!!cfg.rated;game.ratingCategory=ratingCategoryFor(game.initialTime,game.increment);game.myRating=currentRatingForCategory(game.ratingCategory);game.clocks={w:game.initialTime,b:game.initialTime};game.points={w:game.startingPoints,b:game.startingPoints};
     game.clockLastTick=null;game.lastMessage='Matched game ready. White to move.';stopClockLoop();return onlineState();
   }
   function launchLiveSeekMatch(row,role){
     stopLiveSeekPolling();liveSeekSession=null;setSeekUi(false,'Match found! Starting game…',liveSeekStatusTarget);
     onlineSession={id:row.room_id,code:null,token:row.seat_token,color:row.assigned_color,role,version:Number(row.room_version),waiting:false,liveSeek:true};
-    localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));restoreOnlineState(row.state||{});const seekCfg=row.room_settings||{};game.onlineStarted=true;game.rated=!!seekCfg.rated;game.myRating=Number(memberProfile?.rating||1200);game.opponentRating=Number(row.opponent_rating||(role==='guest'?seekCfg.hostRating:seekCfg.guestRating)||1200);game.clockLastTick=performance.now();onlineModal.hidden=true;showScreen('game');gameModeLabel.innerHTML=`Mode: <b>Online — ${game.playerColor==='w'?'White':'Black'} · ${game.rated?'Rated':'Unrated'}</b>`;startOnlinePolling();startClockLoop();renderAbilities();render();
+    localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));restoreOnlineState(row.state||{});const seekCfg=row.room_settings||{};game.onlineStarted=true;game.rated=!!seekCfg.rated;game.ratingCategory=seekCfg.ratingCategory||ratingCategoryFor(Number(seekCfg.base||10)*60,Number(seekCfg.increment||0));game.myRating=currentRatingForCategory(game.ratingCategory);game.opponentRating=Number(row.opponent_rating||(role==='guest'?seekCfg.hostRating:seekCfg.guestRating)||1200);game.clockLastTick=performance.now();onlineModal.hidden=true;showScreen('game');gameModeLabel.innerHTML=`Mode: <b>Online — ${game.playerColor==='w'?'White':'Black'} · ${game.rated?`Rated ${(game.ratingCategory||'rapid').replace(/^./,c=>c.toUpperCase())}`:'Unrated'}</b>`;startOnlinePolling();startClockLoop();renderAbilities();render();
   }
   async function pollLiveSeek(){
     if(!liveSeekSession)return;
@@ -3685,7 +3766,7 @@
   async function createLiveSeek(cfg,statusElTarget){
     if(liveSeekSession){statusElTarget.textContent='Cancel your current seek before starting another.';return;}
     primeGameAudio();applyConfigToControls(cfg);setSeekUi(true,'Looking for a similarly rated opponent with the same setup…',statusElTarget);
-    try{const state=prepareLiveSeekState(cfg);if(cfg.rated&&!memberSession){throw new Error('Sign in to play a rated game.');}const settingsPayload={base:Number(cfg.base),increment:Number(cfg.increment),startingPoints:Number(cfg.startingPoints),upgradeLimit:Number(cfg.upgradeLimit),abilitiesEnabled:cfg.abilitiesEnabled!==false,upgradesEnabled:cfg.upgradesEnabled!==false,rated:!!cfg.rated,hostRating:Number(memberProfile?.rating||1200),hostColor:'w'};
+    try{const state=prepareLiveSeekState(cfg);if(cfg.rated&&!memberSession){throw new Error('Sign in to play a rated game.');}const settingsPayload={base:Number(cfg.base),increment:Number(cfg.increment),startingPoints:Number(cfg.startingPoints),upgradeLimit:Number(cfg.upgradeLimit),abilitiesEnabled:cfg.abilitiesEnabled!==false,upgradesEnabled:cfg.upgradesEnabled!==false,rated:!!cfg.rated,ratingCategory:ratingCategoryFor(Number(cfg.base)*60,Number(cfg.increment)),hostRating:currentRatingForCategory(ratingCategoryFor(Number(cfg.base)*60,Number(cfg.increment))),hostColor:'w'};
       const rows=await supabaseRpc('ability_chess_create_or_match_seek',{p_queue_key:liveSeekQueueKey(cfg),p_game_state:state,p_settings:settingsPayload});const row=rows?.[0];if(!row)throw new Error('Matchmaking did not return a seek.');
       if(row.matched){launchLiveSeekMatch(row,'guest');return;}
       liveSeekSession={id:row.seek_id,token:row.seek_token,roomId:row.room_id};setSeekUi(true,'Seeking an opponent… You can cancel at any time.',statusElTarget);stopLiveSeekPolling();liveSeekPollTimer=setInterval(pollLiveSeek,700);
@@ -3717,7 +3798,7 @@
   function injectSidebarAccounts(){
     document.querySelectorAll('.home-sidebar,.site-ribbon').forEach(sidebar=>{if(sidebar.querySelector('.sidebar-account'))return;const wrap=document.createElement('div');wrap.className='sidebar-account';wrap.innerHTML='<div class="sidebar-member-search"><input type="search" placeholder="Search members"><div class="sidebar-search-results" hidden></div></div><button class="sidebar-profile-link" type="button"><span class="sidebar-avatar">♙</span><span><span class="sidebar-profile-name">Sign in</span><span class="sidebar-profile-meta">Profile and account</span></span></button>';const input=wrap.querySelector('input'),results=wrap.querySelector('.sidebar-search-results'),profileBtn=wrap.querySelector('.sidebar-profile-link');let timer=null;input.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(async()=>{results.replaceChildren();if(!input.value.trim()){results.hidden=true;return;}if(!memberSession){results.hidden=false;results.innerHTML='<div class="member-empty">Sign in to search members.</div>';return;}try{const rows=await memberRpc('ability_chess_list_members',{p_search:input.value.trim()});for(const m of rows||[]){const row=document.createElement('div');row.className='sidebar-search-row';row.innerHTML=`<button type="button" class="sidebar-person-link"><div class="sidebar-search-name">${escapeHtml(m.display_name)}${m.is_owner?'<span class="owner-tag">Owner</span>':''}</div><div class="sidebar-search-meta">@${escapeHtml(m.username)} · ${m.rating}</div></button>`;row.querySelector('.sidebar-person-link').addEventListener('click',()=>{results.hidden=true;viewMemberProfile(m);});const challenge=document.createElement('button');challenge.type='button';challenge.textContent='Challenge';challenge.addEventListener('click',()=>{showScreen('play');selectedPlayFriend=m;playFriendSearch.value=m.username;playFriendResults.replaceChildren();friendChallengeStatus.textContent=`Selected ${m.display_name}.`;results.hidden=true;});row.appendChild(challenge);results.appendChild(row);}if(!rows?.length)results.innerHTML='<div class="member-empty">No matches.</div>';results.hidden=false;}catch(e){results.hidden=false;results.innerHTML=`<div class="member-empty">${escapeHtml(e.message)}</div>`;}},220);});profileBtn.addEventListener('click',()=>memberProfile?viewMemberProfile(memberProfile):openMemberLobby());sidebar.appendChild(wrap);});updateSidebarAccounts();
   }
-  function updateSidebarAccounts(){document.querySelectorAll('.sidebar-account').forEach(wrap=>{const name=wrap.querySelector('.sidebar-profile-name'),meta=wrap.querySelector('.sidebar-profile-meta'),avatar=wrap.querySelector('.sidebar-avatar');if(memberProfile){name.innerHTML=`${escapeHtml(memberProfile.display_name)}${memberProfile.is_owner?'<span class="owner-tag">Owner</span>':''}`;meta.textContent=`@${memberProfile.username} · ${memberProfile.rating}`;avatar.textContent=(memberProfile.display_name||memberProfile.username||'P').slice(0,1).toUpperCase();}else if(memberSession){name.textContent='Loading profile…';meta.textContent='Account';avatar.textContent='♙';}else{name.textContent='Sign in';meta.textContent='Profile and account';avatar.textContent='♙';}});}
+  function updateSidebarAccounts(){document.querySelectorAll('.sidebar-account').forEach(wrap=>{const name=wrap.querySelector('.sidebar-profile-name'),meta=wrap.querySelector('.sidebar-profile-meta'),avatar=wrap.querySelector('.sidebar-avatar');if(memberProfile){name.innerHTML=`${escapeHtml(memberProfile.display_name)}${memberProfile.is_owner?'<span class="owner-tag">Owner</span>':''}`;meta.textContent=`@${memberProfile.username} · B ${memberProfile.bullet_rating??1200} · Z ${memberProfile.blitz_rating??1200} · R ${memberProfile.rapid_rating??1200}`;avatar.textContent=(memberProfile.display_name||memberProfile.username||'P').slice(0,1).toUpperCase();}else if(memberSession){name.textContent='Loading profile…';meta.textContent='Account';avatar.textContent='♙';}else{name.textContent='Sign in';meta.textContent='Profile and account';avatar.textContent='♙';}});}
 
   const profileScreen=document.getElementById('profileScreen'),profilePageAvatar=document.getElementById('profilePageAvatar'),profilePageName=document.getElementById('profilePageName'),profilePageHandle=document.getElementById('profilePageHandle'),profilePageStats=document.getElementById('profilePageStats'),profilePageActions=document.getElementById('profilePageActions');
   const homeStartingPointsSlider=document.getElementById('homeStartingPointsSlider'),homeStartingPointsOutput=document.getElementById('homeStartingPointsOutput'),welcomeMorePlayBtn=document.getElementById('welcomeMorePlayBtn');
@@ -3731,7 +3812,7 @@
     profilePageAvatar.textContent=(m.display_name||m.username||'P').slice(0,1).toUpperCase();
     profilePageName.innerHTML=`${escapeHtml(m.display_name||m.username)}${m.is_owner?'<span class="owner-tag">Owner</span>':''}`;
     profilePageHandle.textContent=`@${m.username||''}`;
-    profilePageStats.innerHTML=`<div class="profile-stat"><b>${Number(m.rating||1200)}</b><span>Rating</span></div><div class="profile-stat"><b>${Number(m.games_played||0)}</b><span>Games</span></div><div class="profile-stat"><b>${Number(m.wins||0)}</b><span>Wins</span></div><div class="profile-stat"><b>${Number(m.draws||0)}</b><span>Draws</span></div>`;
+    profilePageStats.innerHTML=`<div class="profile-stat"><b>${Number(m.bullet_rating??m.rating??1200)}</b><span>Bullet</span></div><div class="profile-stat"><b>${Number(m.blitz_rating??m.rating??1200)}</b><span>Blitz</span></div><div class="profile-stat"><b>${Number(m.rapid_rating??m.rating??1200)}</b><span>Rapid</span></div><div class="profile-stat"><b>${Number(m.games_played||0)}</b><span>Games</span></div>`;
     profilePageActions.replaceChildren();
     if(memberProfile&&m.id===memberProfile.id){const edit=document.createElement('button');edit.type='button';edit.textContent='Edit profile and account';edit.addEventListener('click',openMemberLobby);profilePageActions.appendChild(edit);}else{const challenge=document.createElement('button');challenge.type='button';challenge.textContent='Challenge to a game';challenge.addEventListener('click',()=>{selectedPlayFriend=m;showScreen('play');playFriendSearch.value=m.username||'';friendChallengeStatus.textContent=`Selected ${m.display_name||m.username}.`;});profilePageActions.appendChild(challenge);}
     showScreen('profile',{navigate:options.navigate!==false,replace:!!options.replace,extra:{user:m.username||''}});
@@ -3985,10 +4066,41 @@
     }
     return host.querySelector?.('.ability-tooltip,.upgrade-tooltip,.status-marker-tooltip,.piece-upgrade-tooltip')||null;
   }
+  let boardMarkerTooltip=null;
+  function getBoardMarkerTooltip(){
+    if(boardMarkerTooltip&&document.body.contains(boardMarkerTooltip)) return boardMarkerTooltip;
+    boardMarkerTooltip=document.createElement('div');
+    boardMarkerTooltip.className='piece-hover-floating-tooltip';
+    boardMarkerTooltip.setAttribute('role','tooltip');
+    document.body.appendChild(boardMarkerTooltip);
+    return boardMarkerTooltip;
+  }
+  function placeBoardMarkerTooltip(host,sourceTip){
+    const tip=getBoardMarkerTooltip();
+    tip.textContent=sourceTip.textContent||host.getAttribute('aria-label')||host.title||'';
+    tip.classList.add('tooltip-visible');
+    tip.style.left='0px';tip.style.top='0px';
+    const square=host.closest('.sq')||host;
+    const hostRect=square.getBoundingClientRect();
+    const tipRect=tip.getBoundingClientRect();
+    const margin=10,gap=10;
+    let left=hostRect.right+gap;
+    if(left+tipRect.width>window.innerWidth-margin) left=hostRect.left-tipRect.width-gap;
+    left=Math.max(margin,Math.min(left,window.innerWidth-tipRect.width-margin));
+    let top=hostRect.top+(hostRect.height-tipRect.height)/2;
+    top=Math.max(margin,Math.min(top,window.innerHeight-tipRect.height-margin));
+    tip.style.left=`${Math.round(left)}px`;
+    tip.style.top=`${Math.round(top)}px`;
+  }
   function placeFloatingMenuTooltip(host){
     const tip=tooltipForHost(host);
     if(!tip) return;
-    document.querySelectorAll('.ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible,.status-marker-tooltip.tooltip-visible,.piece-upgrade-tooltip.tooltip-visible').forEach(other=>{if(other!==tip)other.classList.remove('tooltip-visible')});
+    document.querySelectorAll('.ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible,.status-marker-tooltip.tooltip-visible,.piece-upgrade-tooltip.tooltip-visible').forEach(other=>other.classList.remove('tooltip-visible'));
+    if(host.classList?.contains('status-marker')||host.classList?.contains('upgrade-marker')){
+      placeBoardMarkerTooltip(host,tip);
+      return;
+    }
+    getBoardMarkerTooltip().classList.remove('tooltip-visible');
     tip.classList.add('tooltip-visible');
     tip.style.left='0px'; tip.style.top='0px';
     const hostRect=host.getBoundingClientRect();
@@ -4002,6 +4114,10 @@
     tip.style.left=`${Math.round(left)}px`; tip.style.top=`${Math.round(top)}px`;
   }
   function hideFloatingMenuTooltip(host){
+    if(host?.classList?.contains('status-marker')||host?.classList?.contains('upgrade-marker')){
+      getBoardMarkerTooltip().classList.remove('tooltip-visible');
+      return;
+    }
     tooltipForHost(host)?.classList.remove('tooltip-visible');
   }
   document.addEventListener('pointerover',event=>{
@@ -4020,8 +4136,8 @@
     const host=event.target.closest?.('.ability,.upgrade,.status-marker,.upgrade-marker');
     if(host && !host.contains(event.relatedTarget)) hideFloatingMenuTooltip(host);
   });
-  window.addEventListener('scroll',()=>document.querySelectorAll('.ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible,.status-marker-tooltip.tooltip-visible,.piece-upgrade-tooltip.tooltip-visible').forEach(t=>t.classList.remove('tooltip-visible')),true);
-  window.addEventListener('resize',()=>document.querySelectorAll('.ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible,.status-marker-tooltip.tooltip-visible,.piece-upgrade-tooltip.tooltip-visible').forEach(t=>t.classList.remove('tooltip-visible')));
+  window.addEventListener('scroll',()=>{document.querySelectorAll('.ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible,.status-marker-tooltip.tooltip-visible,.piece-upgrade-tooltip.tooltip-visible').forEach(t=>t.classList.remove('tooltip-visible'));boardMarkerTooltip?.classList.remove('tooltip-visible');},true);
+  window.addEventListener('resize',()=>{document.querySelectorAll('.ability-tooltip.tooltip-visible,.upgrade-tooltip.tooltip-visible,.status-marker-tooltip.tooltip-visible,.piece-upgrade-tooltip.tooltip-visible').forEach(t=>t.classList.remove('tooltip-visible'));boardMarkerTooltip?.classList.remove('tooltip-visible');});
   window.addEventListener('popstate',applyBrowserRoute);
   window.addEventListener('storage',event=>{if(event.key==='abilityChessMemberSession'){try{memberSession=JSON.parse(event.newValue||'null');}catch{memberSession=null;}if(memberSession||memberChallengeInboxKey){startGlobalChallengeWatcher();loadChallengeNotifications();}}});
   window.addEventListener('focus',()=>{if(memberSession||memberChallengeInboxKey){startGlobalChallengeWatcher();loadChallengeNotifications();}});
@@ -4043,8 +4159,15 @@
   onlineStartingPointsOutput.textContent=`${onlineStartingPointsSlider.value} point${onlineStartingPointsSlider.value==='1'?'':'s'}`;
   selectedGameMode='bot';
   gameModeLabel.innerHTML='Mode: <b>Bot</b>';
-  newGame();
-  applyBrowserRoute();
+  (async()=>{
+    const restored=await restorePersistedActiveGame();
+    if(!restored){newGame();applyBrowserRoute();}
+    else {
+      const currentRoute=routeFromLocation();
+      if(currentRoute==='game'||currentRoute==='home') navigateTo('game',{},true);
+      else applyBrowserRoute();
+    }
+  })();
 })();
   window.addEventListener('resize',()=>{ if(shieldMoveWarningEl) renderShieldMoveWarning(); });
   window.addEventListener('scroll',()=>{ if(shieldMoveWarningEl) renderShieldMoveWarning(); },true);
