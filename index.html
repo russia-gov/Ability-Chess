@@ -215,67 +215,54 @@
   .play-inline-status{min-height:18px;margin-top:8px;color:#c8d1da;font-size:12px}
   @media(max-width:950px){.play-hub-screen.active{grid-template-columns:1fr}.play-hub-screen>.site-ribbon{display:none}.play-hub-main{padding:18px}.play-hub-shell{grid-template-columns:1fr}.play-hub-preview{display:none}}
 
+  .minimal-home{display:block!important;min-height:100vh;background:radial-gradient(circle at 50% 15%,#252e37 0,#151a20 46%,#0e1115 100%)}
+  .minimal-home.hidden{display:none!important}.minimal-home-main{min-height:100vh;display:grid;place-items:center;padding:28px;box-sizing:border-box}.welcome-card{width:min(760px,100%);text-align:center}.welcome-brand{display:inline-flex;align-items:center;gap:10px;font-size:20px;font-weight:900;color:#f3f6f8}.welcome-card>h1{font-size:clamp(42px,7vw,72px);line-height:1;margin:28px 0 16px}.welcome-card>p{max-width:650px;margin:0 auto 28px;color:#bdc7d1;font-size:18px;line-height:1.6}.bot-launch-card{background:#20262d;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:24px;text-align:left;box-shadow:0 24px 60px rgba(0,0,0,.34)}.bot-launch-card h2{margin:0 0 3px}.bot-launch-card>div>p{margin:0 0 17px;color:var(--muted)}.bot-difficulty-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.bot-difficulty{display:grid;gap:3px;text-align:left;padding:14px;background:#151b21;border:1px solid #3c4854;border-radius:12px}.bot-difficulty span{font-size:11px;color:#aeb8c2}.bot-difficulty.selected{background:#344526;border-color:#88a95b}.bot-settings-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}.bot-settings-grid label{display:grid;gap:6px;color:#aeb8c2;font-size:11px}.bot-settings-grid input{width:100%;box-sizing:border-box;background:#10151a;color:#fff;border:1px solid #465363;border-radius:9px;padding:10px}.bot-settings-grid output{font-size:11px;color:#d7dee5}.welcome-play-button{width:100%;margin-top:15px;padding:15px;background:linear-gradient(135deg,#719246,#8bae54);border-color:#b4d17b;color:#10150b;font-size:17px;font-weight:900}.welcome-secondary{margin-top:14px;background:transparent;border:0;color:#c9d2db;text-decoration:underline}.site-ribbon{position:sticky!important;top:0!important;height:100vh!important;min-height:0!important;box-sizing:border-box;overflow:visible;align-self:start}.site-ribbon .sidebar-account{margin-top:auto}.content-screen,.play-hub-screen,.game-screen{align-items:start}.dedicated-profile-card{display:grid;grid-template-columns:auto 1fr;gap:18px;background:#20262d;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:26px}.profile-page-avatar{width:88px;height:88px;border-radius:16px;background:#384553;display:grid;place-items:center;font-size:38px;font-weight:900}.profile-page-handle{color:var(--muted);font-size:16px}.profile-page-stats{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.profile-stat{background:#151b21;border-radius:11px;padding:14px}.profile-stat b{display:block;font-size:23px}.profile-stat span{font-size:11px;color:var(--muted)}.profile-page-actions{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap}
+  @media(max-width:700px){.bot-difficulty-grid,.bot-settings-grid{grid-template-columns:1fr 1fr}.minimal-home-main{padding:16px}.welcome-card>p{font-size:15px}.dedicated-profile-card{grid-template-columns:1fr}.profile-page-stats{grid-template-columns:1fr 1fr}}
+
 </style>
 </head>
 <body>
-<div id="homeScreen" class="home-screen screen">
-  <aside class="home-sidebar">
-    <div class="brand"><span class="brand-mark">♞</span><span>Ability Chess</span></div>
-    <nav class="home-nav" aria-label="Main navigation">
-      <button class="home-nav-item active" type="button"><span class="home-nav-icon">▶</span>Play</button>
-      <button class="home-nav-item abilities-nav-btn" type="button"><span class="home-nav-icon">★</span>Abilities Guide</button>
-      <button class="home-nav-item settings-nav-btn" type="button"><span class="home-nav-icon">⚙</span>Settings</button>
-      <button class="home-nav-item members-nav-btn" type="button"><span class="home-nav-icon">♙</span>Members</button><button class="home-nav-item history-nav-btn" type="button"><span class="home-nav-icon">◫</span>Game history</button>
-    </nav>
-    <div class="home-sidebar-note"></div>
-  </aside>
-  <main class="home-main">
-    <div class="home-content">
-      <section class="home-board-card" aria-label="Ability Chess preview">
-        <div id="homeBoard" class="home-board"></div>
-      </section>
-      <section class="home-copy">
-        <h1>Chess, with a new layer of <span>power.</span></h1>
-        <p>Capture pieces to earn points, then spend them on shields, teleports, bombs, or a devastating double move.</p>
-        <div class="play-options">
-          <button id="homeBotBtn" class="play-card primary" type="button">
-            <span class="play-icon">🤖</span><span><span class="play-title">Play the Bot</span><span class="play-desc">Challenge the smarter Ability Chess opponent</span></span><span class="play-arrow">›</span>
-          </button>
-          <button id="homeLocalBtn" class="play-card" type="button">
-            <span class="play-icon">♟</span><span><span class="play-title">Two Players</span><span class="play-desc">Play locally on the same device</span></span><span class="play-arrow">›</span>
-          </button>
-          <button id="homeOnlineBtn" class="play-card" type="button">
-            <span class="play-icon">🌐</span><span><span class="play-title">Play Online</span><span class="play-desc">Create or join a private room</span></span><span class="play-arrow">›</span>
-          </button>
+<div id="homeScreen" class="home-screen minimal-home screen">
+  <main class="minimal-home-main">
+    <section class="welcome-card">
+      <div class="welcome-brand"><span class="brand-mark">♞</span><span>Ability Chess</span></div>
+      <h1>Welcome to Ability Chess</h1>
+      <p>Classic chess becomes a battle of timing, resources, upgrades, and special abilities. Capture pieces, earn points, reshape the position, and find combinations that ordinary chess cannot offer.</p>
+      <section class="bot-launch-card" aria-label="Play a bot">
+        <div><h2>Play a bot</h2><p>Choose an opponent and build the game you want.</p></div>
+        <div class="bot-difficulty-grid" id="botDifficultyGrid">
+          <button type="button" class="bot-difficulty selected" data-level="easy"><b>Easy</b><span>Relaxed and forgiving</span></button>
+          <button type="button" class="bot-difficulty" data-level="medium"><b>Medium</b><span>Balanced tactical play</span></button>
+          <button type="button" class="bot-difficulty" data-level="hard"><b>Hard</b><span>Stronger calculation</span></button>
         </div>
-        <section class="time-setup" aria-label="Time control">
-          <h3>Time control</h3>
-          <div class="slider-row"><label for="baseTimeSlider">Base time</label><input id="baseTimeSlider" type="range" min="1" max="60" step="1" value="10"><output id="baseTimeOutput">10 min</output></div>
-          <div class="slider-row"><label for="incrementSlider">Increment</label><input id="incrementSlider" type="range" min="0" max="30" step="1" value="0"><output id="incrementOutput">0 sec</output></div>
-          <div class="slider-row"><label for="upgradeLimitSlider">Upgrade slots</label><input id="upgradeLimitSlider" type="range" min="0" max="6" step="1" value="3"><output id="upgradeLimitOutput">3 types</output></div>
-          <div class="game-rule-row"><label><input id="abilitiesEnabledToggle" type="checkbox" checked> Abilities enabled</label><label><input id="upgradesEnabledToggle" type="checkbox" checked> Upgrades enabled</label></div>
-          <div class="rule-note">These settings apply to bot games, local games, and member challenges you create.</div>
-        </section>
-        <div class="home-feature-row">
-          <div class="home-feature"><b>Earn points</b>Every capture builds your ability bank.</div>
-          <div class="home-feature"><b>Change the board</b>Use one ability before making your move.</div>
-          <div class="home-feature"><b>Capture the king</b>Double Move can create lethal combinations.</div>
+        <div class="bot-settings-grid">
+          <label>Minutes<input id="baseTimeSlider" type="number" min="1" max="60" value="10"><output id="baseTimeOutput">10 min</output></label>
+          <label>Increment<input id="incrementSlider" type="number" min="0" max="30" value="0"><output id="incrementOutput">0 sec</output></label>
+          <label>Starting points<input id="homeStartingPointsSlider" type="number" min="0" max="30" value="0"><output id="homeStartingPointsOutput">0 points</output></label>
+          <label>Max upgrades<input id="upgradeLimitSlider" type="number" min="0" max="6" value="3"><output id="upgradeLimitOutput">3 types</output></label>
         </div>
+        <div class="game-rule-row"><label><input id="abilitiesEnabledToggle" type="checkbox" checked> Abilities enabled</label><label><input id="upgradesEnabledToggle" type="checkbox" checked> Upgrades enabled</label></div>
+        <button id="homeBotBtn" class="welcome-play-button" type="button">Play bot</button>
       </section>
-    </div>
+      <button id="welcomeMorePlayBtn" class="welcome-secondary" type="button">Online, friends, and custom games</button>
+    </section>
   </main>
 </div>
-
 <div id="playHubScreen" class="play-hub-screen screen">
   <aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item active page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item abilities-nav-btn" type="button"><span class="home-nav-icon">★</span>Abilities Guide</button><button class="home-nav-item settings-nav-btn" type="button"><span class="home-nav-icon">⚙</span>Settings</button><button class="home-nav-item history-nav-btn" type="button"><span class="home-nav-icon">◫</span>Game history</button></nav></aside>
   <main class="play-hub-main"><div class="play-hub-shell">
     <section class="play-hub-preview"><h1>Play Ability Chess</h1><p>Choose a quick preset, challenge a friend, or build a custom game. The three numbers represent time control, starting points, and maximum simultaneous upgrades.</p><div id="playHubBoard" class="home-board"></div></section>
     <aside class="play-control-panel">
-      <section class="play-section"><h2>Play online</h2><p>Create a standard online room using one of the common setups.</p><div id="onlinePresetGrid" class="preset-grid"></div><button id="presetOnlineBtn" class="play-primary" type="button">Create online game</button><div id="presetOnlineStatus" class="play-inline-status"></div></section>
+      <section class="play-section"><h2>Play online</h2><p>Choose a setup to enter the live matching queue. The next player choosing the same setup will be paired with you automatically.</p><div id="onlinePresetGrid" class="preset-grid"></div><button id="presetOnlineBtn" class="play-primary" type="button">Find a game</button><button id="cancelSeekBtn" type="button" hidden>Cancel seek</button><div id="presetOnlineStatus" class="play-inline-status"></div></section>
       <section class="play-section"><h2>Play a friend</h2><p>Search for a member, choose a preset, and send a challenge.</p><input id="playFriendSearch" class="play-input" placeholder="Search friends or members"><div id="playFriendResults" class="play-friend-results"></div><select id="friendPresetSelect" class="play-select"></select><button id="sendFriendChallengeBtn" class="play-primary" type="button">Send challenge</button><div id="friendChallengeStatus" class="play-inline-status"></div></section>
-      <section class="play-section"><h2>Custom game</h2><p>Choose every game setting, then create an open online room or challenge a selected member.</p><div class="custom-grid"><label>Minutes<input id="customBase" class="play-input" type="number" min="1" max="60" value="10"></label><label>Increment<input id="customIncrement" class="play-input" type="number" min="0" max="30" value="0"></label><label>Starting points<input id="customPoints" class="play-input" type="number" min="0" max="30" value="0"></label><label>Max upgrades<input id="customUpgrades" class="play-input" type="number" min="0" max="6" value="3"></label></div><div class="game-rule-row"><label><input id="customAbilities" type="checkbox" checked> Abilities</label><label><input id="customUpgradeRules" type="checkbox" checked> Upgrades</label></div><input id="customFriendSearch" class="play-input" placeholder="Optional: search a specific player"><div id="customFriendResults" class="play-friend-results"></div><div class="custom-actions"><button id="customOnlineBtn" type="button">Play online</button><button id="customFriendBtn" class="game-toast-primary" type="button">Challenge player</button></div><div id="customStatus" class="play-inline-status"></div></section>
+      <section class="play-section"><h2>Custom game</h2><p>Choose every game setting, then enter a matching queue or challenge a selected member.</p><div class="custom-grid"><label>Minutes<input id="customBase" class="play-input" type="number" min="1" max="60" value="10"></label><label>Increment<input id="customIncrement" class="play-input" type="number" min="0" max="30" value="0"></label><label>Starting points<input id="customPoints" class="play-input" type="number" min="0" max="30" value="0"></label><label>Max upgrades<input id="customUpgrades" class="play-input" type="number" min="0" max="6" value="3"></label></div><div class="game-rule-row"><label><input id="customAbilities" type="checkbox" checked> Abilities</label><label><input id="customUpgradeRules" type="checkbox" checked> Upgrades</label></div><input id="customFriendSearch" class="play-input" placeholder="Optional: search a specific player"><div id="customFriendResults" class="play-friend-results"></div><div class="custom-actions"><button id="customOnlineBtn" type="button">Find online game</button><button id="customFriendBtn" class="game-toast-primary" type="button">Challenge player</button></div><div id="customStatus" class="play-inline-status"></div></section>
     </aside>
   </div></main>
+</div>
+
+<div id="profileScreen" class="content-screen profile-page-screen screen">
+  <aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item abilities-nav-btn" type="button"><span class="home-nav-icon">★</span>Abilities Guide</button><button class="home-nav-item settings-nav-btn" type="button"><span class="home-nav-icon">⚙</span>Settings</button><button class="home-nav-item history-nav-btn" type="button"><span class="home-nav-icon">◫</span>Game history</button></nav></aside>
+  <main class="content-main"><section class="dedicated-profile-card"><div id="profilePageAvatar" class="profile-page-avatar">♙</div><div><h1 id="profilePageName" class="page-title">Profile</h1><div id="profilePageHandle" class="profile-page-handle"></div></div><div id="profilePageStats" class="profile-page-stats"></div><div id="profilePageActions" class="profile-page-actions"></div></section></main>
 </div>
 
 <div id="onlineModal" class="online-modal" hidden>
@@ -302,7 +289,7 @@
   </section>
 </div>
 <div id="abilitiesScreen" class="content-screen screen">
-  <aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item active" type="button"><span class="home-nav-icon">★</span>Abilities Guide</button><button class="home-nav-item settings-nav-btn" type="button"><span class="home-nav-icon">⚙</span>Settings</button><button class="home-nav-item members-nav-btn" type="button"><span class="home-nav-icon">♙</span>Members</button><button class="home-nav-item history-nav-btn" type="button"><span class="home-nav-icon">◫</span>Game history</button></nav></aside>
+  <aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item active" type="button"><span class="home-nav-icon">★</span>Abilities Guide</button><button class="home-nav-item settings-nav-btn" type="button"><span class="home-nav-icon">⚙</span>Settings</button><button class="home-nav-item history-nav-btn" type="button"><span class="home-nav-icon">◫</span>Game history</button></nav></aside>
   <main class="content-main"><h1 class="page-title">Abilities Guide</h1><p class="page-lead">Captures earn points equal to the captured piece's standard value. Spend those points on one ability before making your normal move.</p>
     <div class="guide-grid">
       <article class="guide-card"><h2>Shield <span class="guide-cost">3 points</span></h2><p>Protect one of your pieces from ordinary capture until your next turn begins. The shield is immediately lost if that piece moves. Bomb is not an ordinary capture.</p></article>
@@ -336,7 +323,7 @@
   </main>
 </div>
 <div id="settingsScreen" class="content-screen screen">
-  <aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item abilities-nav-btn" type="button"><span class="home-nav-icon">★</span>Abilities Guide</button><button class="home-nav-item active" type="button"><span class="home-nav-icon">⚙</span>Settings</button><button class="home-nav-item members-nav-btn" type="button"><span class="home-nav-icon">♙</span>Members</button><button class="home-nav-item history-nav-btn" type="button"><span class="home-nav-icon">◫</span>Game history</button></nav></aside>
+  <aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item abilities-nav-btn" type="button"><span class="home-nav-icon">★</span>Abilities Guide</button><button class="home-nav-item active" type="button"><span class="home-nav-icon">⚙</span>Settings</button><button class="home-nav-item history-nav-btn" type="button"><span class="home-nav-icon">◫</span>Game history</button></nav></aside>
   <main class="content-main"><h1 class="page-title">Settings</h1><p class="page-lead">Customize how Ability Chess looks and feels. Preferences are saved in this browser.</p><div class="settings-stack">
     <section class="settings-card"><h2>Board appearance</h2><div id="boardPresets" class="board-presets"></div><div class="custom-colors"><label class="color-field">Light squares <input id="lightColorInput" type="color"></label><label class="color-field">Dark squares <input id="darkColorInput" type="color"></label></div></section>
     <section class="settings-card"><h2>Gameplay</h2><div class="setting-row"><div class="setting-copy"><b>Enable premoves</b><span>Queue a move while waiting for the opponent.</span></div><label class="switch"><input id="premovesSetting" type="checkbox"><span></span></label></div><div class="setting-row"><div class="setting-copy"><b>Show legal move markers</b><span>Display dots and capture rings for selected pieces.</span></div><label class="switch"><input id="legalMarkersSetting" type="checkbox"><span></span></label></div></section>
@@ -344,7 +331,7 @@
   </div><div class="settings-actions"><button id="resetSettingsBtn" type="button">Reset defaults</button><button class="page-play-btn" type="button">Back to Play</button></div></main>
 </div>
 <div id="historyScreen" class="history-screen screen">
-  <aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item abilities-nav-btn" type="button"><span class="home-nav-icon">★</span>Abilities Guide</button><button class="home-nav-item settings-nav-btn" type="button"><span class="home-nav-icon">⚙</span>Settings</button><button class="home-nav-item members-nav-btn" type="button"><span class="home-nav-icon">♙</span>Members</button><button class="home-nav-item history-nav-btn active" type="button"><span class="home-nav-icon">◫</span>Game history</button></nav></aside>
+  <aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item abilities-nav-btn" type="button"><span class="home-nav-icon">★</span>Abilities Guide</button><button class="home-nav-item settings-nav-btn" type="button"><span class="home-nav-icon">⚙</span>Settings</button><button class="home-nav-item history-nav-btn active" type="button"><span class="home-nav-icon">◫</span>Game history</button></nav></aside>
   <main class="history-main"><div class="history-toolbar"><div><h1 class="page-title">Game History</h1><p class="page-lead">Completed games saved to your Ability Chess account.</p></div><button id="refreshHistoryBtn" type="button">Refresh</button></div><div id="historyList" class="history-list"><div class="history-empty">Sign in to view saved games.</div></div></main>
 </div>
 <div id="gameScreen" class="game-screen screen">
@@ -354,7 +341,7 @@
       <button id="gamePlayNavBtn" class="home-nav-item active" type="button"><span class="home-nav-icon">▶</span>Play</button>
       <button class="home-nav-item abilities-nav-btn" type="button"><span class="home-nav-icon">★</span>Abilities Guide</button>
       <button class="home-nav-item settings-nav-btn" type="button"><span class="home-nav-icon">⚙</span>Settings</button>
-      <button class="home-nav-item members-nav-btn" type="button"><span class="home-nav-icon">♙</span>Members</button><button class="home-nav-item history-nav-btn" type="button"><span class="home-nav-icon">◫</span>Game history</button>
+      <button class="home-nav-item history-nav-btn" type="button"><span class="home-nav-icon">◫</span>Game history</button>
     </nav>
     <div class="home-sidebar-note"></div>
   </aside>
@@ -495,7 +482,7 @@
   const homeScreen = document.getElementById('homeScreen');
   const playHubScreen=document.getElementById('playHubScreen');
   const playHubBoard=document.getElementById('playHubBoard');
-  const onlinePresetGrid=document.getElementById('onlinePresetGrid'), presetOnlineBtn=document.getElementById('presetOnlineBtn'), presetOnlineStatus=document.getElementById('presetOnlineStatus');
+  const onlinePresetGrid=document.getElementById('onlinePresetGrid'), presetOnlineBtn=document.getElementById('presetOnlineBtn'), presetOnlineStatus=document.getElementById('presetOnlineStatus'), cancelSeekBtn=document.getElementById('cancelSeekBtn');
   const playFriendSearch=document.getElementById('playFriendSearch'), playFriendResults=document.getElementById('playFriendResults'), friendPresetSelect=document.getElementById('friendPresetSelect'), sendFriendChallengeBtn=document.getElementById('sendFriendChallengeBtn'), friendChallengeStatus=document.getElementById('friendChallengeStatus');
   const customBase=document.getElementById('customBase'), customIncrement=document.getElementById('customIncrement'), customPoints=document.getElementById('customPoints'), customUpgrades=document.getElementById('customUpgrades'), customAbilities=document.getElementById('customAbilities'), customUpgradeRules=document.getElementById('customUpgradeRules'), customFriendSearch=document.getElementById('customFriendSearch'), customFriendResults=document.getElementById('customFriendResults'), customOnlineBtn=document.getElementById('customOnlineBtn'), customFriendBtn=document.getElementById('customFriendBtn'), customStatus=document.getElementById('customStatus');
   const gameScreen = document.getElementById('gameScreen');
@@ -824,6 +811,7 @@
   const SUPABASE_URL='https://cczvdpofddjghqoeiqew.supabase.co';
   const SUPABASE_KEY='sb_publishable_1j0iGD0GxwBdhac9suyPSw_5CPJGvaM';
   let onlineSession=null, onlinePollTimer=null, onlineSyncing=false, onlineConnectionState='connected', onlineLastSuccess=0;
+  let liveSeekSession=null, liveSeekPollTimer=null, liveSeekStatusTarget=null;
   function setOnlineConnectionStatus(status){
     onlineConnectionState=status;
     if(!connectionStatus)return;
@@ -3502,8 +3490,8 @@
   }
   function buildBoardPresets(){ boardPresets.replaceChildren(); for(const [name,light,dark] of BOARD_PRESETS){const b=document.createElement('button');b.type='button';b.className='board-preset';b.title=name;b.dataset.light=light;b.dataset.dark=dark;b.innerHTML=`<i style="background:${light}"></i><i style="background:${dark}"></i>`;b.addEventListener('click',()=>{settings.light=light;settings.dark=dark;saveSettings();});boardPresets.appendChild(b);} }
   function showScreen(target){
-    homeScreen.classList.add('hidden'); playHubScreen?.classList.remove('active'); gameScreen.classList.remove('active'); abilitiesScreen.classList.remove('active'); settingsScreen.classList.remove('active'); historyScreen.classList.remove('active');
-    if(target==='home') homeScreen.classList.remove('hidden'); else if(target==='play'){playHubScreen?.classList.add('active');renderPlayHub();} else if(target==='game') gameScreen.classList.add('active'); else if(target==='abilities') abilitiesScreen.classList.add('active'); else if(target==='settings') settingsScreen.classList.add('active'); else if(target==='history'){historyScreen.classList.add('active');loadGameHistory();}
+    homeScreen.classList.add('hidden'); playHubScreen?.classList.remove('active'); gameScreen.classList.remove('active'); abilitiesScreen.classList.remove('active'); settingsScreen.classList.remove('active'); historyScreen.classList.remove('active'); profileScreen?.classList.remove('active');
+    if(target==='home') homeScreen.classList.remove('hidden'); else if(target==='play'){playHubScreen?.classList.add('active');renderPlayHub();} else if(target==='game') gameScreen.classList.add('active'); else if(target==='abilities') abilitiesScreen.classList.add('active'); else if(target==='settings') settingsScreen.classList.add('active'); else if(target==='history'){historyScreen.classList.add('active');loadGameHistory();} else if(target==='profile'){profileScreen?.classList.add('active');}
     window.scrollTo({top:0,behavior:'instant'});
   }
 
@@ -3539,10 +3527,48 @@
     baseTimeOutput.textContent=`${cfg.base} min`;incrementOutput.textContent=`${cfg.increment} sec`;upgradeLimitOutput.textContent=`${cfg.upgradeLimit} types`;
     onlineBaseTimeOutput.textContent=`${cfg.base} min`;onlineIncrementOutput.textContent=`${cfg.increment} sec`;onlineStartingPointsOutput.textContent=`${cfg.startingPoints} points`;onlineUpgradeLimitOutput.textContent=`${cfg.upgradeLimit} types`;
   }
-  async function createConfiguredOpenRoom(cfg,statusElTarget){
-    applyConfigToControls(cfg);onlineModal.hidden=false;onlineSetup.hidden=false;onlineWaiting.hidden=true;onlineStatus.textContent='';
-    statusElTarget.textContent='Creating online room…';
-    try{await createOnlineRoom();statusElTarget.textContent='Room created. Share the displayed code with an opponent.';}catch(e){statusElTarget.textContent=e.message;}
+  function liveSeekQueueKey(cfg){
+    return [Number(cfg.base),Number(cfg.increment),Number(cfg.startingPoints),Number(cfg.upgradeLimit),cfg.abilitiesEnabled!==false?1:0,cfg.upgradesEnabled!==false?1:0].join(':');
+  }
+  function stopLiveSeekPolling(){clearInterval(liveSeekPollTimer);liveSeekPollTimer=null;}
+  function setSeekUi(waiting,message,target){
+    liveSeekStatusTarget=target||liveSeekStatusTarget||presetOnlineStatus;
+    if(liveSeekStatusTarget)liveSeekStatusTarget.textContent=message||'';
+    if(cancelSeekBtn)cancelSeekBtn.hidden=!waiting;
+    if(presetOnlineBtn)presetOnlineBtn.disabled=waiting;
+    if(customOnlineBtn)customOnlineBtn.disabled=waiting;
+  }
+  function prepareLiveSeekState(cfg){
+    selectedGameMode='online';newGame();game.mode='online';game.onlineStarted=true;game.hostColor='w';game.playerColor='w';
+    game.initialTime=Number(cfg.base)*60;game.increment=Number(cfg.increment);game.startingPoints=Number(cfg.startingPoints);game.upgradeLimit=Number(cfg.upgradeLimit);
+    game.abilitiesEnabled=cfg.abilitiesEnabled!==false;game.upgradesEnabled=cfg.upgradesEnabled!==false;game.clocks={w:game.initialTime,b:game.initialTime};game.points={w:game.startingPoints,b:game.startingPoints};
+    game.clockLastTick=null;game.lastMessage='Matched game ready. White to move.';stopClockLoop();return onlineState();
+  }
+  function launchLiveSeekMatch(row,role){
+    stopLiveSeekPolling();liveSeekSession=null;setSeekUi(false,'Match found! Starting game…',liveSeekStatusTarget);
+    onlineSession={id:row.room_id,code:null,token:row.seat_token,color:row.assigned_color,role,version:Number(row.room_version),waiting:false,liveSeek:true};
+    localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));restoreOnlineState(row.state||{});game.onlineStarted=true;game.clockLastTick=performance.now();onlineModal.hidden=true;showScreen('game');startOnlinePolling();startClockLoop();renderAbilities();render();
+  }
+  async function pollLiveSeek(){
+    if(!liveSeekSession)return;
+    try{const rows=await supabaseRpc('ability_chess_poll_seek',{p_seek_id:liveSeekSession.id,p_seek_token:liveSeekSession.token});const row=rows?.[0];if(!row)return;
+      if(row.matched){launchLiveSeekMatch(row,'host');return;}
+      if(row.status!=='waiting'){stopLiveSeekPolling();liveSeekSession=null;setSeekUi(false,row.status==='expired'?'Seek expired. Choose a setup to try again.':'Seek cancelled.',liveSeekStatusTarget);}
+    }catch(e){setSeekUi(true,`Still seeking… (${e.message})`,liveSeekStatusTarget);}
+  }
+  async function createLiveSeek(cfg,statusElTarget){
+    if(liveSeekSession){statusElTarget.textContent='Cancel your current seek before starting another.';return;}
+    primeGameAudio();applyConfigToControls(cfg);setSeekUi(true,'Looking for an opponent with the same setup…',statusElTarget);
+    try{const state=prepareLiveSeekState(cfg);const settingsPayload={base:Number(cfg.base),increment:Number(cfg.increment),startingPoints:Number(cfg.startingPoints),upgradeLimit:Number(cfg.upgradeLimit),abilitiesEnabled:cfg.abilitiesEnabled!==false,upgradesEnabled:cfg.upgradesEnabled!==false,hostColor:'w'};
+      const rows=await supabaseRpc('ability_chess_create_or_match_seek',{p_queue_key:liveSeekQueueKey(cfg),p_game_state:state,p_settings:settingsPayload});const row=rows?.[0];if(!row)throw new Error('Matchmaking did not return a seek.');
+      if(row.matched){launchLiveSeekMatch(row,'guest');return;}
+      liveSeekSession={id:row.seek_id,token:row.seek_token,roomId:row.room_id};setSeekUi(true,'Seeking an opponent… You can cancel at any time.',statusElTarget);stopLiveSeekPolling();liveSeekPollTimer=setInterval(pollLiveSeek,700);
+    }catch(e){liveSeekSession=null;stopLiveSeekPolling();setSeekUi(false,e.message,statusElTarget);}
+  }
+  async function cancelLiveSeek(){
+    if(!liveSeekSession)return;const current=liveSeekSession;stopLiveSeekPolling();
+    try{await supabaseRpc('ability_chess_cancel_seek',{p_seek_id:current.id,p_seek_token:current.token});}catch(e){}
+    liveSeekSession=null;setSeekUi(false,'Seek cancelled.',liveSeekStatusTarget);
   }
   async function sendPresetChallenge(member,cfg,statusTarget){
     if(!member){statusTarget.textContent='Choose a player first.';return;}
@@ -3559,15 +3585,32 @@
     const term=input.value.trim();container.replaceChildren();
     if(term.length<1)return;
     if(!memberSession){container.innerHTML='<div class="member-empty">Sign in from your profile to search members.</div>';return;}
-    try{const rows=await memberRpc('ability_chess_list_members',{p_search:term});for(const m of rows||[]){const row=document.createElement('div');row.className='play-friend-card';row.innerHTML=`<div><div class="member-name">${escapeHtml(m.display_name)} (@${escapeHtml(m.username)})${m.is_owner?'<span class="owner-tag">Owner</span>':''}</div><div class="member-meta">${m.is_online?'Online · ':''}Rating ${m.rating}</div></div>`;const b=document.createElement('button');b.type='button';b.textContent='Select';b.addEventListener('click',()=>{container.querySelectorAll('.play-friend-card').forEach(x=>x.classList.remove('selected'));row.classList.add('selected');selectCallback(m);});row.appendChild(b);container.appendChild(row);}if(!rows?.length)container.innerHTML='<div class="member-empty">No matching members.</div>';}catch(e){container.innerHTML=`<div class="member-empty">${escapeHtml(e.message)}</div>`;}
+    try{const rows=await memberRpc('ability_chess_list_members',{p_search:term});for(const m of rows||[]){const row=document.createElement('div');row.className='play-friend-card';row.innerHTML=`<button type="button" class="sidebar-person-link"><div class="member-name">${escapeHtml(m.display_name)} (@${escapeHtml(m.username)})${m.is_owner?'<span class="owner-tag">Owner</span>':''}</div><div class="member-meta">${m.is_online?'Online · ':''}Rating ${m.rating}</div></button>`;row.querySelector('.sidebar-person-link').addEventListener('click',()=>viewMemberProfile(m));const b=document.createElement('button');b.type='button';b.textContent='Select';b.addEventListener('click',()=>{container.querySelectorAll('.play-friend-card').forEach(x=>x.classList.remove('selected'));row.classList.add('selected');selectCallback(m);});row.appendChild(b);container.appendChild(row);}if(!rows?.length)container.innerHTML='<div class="member-empty">No matching members.</div>';}catch(e){container.innerHTML=`<div class="member-empty">${escapeHtml(e.message)}</div>`;}
   }
   function customConfig(){return {base:Math.max(1,Number(customBase.value||10)),increment:Math.max(0,Number(customIncrement.value||0)),startingPoints:Math.max(0,Number(customPoints.value||0)),upgradeLimit:Math.max(0,Math.min(6,Number(customUpgrades.value||3))),abilitiesEnabled:customAbilities.checked,upgradesEnabled:customUpgradeRules.checked,hostColor:'w'};}
   function injectSidebarAccounts(){
-    document.querySelectorAll('.home-sidebar,.site-ribbon').forEach(sidebar=>{if(sidebar.querySelector('.sidebar-account'))return;const wrap=document.createElement('div');wrap.className='sidebar-account';wrap.innerHTML='<div class="sidebar-member-search"><input type="search" placeholder="Search members"><div class="sidebar-search-results" hidden></div></div><button class="sidebar-profile-link" type="button"><span class="sidebar-avatar">♙</span><span><span class="sidebar-profile-name">Sign in</span><span class="sidebar-profile-meta">Profile and account</span></span></button>';const input=wrap.querySelector('input'),results=wrap.querySelector('.sidebar-search-results'),profileBtn=wrap.querySelector('.sidebar-profile-link');let timer=null;input.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(async()=>{results.replaceChildren();if(!input.value.trim()){results.hidden=true;return;}if(!memberSession){results.hidden=false;results.innerHTML='<div class="member-empty">Sign in to search members.</div>';return;}try{const rows=await memberRpc('ability_chess_list_members',{p_search:input.value.trim()});for(const m of rows||[]){const row=document.createElement('div');row.className='sidebar-search-row';row.innerHTML=`<div><div class="sidebar-search-name">${escapeHtml(m.display_name)}${m.is_owner?'<span class="owner-tag">Owner</span>':''}</div><div class="sidebar-search-meta">@${escapeHtml(m.username)} · ${m.rating}</div></div>`;const challenge=document.createElement('button');challenge.type='button';challenge.textContent='Challenge';challenge.addEventListener('click',()=>{showScreen('play');selectedPlayFriend=m;playFriendSearch.value=m.username;playFriendResults.replaceChildren();friendChallengeStatus.textContent=`Selected ${m.display_name}.`;results.hidden=true;});row.appendChild(challenge);results.appendChild(row);}if(!rows?.length)results.innerHTML='<div class="member-empty">No matches.</div>';results.hidden=false;}catch(e){results.hidden=false;results.innerHTML=`<div class="member-empty">${escapeHtml(e.message)}</div>`;}},220);});profileBtn.addEventListener('click',openMemberLobby);sidebar.appendChild(wrap);});updateSidebarAccounts();
+    document.querySelectorAll('.home-sidebar,.site-ribbon').forEach(sidebar=>{if(sidebar.querySelector('.sidebar-account'))return;const wrap=document.createElement('div');wrap.className='sidebar-account';wrap.innerHTML='<div class="sidebar-member-search"><input type="search" placeholder="Search members"><div class="sidebar-search-results" hidden></div></div><button class="sidebar-profile-link" type="button"><span class="sidebar-avatar">♙</span><span><span class="sidebar-profile-name">Sign in</span><span class="sidebar-profile-meta">Profile and account</span></span></button>';const input=wrap.querySelector('input'),results=wrap.querySelector('.sidebar-search-results'),profileBtn=wrap.querySelector('.sidebar-profile-link');let timer=null;input.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(async()=>{results.replaceChildren();if(!input.value.trim()){results.hidden=true;return;}if(!memberSession){results.hidden=false;results.innerHTML='<div class="member-empty">Sign in to search members.</div>';return;}try{const rows=await memberRpc('ability_chess_list_members',{p_search:input.value.trim()});for(const m of rows||[]){const row=document.createElement('div');row.className='sidebar-search-row';row.innerHTML=`<button type="button" class="sidebar-person-link"><div class="sidebar-search-name">${escapeHtml(m.display_name)}${m.is_owner?'<span class="owner-tag">Owner</span>':''}</div><div class="sidebar-search-meta">@${escapeHtml(m.username)} · ${m.rating}</div></button>`;row.querySelector('.sidebar-person-link').addEventListener('click',()=>{results.hidden=true;viewMemberProfile(m);});const challenge=document.createElement('button');challenge.type='button';challenge.textContent='Challenge';challenge.addEventListener('click',()=>{showScreen('play');selectedPlayFriend=m;playFriendSearch.value=m.username;playFriendResults.replaceChildren();friendChallengeStatus.textContent=`Selected ${m.display_name}.`;results.hidden=true;});row.appendChild(challenge);results.appendChild(row);}if(!rows?.length)results.innerHTML='<div class="member-empty">No matches.</div>';results.hidden=false;}catch(e){results.hidden=false;results.innerHTML=`<div class="member-empty">${escapeHtml(e.message)}</div>`;}},220);});profileBtn.addEventListener('click',()=>memberProfile?viewMemberProfile(memberProfile):openMemberLobby());sidebar.appendChild(wrap);});updateSidebarAccounts();
   }
   function updateSidebarAccounts(){document.querySelectorAll('.sidebar-account').forEach(wrap=>{const name=wrap.querySelector('.sidebar-profile-name'),meta=wrap.querySelector('.sidebar-profile-meta'),avatar=wrap.querySelector('.sidebar-avatar');if(memberProfile){name.innerHTML=`${escapeHtml(memberProfile.display_name)}${memberProfile.is_owner?'<span class="owner-tag">Owner</span>':''}`;meta.textContent=`@${memberProfile.username} · ${memberProfile.rating}`;avatar.textContent=(memberProfile.display_name||memberProfile.username||'P').slice(0,1).toUpperCase();}else if(memberSession){name.textContent='Loading profile…';meta.textContent='Account';avatar.textContent='♙';}else{name.textContent='Sign in';meta.textContent='Profile and account';avatar.textContent='♙';}});}
 
+  const profileScreen=document.getElementById('profileScreen'),profilePageAvatar=document.getElementById('profilePageAvatar'),profilePageName=document.getElementById('profilePageName'),profilePageHandle=document.getElementById('profilePageHandle'),profilePageStats=document.getElementById('profilePageStats'),profilePageActions=document.getElementById('profilePageActions');
+  const homeStartingPointsSlider=document.getElementById('homeStartingPointsSlider'),homeStartingPointsOutput=document.getElementById('homeStartingPointsOutput'),welcomeMorePlayBtn=document.getElementById('welcomeMorePlayBtn');
+  let selectedBotDifficulty='easy';
+  document.querySelectorAll('.bot-difficulty').forEach(btn=>btn.addEventListener('click',()=>{selectedBotDifficulty=btn.dataset.level;document.querySelectorAll('.bot-difficulty').forEach(x=>x.classList.toggle('selected',x===btn));}));
+  [baseTimeSlider,incrementSlider,homeStartingPointsSlider,upgradeLimitSlider].forEach(input=>input?.addEventListener('input',()=>{baseTimeOutput.textContent=`${baseTimeSlider.value} min`;incrementOutput.textContent=`${incrementSlider.value} sec`;homeStartingPointsOutput.textContent=`${homeStartingPointsSlider.value} points`;upgradeLimitOutput.textContent=`${upgradeLimitSlider.value} types`;}));
+  welcomeMorePlayBtn?.addEventListener('click',()=>showScreen('play'));
+  function viewMemberProfile(member){
+    const m=member||memberProfile;if(!m){openMemberLobby();return;}
+    profilePageAvatar.textContent=(m.display_name||m.username||'P').slice(0,1).toUpperCase();
+    profilePageName.innerHTML=`${escapeHtml(m.display_name||m.username)}${m.is_owner?'<span class="owner-tag">Owner</span>':''}`;
+    profilePageHandle.textContent=`@${m.username||''}`;
+    profilePageStats.innerHTML=`<div class="profile-stat"><b>${Number(m.rating||1200)}</b><span>Rating</span></div><div class="profile-stat"><b>${Number(m.games_played||0)}</b><span>Games</span></div><div class="profile-stat"><b>${Number(m.wins||0)}</b><span>Wins</span></div><div class="profile-stat"><b>${Number(m.draws||0)}</b><span>Draws</span></div>`;
+    profilePageActions.replaceChildren();
+    if(memberProfile&&m.id===memberProfile.id){const edit=document.createElement('button');edit.type='button';edit.textContent='Edit profile and account';edit.addEventListener('click',openMemberLobby);profilePageActions.appendChild(edit);}else{const challenge=document.createElement('button');challenge.type='button';challenge.textContent='Challenge to a game';challenge.addEventListener('click',()=>{selectedPlayFriend=m;showScreen('play');playFriendSearch.value=m.username||'';friendChallengeStatus.textContent=`Selected ${m.display_name||m.username}.`;});profilePageActions.appendChild(challenge);}
+    showScreen('profile');
+  }
   function renderHomeBoard(){
+    if(!homeBoard)return;
     const preview = [
       ['br','bn','bb','bq','bk','bb','bn','br'],
       ['bp','bp','bp','bp','bp','bp','bp','bp'],
@@ -3597,6 +3640,12 @@
     window.scrollTo({top:0,behavior:'instant'});
   }
 
+  startFromHome = function(mode){
+    getAudioContext();selectedGameMode=mode;gameModeLabel.innerHTML=`Mode: <b>${mode==='bot'?`Bot — ${selectedBotDifficulty[0].toUpperCase()+selectedBotDifficulty.slice(1)}`:mode==='online'?'Online':'Two Players'}</b>`;showScreen('game');newGame();
+    const points=Math.max(0,Number(homeStartingPointsSlider?.value||0));game.startingPoints=points;game.points={w:points,b:points};game.upgradeLimit=Math.max(0,Math.min(6,Number(upgradeLimitSlider.value||3)));game.abilitiesEnabled=abilitiesEnabledToggle.checked;game.upgradesEnabled=upgradesEnabledToggle.checked;render();window.scrollTo({top:0,behavior:'instant'});
+  };
+  const originalBotTimingProfile=botTimingProfile;
+  botTimingProfile=function(){const base=originalBotTimingProfile();if(selectedBotDifficulty==='easy')return {...base,depth:1,fast:true,useAbilities:false,useComplexAbilities:false};if(selectedBotDifficulty==='medium')return {...base,depth:Math.min(2,base.depth||2),fast:false,useAbilities:true,useComplexAbilities:false};return {...base,depth:3,fast:false,useAbilities:true,useComplexAbilities:true};};
   function showHome(){
     if(game?.mode==='online') stopOnline();
     if (premoveTimer) { clearTimeout(premoveTimer); premoveTimer=null; }
@@ -3714,8 +3763,8 @@
     if(event.target===resultModal) resultModal.hidden=true; resultModal.style.display='none';
   });
   cancelAbilityBtn.addEventListener('click', cancelAbility);
-  homeBotBtn.addEventListener('click', () => startFromHome('bot'));
-  homeLocalBtn.addEventListener('click', () => startFromHome('local'));
+  homeBotBtn?.addEventListener('click', () => startFromHome('bot'));
+  homeLocalBtn?.addEventListener('click', () => startFromHome('local'));
   homeOnlineBtn.addEventListener('click',()=>{onlineModal.hidden=false;onlineSetup.hidden=false;onlineWaiting.hidden=true;onlineStatus.textContent='';joinCodeInput.value='';});
   openMembersBtn.addEventListener('click',()=>{onlineModal.hidden=true;openMemberLobby();});
   acceptMemberChallengeToastBtn.addEventListener('click',()=>{if(visibleMemberChallenge)acceptMemberChallenge(visibleMemberChallenge.challenge_id);});
@@ -3758,11 +3807,12 @@
   document.querySelectorAll('.settings-nav-btn').forEach(btn=>btn.addEventListener('click',()=>showScreen('settings')));
   document.querySelectorAll('.page-home-btn').forEach(btn=>btn.addEventListener('click',showHome));
   document.querySelectorAll('.page-play-btn').forEach(btn=>btn.addEventListener('click',()=>showScreen('play')));
-  presetOnlineBtn?.addEventListener('click',()=>createConfiguredOpenRoom({...selectedOnlinePreset,abilitiesEnabled:true,upgradesEnabled:true,hostColor:'w'},presetOnlineStatus));
+  presetOnlineBtn?.addEventListener('click',()=>createLiveSeek({...selectedOnlinePreset,abilitiesEnabled:true,upgradesEnabled:true,hostColor:'w'},presetOnlineStatus));
+  cancelSeekBtn?.addEventListener('click',cancelLiveSeek);
   playFriendSearch?.addEventListener('input',()=>{clearTimeout(playFriendSearch._t);playFriendSearch._t=setTimeout(()=>searchMembersForPlay(playFriendSearch,playFriendResults,m=>{selectedPlayFriend=m;friendChallengeStatus.textContent=`Selected ${m.display_name}.`;}),220);});
   customFriendSearch?.addEventListener('input',()=>{clearTimeout(customFriendSearch._t);customFriendSearch._t=setTimeout(()=>searchMembersForPlay(customFriendSearch,customFriendResults,m=>{selectedCustomFriend=m;customStatus.textContent=`Selected ${m.display_name}.`;}),220);});
   sendFriendChallengeBtn?.addEventListener('click',()=>{const p=PLAY_PRESETS.find(x=>x.label===friendPresetSelect.value)||PLAY_PRESETS[0];sendPresetChallenge(selectedPlayFriend,{...p,abilitiesEnabled:true,upgradesEnabled:true,hostColor:'w'},friendChallengeStatus);});
-  customOnlineBtn?.addEventListener('click',()=>createConfiguredOpenRoom(customConfig(),customStatus));
+  customOnlineBtn?.addEventListener('click',()=>createLiveSeek(customConfig(),customStatus));
   customFriendBtn?.addEventListener('click',()=>sendPresetChallenge(selectedCustomFriend,customConfig(),customStatus));
   baseTimeSlider.addEventListener('input',()=>{baseTimeOutput.textContent=`${baseTimeSlider.value} min`;});
   incrementSlider.addEventListener('input',()=>{incrementOutput.textContent=`${incrementSlider.value} sec`;});
