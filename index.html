@@ -551,6 +551,9 @@
       }
     }
     gameModeLabel.innerHTML=`Mode: <b>Online — ${keepColor==='w'?'White':'Black'}</b>`;
+    // A remotely accepted rematch changes the synchronized game from over to active.
+    // Close the old game-over menu immediately so the challenger can play.
+    if(previousGame?.over && !game.over) resultModal.hidden=true;
     renderAbilities(); render(); if(game.over) showGameOverPopup(); else if(game.onlineStarted!==false) startClockLoop();
   }
   async function syncOnlineState(){
@@ -2574,6 +2577,11 @@
   declineRematchBtn.addEventListener('click',()=>{ if(game?.rematchChallenge && game.rematchChallenge.from!==game.playerColor){ game.rematchChallenge=null; render(); queueMicrotask(syncOnlineState); } });
   cancelRematchBtn.addEventListener('click',()=>{ if(game?.rematchChallenge?.from===game.playerColor){ game.rematchChallenge=null; render(); queueMicrotask(syncOnlineState); } });
   resultHomeBtn.addEventListener('click',()=>{ resultModal.hidden=true; showHome(); });
+  // Dismiss the game-over/rematch menu by clicking its shaded backdrop.
+  // Clicks inside the card keep the menu open.
+  resultModal.addEventListener('click',(event)=>{
+    if(event.target===resultModal) resultModal.hidden=true;
+  });
   cancelAbilityBtn.addEventListener('click', cancelAbility);
   homeBotBtn.addEventListener('click', () => startFromHome('bot'));
   homeLocalBtn.addEventListener('click', () => startFromHome('local'));
