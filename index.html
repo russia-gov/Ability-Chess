@@ -135,7 +135,7 @@
   @media(max-width:900px){.content-screen.active{grid-template-columns:1fr}.content-screen .site-ribbon{min-height:auto;height:auto;position:static;flex-direction:row;align-items:center;padding:10px 12px;border-right:0;border-bottom:1px solid rgba(255,255,255,.06);gap:14px}.content-screen .site-ribbon .home-nav{display:flex;overflow-x:auto}.content-main{padding:22px}.guide-grid{grid-template-columns:1fr}}
   @media(max-width:560px){.slider-row{grid-template-columns:90px 1fr 58px;gap:7px}.clock-time{font-size:18px}.setting-row{align-items:flex-start}}
 
-  .online-modal{position:fixed;inset:0;z-index:21000;display:grid;place-items:center;background:rgba(5,8,12,.76);padding:18px}.online-modal[hidden]{display:none}.online-card{width:min(460px,100%);background:#20262e;border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:22px;box-shadow:0 22px 60px rgba(0,0,0,.45)}.online-card h2{margin:0 0 8px}.online-card p{color:var(--muted);line-height:1.45}.online-actions{display:grid;gap:10px;margin-top:16px}.online-join{display:grid;grid-template-columns:1fr auto;gap:8px}.online-join input{min-width:0;background:#13181e;color:white;border:1px solid #465363;border-radius:10px;padding:11px 12px;text-transform:uppercase;font-size:16px;font-weight:800;letter-spacing:.12em}.room-code{font-size:34px;font-weight:900;letter-spacing:.18em;text-align:center;color:var(--warn);margin:14px 0}.online-status{min-height:22px;color:#cbd3db}.online-close{margin-top:12px;width:100%}
+  .online-modal{position:fixed;inset:0;z-index:21000;display:grid;place-items:center;background:rgba(5,8,12,.76);padding:18px}.online-modal[hidden]{display:none}.online-card{width:min(460px,100%);background:#20262e;border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:22px;box-shadow:0 22px 60px rgba(0,0,0,.45)}.online-card h2{margin:0 0 8px}.online-card p{color:var(--muted);line-height:1.45}.online-actions{display:grid;gap:10px;margin-top:16px}.online-join{display:grid;grid-template-columns:1fr auto;gap:8px}.online-join input{min-width:0;background:#13181e;color:white;border:1px solid #465363;border-radius:10px;padding:11px 12px;text-transform:uppercase;font-size:16px;font-weight:800;letter-spacing:.12em}.room-code{font-size:34px;font-weight:900;letter-spacing:.18em;text-align:center;color:var(--warn);margin:14px 0}.online-status{min-height:22px;color:#cbd3db}.online-close{margin-top:12px;width:100%}.online-host-config{margin-top:16px;padding:14px;background:#171c22;border:1px solid #3b4652;border-radius:12px}.online-host-config[hidden]{display:none}.online-host-config h3{margin:0 0 10px}.online-color-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 14px}.online-color-row label{display:flex;align-items:center;gap:8px;padding:10px;border:1px solid #465363;border-radius:10px;background:#13181e}.online-host-config .slider-row{grid-template-columns:92px 1fr 68px}.online-start-btn{width:100%;background:linear-gradient(135deg,#d98a20,#ffb84d);border-color:#ffc76d;color:#18120a;font-weight:800}
 </style>
 </head>
 <body>
@@ -191,7 +191,15 @@
       <div class="online-actions"><button id="createRoomBtn" class="primary-button" type="button">Create room</button>
         <div class="online-join"><input id="joinCodeInput" maxlength="6" autocomplete="off" placeholder="ROOM CODE" aria-label="Room code"><button id="joinRoomBtn" type="button">Join</button></div></div>
     </div>
-    <div id="onlineWaiting" hidden><div id="roomCodeDisplay" class="room-code"></div><p id="onlineStatus" class="online-status">Waiting for your opponent…</p></div>
+    <div id="onlineWaiting" hidden><div id="roomCodeDisplay" class="room-code"></div><p id="onlineStatus" class="online-status">Waiting for your opponent…</p>
+      <div id="onlineHostConfig" class="online-host-config" hidden>
+        <h3>Choose game settings</h3>
+        <div class="slider-row"><label for="onlineBaseTimeSlider">Base time</label><input id="onlineBaseTimeSlider" type="range" min="1" max="60" step="1" value="10"><output id="onlineBaseTimeOutput">10 min</output></div>
+        <div class="slider-row"><label for="onlineIncrementSlider">Increment</label><input id="onlineIncrementSlider" type="range" min="0" max="30" step="1" value="0"><output id="onlineIncrementOutput">0 sec</output></div>
+        <div class="online-color-row"><label><input type="radio" name="hostColor" value="w" checked> Play White</label><label><input type="radio" name="hostColor" value="b"> Play Black</label></div>
+        <button id="startOnlineGameBtn" class="online-start-btn" type="button">Start game</button>
+      </div>
+    </div>
     <button id="closeOnlineBtn" class="online-close" type="button">Close</button>
   </section>
 </div>
@@ -243,6 +251,9 @@
       </div>
       <div class="row">
         <span id="gameModeLabel" class="game-mode-label">Mode: <b>Bot</b></span>
+        <button id="offerDrawBtn">Offer Draw</button>
+        <button id="acceptDrawBtn" hidden>Accept Draw</button>
+        <button id="declineDrawBtn" hidden>Decline</button>
         <button id="resignBtn" class="danger-button">Resign</button>
         <button id="newGameBtn">New Game</button>
       </div>
@@ -293,6 +304,9 @@
   const abilitiesEl = document.getElementById('abilities');
   const newGameBtn = document.getElementById('newGameBtn');
   const resignBtn = document.getElementById('resignBtn');
+  const offerDrawBtn = document.getElementById('offerDrawBtn');
+  const acceptDrawBtn = document.getElementById('acceptDrawBtn');
+  const declineDrawBtn = document.getElementById('declineDrawBtn');
   const resultModal = document.getElementById('resultModal');
   const resultTitle = document.getElementById('resultTitle');
   const resultDetail = document.getElementById('resultDetail');
@@ -305,7 +319,7 @@
   const homeBotBtn = document.getElementById('homeBotBtn');
   const homeLocalBtn = document.getElementById('homeLocalBtn');
   const homeOnlineBtn=document.getElementById('homeOnlineBtn');
-  const onlineModal=document.getElementById('onlineModal'), onlineSetup=document.getElementById('onlineSetup'), onlineWaiting=document.getElementById('onlineWaiting'), roomCodeDisplay=document.getElementById('roomCodeDisplay'), onlineStatus=document.getElementById('onlineStatus'), createRoomBtn=document.getElementById('createRoomBtn'), joinRoomBtn=document.getElementById('joinRoomBtn'), joinCodeInput=document.getElementById('joinCodeInput'), closeOnlineBtn=document.getElementById('closeOnlineBtn');
+  const onlineModal=document.getElementById('onlineModal'), onlineSetup=document.getElementById('onlineSetup'), onlineWaiting=document.getElementById('onlineWaiting'), roomCodeDisplay=document.getElementById('roomCodeDisplay'), onlineStatus=document.getElementById('onlineStatus'), createRoomBtn=document.getElementById('createRoomBtn'), joinRoomBtn=document.getElementById('joinRoomBtn'), joinCodeInput=document.getElementById('joinCodeInput'), closeOnlineBtn=document.getElementById('closeOnlineBtn'), onlineHostConfig=document.getElementById('onlineHostConfig'), onlineBaseTimeSlider=document.getElementById('onlineBaseTimeSlider'), onlineBaseTimeOutput=document.getElementById('onlineBaseTimeOutput'), onlineIncrementSlider=document.getElementById('onlineIncrementSlider'), onlineIncrementOutput=document.getElementById('onlineIncrementOutput'), startOnlineGameBtn=document.getElementById('startOnlineGameBtn');
   const gameBrandBtn = document.getElementById('gameBrandBtn');
   const gamePlayNavBtn = document.getElementById('gamePlayNavBtn');
   const gameModeLabel = document.getElementById('gameModeLabel');
@@ -504,7 +518,23 @@
     const data=await res.json().catch(()=>null); if(!res.ok) throw new Error(data?.message||data?.hint||'Online request failed.'); return data;
   }
   function onlineState(){ const copy=JSON.parse(JSON.stringify(game)); delete copy.clockLastTick; delete copy.selected; delete copy.legalMoves; delete copy.turnLegalMoves; delete copy.activeAbility; delete copy.awaitingAbilityTarget; delete copy.abilitySelection; delete copy.selectedAsPremove; delete copy.premoveQueue; return copy; }
-  function restoreOnlineState(state){ const keepColor=onlineSession?.color; game=state; game.mode='online'; game.playerColor=keepColor; game.clockLastTick=performance.now(); game.selected=null; game.legalMoves=[]; game.turnLegalMoves=allLegalMoves(game,game.turn); game.premoveQueue=[]; renderAbilities(); render(); if(game.over) showGameOverPopup(); else startClockLoop(); }
+  function restoreOnlineState(state){
+    const previousSelection = game?.selectedAsPremove && game?.selected ? {...game.selected} : null;
+    const hostColor=state?.hostColor || 'w';
+    const keepColor=onlineSession?.role==='host' ? hostColor : other(hostColor);
+    game=state; game.mode='online'; game.playerColor=keepColor; onlineSession.color=keepColor; game.drawOffer=game.drawOffer || null; game.clockLastTick=performance.now();
+    game.selected=null; game.selectedAsPremove=false; game.legalMoves=[]; game.turnLegalMoves=allLegalMoves(game,game.turn); game.premoveQueue=[];
+    if(previousSelection){
+      const piece=pieceAt(game.board,previousSelection.r,previousSelection.c);
+      if(piece && colorOf(piece)===keepColor){
+        game.selected=previousSelection;
+        game.selectedAsPremove=game.turn!==keepColor;
+        game.legalMoves=game.selectedAsPremove ? premoveMovesFor(previousSelection.r,previousSelection.c) : game.turnLegalMoves.filter(m=>m.from.r===previousSelection.r&&m.from.c===previousSelection.c);
+      }
+    }
+    gameModeLabel.innerHTML=`Mode: <b>Online — ${keepColor==='w'?'White':'Black'}</b>`;
+    renderAbilities(); render(); if(game.over) showGameOverPopup(); else if(game.onlineStarted!==false) startClockLoop();
+  }
   async function syncOnlineState(){
     if(!onlineSession||onlineSyncing||!game||game.mode!=='online') return; onlineSyncing=true;
     try{ const rows=await supabaseRpc('update_ability_chess_room',{p_room_id:onlineSession.id,p_seat_token:onlineSession.token,p_expected_version:onlineSession.version,p_game_state:onlineState(),p_status:game.over?'finished':'active'}); const row=rows?.[0]; if(row) onlineSession.version=Number(row.new_version); }
@@ -512,19 +542,25 @@
   }
   async function pollOnlineRoom(){
     if(!onlineSession||onlineSyncing) return;
-    try{ const rows=await supabaseRpc('get_ability_chess_room',{p_room_id:onlineSession.id,p_seat_token:onlineSession.token}); const row=rows?.[0]; if(!row)return;
-      const v=Number(row.room_version); if(v>onlineSession.version){ onlineSession.version=v; restoreOnlineState(row.state); }
-      if(row.opponent_joined && onlineSession.waiting){
+    try{
+      const rows=await supabaseRpc('get_ability_chess_room',{p_room_id:onlineSession.id,p_seat_token:onlineSession.token});
+      const row=rows?.[0]; if(!row)return;
+      const v=Number(row.room_version);
+      if(v>onlineSession.version){
+        onlineSession.version=v;
+        restoreOnlineState(row.state);
+      }
+      if(row.opponent_joined && onlineSession.role==='host' && onlineSession.waiting){
         onlineSession.waiting=false;
-        onlineStatus.textContent='Opponent joined. Starting game…';
+        onlineStatus.textContent='Opponent joined. Choose the settings, then start the game.';
+        onlineHostConfig.hidden=false;
+      }
+      if(game?.onlineStarted && !gameScreen.classList.contains('active')){
         onlineModal.hidden=true;
-        game.playerColor=onlineSession.color;
-        gameModeLabel.innerHTML=`Mode: <b>Online — ${onlineSession.color==='w'?'White':'Black'}</b>`;
         showScreen('game');
         game.clockLastTick=performance.now();
         startClockLoop();
         render();
-        window.scrollTo({top:0,behavior:'instant'});
       }
     }catch(e){onlineStatus.textContent=e.message;}
   }
@@ -532,11 +568,41 @@
   function stopOnline(){ clearInterval(onlinePollTimer); onlinePollTimer=null; onlineSession=null; }
   async function createOnlineRoom(){
     createRoomBtn.disabled=true; onlineStatus.textContent='Creating room…';
-    try{ selectedGameMode='online'; newGame(); game.mode='online'; game.playerColor='w'; stopClockLoop(); const rows=await supabaseRpc('create_ability_chess_room',{p_game_state:onlineState(),p_settings:{base:Number(baseTimeSlider.value),increment:Number(incrementSlider.value)},p_host_color:'w'}); const row=rows[0]; onlineSession={id:row.room_id,code:row.room_code,token:row.seat_token,color:row.assigned_color,version:Number(row.room_version),waiting:true}; game.playerColor=onlineSession.color; roomCodeDisplay.textContent=row.room_code; onlineSetup.hidden=true; onlineWaiting.hidden=false; onlineStatus.textContent='Waiting for your opponent…'; localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession)); startOnlinePolling(); }catch(e){onlineStatus.textContent=e.message;}finally{createRoomBtn.disabled=false;}
+    try{ selectedGameMode='online'; newGame(); game.mode='online'; game.onlineStarted=false; game.hostColor='w'; game.playerColor='w'; stopClockLoop(); const rows=await supabaseRpc('create_ability_chess_room',{p_game_state:onlineState(),p_settings:{base:Number(baseTimeSlider.value),increment:Number(incrementSlider.value)},p_host_color:'w'}); const row=rows[0]; onlineSession={id:row.room_id,code:row.room_code,token:row.seat_token,color:'w',role:'host',version:Number(row.room_version),waiting:true}; roomCodeDisplay.textContent=row.room_code; onlineSetup.hidden=true; onlineWaiting.hidden=false; onlineHostConfig.hidden=true; onlineStatus.textContent='Waiting for your opponent…'; localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession)); startOnlinePolling(); }catch(e){onlineStatus.textContent=e.message;}finally{createRoomBtn.disabled=false;}
   }
   async function joinOnlineRoom(){
     const code=joinCodeInput.value.trim().toUpperCase(); if(code.length!==6)return; joinRoomBtn.disabled=true;
-    try{ const rows=await supabaseRpc('join_ability_chess_room',{p_room_code:code}); const row=rows[0]; onlineSession={id:row.room_id,code,token:row.seat_token,color:row.assigned_color,version:Number(row.room_version),waiting:false}; localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession)); restoreOnlineState(row.state); game.playerColor=onlineSession.color; gameModeLabel.innerHTML=`Mode: <b>Online — ${onlineSession.color==='w'?'White':'Black'}</b>`; onlineModal.hidden=true; showScreen('game'); startOnlinePolling(); await syncOnlineState(); }catch(e){onlineStatus.textContent=e.message;}finally{joinRoomBtn.disabled=false;}
+    try{ const rows=await supabaseRpc('join_ability_chess_room',{p_room_code:code}); const row=rows[0]; onlineSession={id:row.room_id,code,token:row.seat_token,color:'b',role:'guest',version:Number(row.room_version),waiting:false}; localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession)); restoreOnlineState(row.state); roomCodeDisplay.textContent=code; onlineSetup.hidden=true; onlineWaiting.hidden=false; onlineHostConfig.hidden=true; onlineStatus.textContent=game.onlineStarted?'Starting game…':'Joined. Waiting for the host to choose settings…'; if(game.onlineStarted){onlineModal.hidden=true;showScreen('game');} startOnlinePolling(); }catch(e){onlineStatus.textContent=e.message;}finally{joinRoomBtn.disabled=false;}
+  }
+
+  async function startConfiguredOnlineGame(){
+    if(!onlineSession || onlineSession.role!=='host') return;
+    startOnlineGameBtn.disabled=true;
+    try{
+      const hostColor=document.querySelector('input[name="hostColor"]:checked')?.value || 'w';
+      const base=Number(onlineBaseTimeSlider.value);
+      const increment=Number(onlineIncrementSlider.value);
+      selectedGameMode='online';
+      newGame();
+      game.mode='online';
+      game.onlineStarted=true;
+      game.hostColor=hostColor;
+      game.playerColor=hostColor;
+      game.clocks={w:base*60,b:base*60};
+      game.increment=increment;
+      game.clockLastTick=performance.now();
+      game.lastMessage=`Online game started. White to move.`;
+      onlineSession.color=hostColor;
+      onlineSession.waiting=false;
+      localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));
+      await syncOnlineState();
+      gameModeLabel.innerHTML=`Mode: <b>Online — ${hostColor==='w'?'White':'Black'}</b>`;
+      onlineModal.hidden=true;
+      showScreen('game');
+      startClockLoop();
+      render();
+    }catch(e){ onlineStatus.textContent=e.message; }
+    finally{ startOnlineGameBtn.disabled=false; }
   }
 
   function newGame(){
@@ -569,6 +635,7 @@
       endAnnounced:false,
       resultReason:null,
       resultDetail:null,
+      drawOffer:null,
       log:[],
       clocks:{w:Number(baseTimeSlider.value)*60,b:Number(baseTimeSlider.value)*60},
       increment:Number(incrementSlider.value),
@@ -1033,8 +1100,9 @@
     }
 
     for (const a of arrows){
-      const x1=a.from.c+.5, y1=a.from.r+.5;
-      const tipX=a.to.c+.5, tipY=a.to.r+.5;
+      const fromPoint=displayPoint(a.from), toPoint=displayPoint(a.to);
+      const x1=fromPoint.x, y1=fromPoint.y;
+      const tipX=toPoint.x, tipY=toPoint.y;
       const dx=tipX-x1, dy=tipY-y1;
       const len=Math.hypot(dx,dy);
       if (!len) continue;
@@ -1153,6 +1221,7 @@
     game.winner=winner ?? null;
     game.resultReason=reason;
     game.resultDetail=detail;
+    game.drawOffer=null;
     game.lastMessage=detail;
     game.endAnnounced=false;
     game.selected=null;
@@ -2116,20 +2185,46 @@
     }
   }
 
+  function drawActorColor(){
+    if(!game) return null;
+    if(game.mode==='online') return game.playerColor;
+    if(game.mode==='local') return game.turn;
+    return 'w';
+  }
+
+  function renderDrawControls(){
+    if(!offerDrawBtn || !acceptDrawBtn || !declineDrawBtn) return;
+    const actor=drawActorColor();
+    const available=!!game && !game.over && game.mode!=='bot' && (game.mode!=='online' || game.onlineStarted!==false);
+    const incoming=available && !!game.drawOffer && game.drawOffer!==actor;
+    const outgoing=available && !!game.drawOffer && game.drawOffer===actor;
+    offerDrawBtn.hidden=!available || incoming;
+    offerDrawBtn.disabled=!available || outgoing;
+    offerDrawBtn.textContent=outgoing ? 'Draw Offered' : 'Offer Draw';
+    acceptDrawBtn.hidden=!incoming;
+    declineDrawBtn.hidden=!incoming;
+  }
+
+  function boardIsFlipped(){ return !!(game?.mode==='online' && game?.playerColor==='b'); }
+  function displayPoint(square){ return boardIsFlipped() ? {x:7-square.c+.5,y:7-square.r+.5} : {x:square.c+.5,y:square.r+.5}; }
+
   function render(){
     whitePointsEl.textContent = game ? game.points.w : 0;
     blackPointsEl.textContent = game ? game.points.b : 0;
     renderClocks();
+    renderDrawControls();
     boardEl.innerHTML = '';
     const sel = game?.selected;
     const legal = game?.legalMoves || [];
-    for (let r=0;r<8;r++){
-      for (let c=0;c<8;c++){
+    for (let displayR=0;displayR<8;displayR++){
+      for (let displayC=0;displayC<8;displayC++){
+        const r=boardIsFlipped()?7-displayR:displayR;
+        const c=boardIsFlipped()?7-displayC:displayC;
         const sq = document.createElement('div');
         sq.className = 'sq ' + (((r+c)%2===0) ? 'light' : 'dark');
         const p = game?.board?.[r]?.[c];
         sq.innerHTML = p ? pieceMarkup(p) : '';
-        if (sel && sel.r===r && sel.c===c) sq.classList.add(isPremoveWindow() ? 'premove-selected' : 'selected');
+        if (sel && sel.r===r && sel.c===c) sq.classList.add(game?.selectedAsPremove ? 'premove-selected' : 'selected');
         const queuedPremoves=Array.isArray(game?.premoveQueue)?game.premoveQueue:(game?.premove?[game.premove]:[]);
         if (queuedPremoves.some(pm=>pm.from.r===r&&pm.from.c===c)) sq.classList.add('premove-origin');
         if (queuedPremoves.some(pm=>pm.to.r===r&&pm.to.c===c)) sq.classList.add('premove-destination');
@@ -2372,6 +2467,33 @@
   });
 
   newGameBtn.addEventListener('click', () => { getAudioContext(); if(game?.mode==='online'){showHome();return;} newGame(); });
+  offerDrawBtn.addEventListener('click',()=>{
+    if(!game || game.over || game.mode==='bot' || game.drawOffer) return;
+    const offering=drawActorColor();
+    if(!offering) return;
+    game.drawOffer=offering;
+    game.lastMessage=`${offering==='w'?'White':'Black'} offered a draw.`;
+    game.log.push(`${offering==='w'?'White':'Black'} offered a draw.`);
+    render();
+    if(game.mode==='online') queueMicrotask(syncOnlineState);
+  });
+  acceptDrawBtn.addEventListener('click',()=>{
+    if(!game || game.over || !game.drawOffer) return;
+    const actor=drawActorColor();
+    if(!actor || actor===game.drawOffer) return;
+    endGame(null,'agreement','The players agreed to a draw.');
+  });
+  declineDrawBtn.addEventListener('click',()=>{
+    if(!game || game.over || !game.drawOffer) return;
+    const actor=drawActorColor();
+    if(!actor || actor===game.drawOffer) return;
+    const declining=actor;
+    game.drawOffer=null;
+    game.lastMessage=`${declining==='w'?'White':'Black'} declined the draw offer.`;
+    game.log.push(`${declining==='w'?'White':'Black'} declined the draw offer.`);
+    render();
+    if(game.mode==='online') queueMicrotask(syncOnlineState);
+  });
   resignBtn.addEventListener('click',()=>{
     if(!game || game.over) return;
     const resigning=game.mode==='bot'?'w':game.mode==='online'?game.playerColor:game.turn;
@@ -2385,6 +2507,9 @@
   homeLocalBtn.addEventListener('click', () => startFromHome('local'));
   homeOnlineBtn.addEventListener('click',()=>{onlineModal.hidden=false;onlineSetup.hidden=false;onlineWaiting.hidden=true;onlineStatus.textContent='';joinCodeInput.value='';});
   closeOnlineBtn.addEventListener('click',()=>{onlineModal.hidden=true;});
+  onlineBaseTimeSlider.addEventListener('input',()=>onlineBaseTimeOutput.textContent=`${onlineBaseTimeSlider.value} min`);
+  onlineIncrementSlider.addEventListener('input',()=>onlineIncrementOutput.textContent=`${onlineIncrementSlider.value} sec`);
+  startOnlineGameBtn.addEventListener('click',startConfiguredOnlineGame);
   createRoomBtn.addEventListener('click',createOnlineRoom);
   joinRoomBtn.addEventListener('click',joinOnlineRoom);
   joinCodeInput.addEventListener('keydown',e=>{if(e.key==='Enter')joinOnlineRoom();});
