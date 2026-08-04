@@ -197,6 +197,7 @@
         <h3>Choose game settings</h3>
         <div class="slider-row"><label for="onlineBaseTimeSlider">Base time</label><input id="onlineBaseTimeSlider" type="range" min="1" max="60" step="1" value="10"><output id="onlineBaseTimeOutput">10 min</output></div>
         <div class="slider-row"><label for="onlineIncrementSlider">Increment</label><input id="onlineIncrementSlider" type="range" min="0" max="30" step="1" value="0"><output id="onlineIncrementOutput">0 sec</output></div>
+        <div class="slider-row"><label for="onlineStartingPointsSlider">Starting points</label><input id="onlineStartingPointsSlider" type="range" min="0" max="30" step="1" value="0"><output id="onlineStartingPointsOutput">0 points</output></div>
         <div class="online-color-row"><label><input type="radio" name="hostColor" value="w" checked> Play White</label><label><input type="radio" name="hostColor" value="b"> Play Black</label></div>
         <button id="startOnlineGameBtn" class="online-start-btn" type="button">Start game</button>
       </div>
@@ -267,8 +268,8 @@
     <h2>Game</h2>
     <div id="status" class="status" aria-live="polite">Starting game…</div>
     <div class="banks">
-      <div class="bank"><b>White points:</b> <span id="whitePoints">0</span></div>
-      <div class="bank"><b>Black points:</b> <span id="blackPoints">0</span></div>
+      <div id="whiteBank" class="bank"><b>White points:</b> <span id="whitePoints">0</span></div>
+      <div id="blackBank" class="bank"><b>Black points:</b> <span id="blackPoints">0</span></div>
     </div>
     <div class="legend">Shielded pieces cannot be captured until that side's next turn. Bomb destroys a 3×3 zone and the initiating piece, but it cannot be used if either king is in the blast. Kings are captured rather than checkmated; during Double Move, a king exposed by the first move may be captured by the second.</div>
 
@@ -306,6 +307,8 @@
   const logEl = document.getElementById('log');
   const whitePointsEl = document.getElementById('whitePoints');
   const blackPointsEl = document.getElementById('blackPoints');
+  const whiteBankEl = document.getElementById('whiteBank');
+  const blackBankEl = document.getElementById('blackBank');
   const abilitiesEl = document.getElementById('abilities');
   const newGameBtn = document.getElementById('newGameBtn');
   const resignBtn = document.getElementById('resignBtn');
@@ -326,7 +329,7 @@
   const homeBotBtn = document.getElementById('homeBotBtn');
   const homeLocalBtn = document.getElementById('homeLocalBtn');
   const homeOnlineBtn=document.getElementById('homeOnlineBtn');
-  const onlineModal=document.getElementById('onlineModal'), onlineSetup=document.getElementById('onlineSetup'), onlineWaiting=document.getElementById('onlineWaiting'), roomCodeDisplay=document.getElementById('roomCodeDisplay'), onlineStatus=document.getElementById('onlineStatus'), createRoomBtn=document.getElementById('createRoomBtn'), joinRoomBtn=document.getElementById('joinRoomBtn'), joinCodeInput=document.getElementById('joinCodeInput'), closeOnlineBtn=document.getElementById('closeOnlineBtn'), onlineHostConfig=document.getElementById('onlineHostConfig'), onlineBaseTimeSlider=document.getElementById('onlineBaseTimeSlider'), onlineBaseTimeOutput=document.getElementById('onlineBaseTimeOutput'), onlineIncrementSlider=document.getElementById('onlineIncrementSlider'), onlineIncrementOutput=document.getElementById('onlineIncrementOutput'), startOnlineGameBtn=document.getElementById('startOnlineGameBtn');
+  const onlineModal=document.getElementById('onlineModal'), onlineSetup=document.getElementById('onlineSetup'), onlineWaiting=document.getElementById('onlineWaiting'), roomCodeDisplay=document.getElementById('roomCodeDisplay'), onlineStatus=document.getElementById('onlineStatus'), createRoomBtn=document.getElementById('createRoomBtn'), joinRoomBtn=document.getElementById('joinRoomBtn'), joinCodeInput=document.getElementById('joinCodeInput'), closeOnlineBtn=document.getElementById('closeOnlineBtn'), onlineHostConfig=document.getElementById('onlineHostConfig'), onlineBaseTimeSlider=document.getElementById('onlineBaseTimeSlider'), onlineBaseTimeOutput=document.getElementById('onlineBaseTimeOutput'), onlineIncrementSlider=document.getElementById('onlineIncrementSlider'), onlineIncrementOutput=document.getElementById('onlineIncrementOutput'), onlineStartingPointsSlider=document.getElementById('onlineStartingPointsSlider'), onlineStartingPointsOutput=document.getElementById('onlineStartingPointsOutput'), startOnlineGameBtn=document.getElementById('startOnlineGameBtn');
   const gameBrandBtn = document.getElementById('gameBrandBtn');
   const gamePlayNavBtn = document.getElementById('gamePlayNavBtn');
   const gameModeLabel = document.getElementById('gameModeLabel');
@@ -528,6 +531,9 @@
   function restoreOnlineState(state){
     const previousGame=game;
     const previousSelection = game?.selectedAsPremove && game?.selected ? {...game.selected} : null;
+    const previousPremoveQueue = Array.isArray(game?.premoveQueue)
+      ? game.premoveQueue.map(pm=>({from:{...pm.from},to:{...pm.to},promotion:pm.promotion||null}))
+      : (game?.premove ? [{from:{...game.premove.from},to:{...game.premove.to},promotion:game.premove.promotion||null}] : []);
     const hostColor=state?.hostColor || 'w';
     const keepColor=onlineSession?.role==='host' ? hostColor : other(hostColor);
     const opponentColor=other(keepColor);
@@ -541,7 +547,7 @@
       window.setTimeout(()=>newCount<oldCount ? playCaptureSound() : playMoveSound(),25);
     }
     game=state; game.mode='online'; game.playerColor=keepColor; onlineSession.color=keepColor; game.drawOffer=game.drawOffer || null; game.rematchChallenge=game.rematchChallenge || null; game.clockLastTick=performance.now();
-    game.selected=null; game.selectedAsPremove=false; game.legalMoves=[]; game.turnLegalMoves=allLegalMoves(game,game.turn); game.premoveQueue=[];
+    game.selected=null; game.selectedAsPremove=false; game.legalMoves=[]; game.turnLegalMoves=allLegalMoves(game,game.turn); game.premoveQueue=previousPremoveQueue; game.premove=previousPremoveQueue[0]||null;
     if(previousSelection){
       const piece=pieceAt(game.board,previousSelection.r,previousSelection.c);
       if(piece && colorOf(piece)===keepColor){
@@ -554,7 +560,7 @@
     // A remotely accepted rematch changes the synchronized game from over to active.
     // Close the old game-over menu immediately so the challenger can play.
     if(previousGame?.over && !game.over) resultModal.hidden=true;
-    renderAbilities(); render(); if(game.over) showGameOverPopup(); else if(game.onlineStarted!==false) startClockLoop();
+    renderAbilities(); render(); if(game.over) showGameOverPopup(); else if(game.onlineStarted!==false) { startClockLoop(); schedulePremoveIfReady(); }
   }
   async function syncOnlineState(){
     if(!onlineSession||onlineSyncing||!game||game.mode!=='online') return; onlineSyncing=true;
@@ -606,6 +612,7 @@
       const hostColor=document.querySelector('input[name="hostColor"]:checked')?.value || 'w';
       const base=Number(onlineBaseTimeSlider.value);
       const increment=Number(onlineIncrementSlider.value);
+      const startingPoints=Number(onlineStartingPointsSlider.value);
       selectedGameMode='online';
       newGame();
       game.mode='online';
@@ -615,6 +622,8 @@
       game.clocks={w:base*60,b:base*60};
       game.initialTime=base*60;
       game.increment=increment;
+      game.startingPoints=startingPoints;
+      game.points={w:startingPoints,b:startingPoints};
       game.clockLastTick=performance.now();
       game.lastMessage=`Online game started. White to move.`;
       onlineSession.color=hostColor;
@@ -641,6 +650,7 @@
       activeAbility:null,
       awaitingAbilityTarget:false,
       points:{w:0,b:0},
+      startingPoints:0,
       shielded:{w:null,b:null},
       frozen:{w:null,b:null},
       ambushed:{w:null,b:null},
@@ -890,6 +900,9 @@
 
     if (s.shielded[colorOf(piece)]?.r===move.from.r && s.shielded[colorOf(piece)]?.c===move.from.c) {
       s.shielded[colorOf(piece)]={r:move.to.r,c:move.to.c};
+    }
+    if (s.ambushed[colorOf(piece)]?.r===move.from.r && s.ambushed[colorOf(piece)]?.c===move.from.c) {
+      s.ambushed[colorOf(piece)]={r:move.to.r,c:move.to.c};
     }
 
     const exit=portalExit(s,colorOf(piece),move.to);
@@ -2257,6 +2270,9 @@
   function render(){
     whitePointsEl.textContent = game ? game.points.w : 0;
     blackPointsEl.textContent = game ? game.points.b : 0;
+    const privateOnlineBank = game?.mode==='online' && !!game?.playerColor;
+    whiteBankEl.hidden = privateOnlineBank && game.playerColor!=='w';
+    blackBankEl.hidden = privateOnlineBank && game.playerColor!=='b';
     renderClocks();
     renderDrawControls();
     renderRematchControls();
@@ -2281,8 +2297,10 @@
         if (game?.shielded?.b?.r===r && game?.shielded?.b?.c===c) sq.classList.add('shielded');
         if (game?.frozen?.w?.r===r && game?.frozen?.w?.c===c) sq.classList.add('frozen');
         if (game?.frozen?.b?.r===r && game?.frozen?.b?.c===c) sq.classList.add('frozen');
-        if (game?.ambushed?.w?.r===r && game?.ambushed?.w?.c===c) sq.classList.add('ambushed');
-        if (game?.ambushed?.b?.r===r && game?.ambushed?.b?.c===c) sq.classList.add('ambushed');
+        const canSeeWhiteAmbush = game?.mode!=='online' || game?.playerColor==='w';
+        const canSeeBlackAmbush = game?.mode!=='online' || game?.playerColor==='b';
+        if (canSeeWhiteAmbush && game?.ambushed?.w?.r===r && game?.ambushed?.w?.c===c) sq.classList.add('ambushed');
+        if (canSeeBlackAmbush && game?.ambushed?.b?.r===r && game?.ambushed?.b?.c===c) sq.classList.add('ambushed');
         if (squareInFortify(game,'w',r,c)||squareInFortify(game,'b',r,c)) sq.classList.add('fortified');
         if ((game?.portals?.w&&(sameSquare(game.portals.w.a,{r,c})||sameSquare(game.portals.w.b,{r,c})))||(game?.portals?.b&&(sameSquare(game.portals.b.a,{r,c})||sameSquare(game.portals.b.b,{r,c})))) sq.classList.add('portal-square');
         if (game?.awaitingAbilityTarget && game.activeAbility==='bomb') {
@@ -2589,6 +2607,7 @@
   closeOnlineBtn.addEventListener('click',()=>{onlineModal.hidden=true;});
   onlineBaseTimeSlider.addEventListener('input',()=>onlineBaseTimeOutput.textContent=`${onlineBaseTimeSlider.value} min`);
   onlineIncrementSlider.addEventListener('input',()=>onlineIncrementOutput.textContent=`${onlineIncrementSlider.value} sec`);
+  onlineStartingPointsSlider.addEventListener('input',()=>onlineStartingPointsOutput.textContent=`${onlineStartingPointsSlider.value} point${onlineStartingPointsSlider.value==='1'?'':'s'}`);
   startOnlineGameBtn.addEventListener('click',startConfiguredOnlineGame);
   createRoomBtn.addEventListener('click',createOnlineRoom);
   joinRoomBtn.addEventListener('click',joinOnlineRoom);
@@ -2612,6 +2631,7 @@
   renderAbilities();
   renderHomeBoard();
   baseTimeOutput.textContent=`${baseTimeSlider.value} min`; incrementOutput.textContent=`${incrementSlider.value} sec`;
+  onlineStartingPointsOutput.textContent=`${onlineStartingPointsSlider.value} point${onlineStartingPointsSlider.value==='1'?'':'s'}`;
   selectedGameMode='bot';
   gameModeLabel.innerHTML='Mode: <b>Bot</b>';
   newGame();
