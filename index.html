@@ -290,6 +290,7 @@
 <div class="game-toast-stack" aria-live="polite">
   <section id="drawOfferToast" class="game-toast" hidden><h3>Draw offer</h3><p>Your opponent has offered a draw.</p><div class="game-toast-actions"><button id="toastAcceptDrawBtn" class="game-toast-primary" type="button">Accept</button><button id="toastDeclineDrawBtn" type="button">Decline</button></div></section>
   <section id="rematchToast" class="game-toast" hidden><h3 id="rematchToastTitle">Rematch challenge</h3><p id="rematchToastText">Your opponent wants to play again.</p><div class="game-toast-actions"><button id="acceptRematchBtn" class="game-toast-primary" type="button">Accept</button><button id="declineRematchBtn" type="button">Decline</button><button id="cancelRematchBtn" type="button" hidden>Cancel challenge</button></div></section>
+  <section id="memberChallengeToast" class="game-toast" hidden><h3>Member challenge</h3><p id="memberChallengeToastText">A member has challenged you to a game.</p><div class="game-toast-actions"><button id="acceptMemberChallengeToastBtn" class="game-toast-primary" type="button">Accept</button><button id="declineMemberChallengeToastBtn" type="button">Decline</button></div></section>
 </div>
 
 <div id="memberModal" class="member-modal" hidden>
@@ -343,6 +344,7 @@
   const acceptDrawBtn = document.getElementById('acceptDrawBtn');
   const declineDrawBtn = document.getElementById('declineDrawBtn');
   const drawOfferToast=document.getElementById('drawOfferToast'), toastAcceptDrawBtn=document.getElementById('toastAcceptDrawBtn'), toastDeclineDrawBtn=document.getElementById('toastDeclineDrawBtn');
+  const memberChallengeToast=document.getElementById('memberChallengeToast'), memberChallengeToastText=document.getElementById('memberChallengeToastText'), acceptMemberChallengeToastBtn=document.getElementById('acceptMemberChallengeToastBtn'), declineMemberChallengeToastBtn=document.getElementById('declineMemberChallengeToastBtn');
   const rematchToast=document.getElementById('rematchToast'), rematchToastTitle=document.getElementById('rematchToastTitle'), rematchToastText=document.getElementById('rematchToastText'), acceptRematchBtn=document.getElementById('acceptRematchBtn'), declineRematchBtn=document.getElementById('declineRematchBtn'), cancelRematchBtn=document.getElementById('cancelRematchBtn');
   const resultModal = document.getElementById('resultModal');
   const resultTitle = document.getElementById('resultTitle');
@@ -557,7 +559,7 @@
     const data=await res.json().catch(()=>null); if(!res.ok) throw new Error(data?.message||data?.hint||'Online request failed.'); return data;
   }
 
-  let memberSession=null, memberProfile=null, memberTab='members', memberPollTimer=null, handledChallengeIds=new Set();
+  let memberSession=null, memberProfile=null, memberTab='members', memberPollTimer=null, handledChallengeIds=new Set(), visibleMemberChallenge=null;
   try{ memberSession=JSON.parse(localStorage.getItem('abilityChessMemberSession')||'null'); }catch{}
   function authHeaders(){ return {apikey:SUPABASE_KEY,Authorization:`Bearer ${memberSession?.access_token||SUPABASE_KEY}`,'Content-Type':'application/json'}; }
   async function authRequest(path,body){ const res=await fetch(`${SUPABASE_URL}/auth/v1/${path}`,{method:'POST',headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify(body)}); const data=await res.json().catch(()=>null); if(!res.ok) throw new Error(data?.msg||data?.message||data?.error_description||'Authentication failed.'); return data; }
@@ -604,13 +606,79 @@
   function memberRow(title,meta,actions=[]){const row=document.createElement('div');row.className='member-row';const copy=document.createElement('div');copy.innerHTML=`<div class="member-name">${escapeHtml(title)}</div><div class="member-meta">${escapeHtml(meta)}</div>`;const acts=document.createElement('div');acts.className='member-actions';actions.forEach(a=>acts.appendChild(a));row.append(copy,acts);return row;}
   function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
   function renderMemberTabs(){document.querySelectorAll('.member-tab').forEach(b=>b.classList.toggle('active',b.dataset.memberTab===memberTab));memberSearch.hidden=memberTab!=='members';postOpenChallengeBtn.hidden=memberTab==='members';}
-  async function loadMemberList(){ if(!memberSession)return; memberList.innerHTML='<div class="member-empty">Loading…</div>'; try{if(memberTab==='members'){const rows=await memberRpc('ability_chess_list_members',{p_search:memberSearch.value.trim()});memberList.replaceChildren();for(const m of rows||[]){const challenge=memberButton('Challenge',()=>createMemberChallenge(m.id));memberList.appendChild(memberRow(`${m.display_name} (@${m.username})`,`${m.is_online?'Online · ':''}Rating ${m.rating} · ${m.games_played} games`,[challenge]));}if(!rows?.length)memberList.innerHTML='<div class="member-empty">No matching members.</div>';}else{const rows=await memberRpc('ability_chess_list_member_challenges');const filtered=(rows||[]).filter(c=>memberTab==='open'?(c.challenge_type==='open'&&c.direction==='open'&&c.status==='pending'):(c.direction!=='open'||c.status==='accepted'));memberList.replaceChildren();for(const c of filtered){const who=c.other_display_name?`${c.other_display_name} (@${c.other_username})`:(c.challenge_type==='open'?'Open challenge':'Waiting for opponent');const settings=c.settings||{};const meta=`${c.challenge_type==='open'?'Open':'Direct'} · ${settings.base||10}+${settings.increment||0} · ${c.status}`;const actions=[];if(c.status==='pending'&&(c.direction==='incoming'||c.direction==='open')) actions.push(memberButton('Accept',()=>acceptMemberChallenge(c.challenge_id)));if(c.status==='pending'&&c.direction==='incoming') actions.push(memberButton('Decline',()=>declineMemberChallenge(c.challenge_id)));if(c.status==='pending'&&c.direction==='outgoing') actions.push(memberButton('Cancel',()=>cancelMemberChallenge(c.challenge_id)));memberList.appendChild(memberRow(who,meta,actions));}if(!filtered.length)memberList.innerHTML='<div class="member-empty">No challenges here yet.</div>';await detectAcceptedChallenges(rows||[]);} }catch(e){memberList.innerHTML=`<div class="member-empty">${escapeHtml(e.message)}</div>`;} }
-  async function acceptMemberChallenge(id){memberStatus.textContent='Accepting challenge…';try{const rows=await memberRpc('ability_chess_accept_member_challenge',{p_challenge_id:id});const row=rows?.[0];if(!row)throw new Error('Challenge could not be accepted.');onlineSession={id:row.room_id,code:row.room_code,token:row.seat_token,color:row.assigned_color,role:'guest',version:Number(row.room_version),waiting:false,memberChallenge:id};localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));restoreOnlineState(row.state);memberModal.hidden=true;onlineModal.hidden=false;onlineSetup.hidden=true;onlineWaiting.hidden=false;onlineHostConfig.hidden=true;roomCodeDisplay.textContent=row.room_code;onlineStatus.textContent='Challenge accepted. Waiting for the host to choose settings…';startOnlinePolling();}catch(e){memberStatus.textContent=e.message;} }
+  async function loadMemberList(){ if(!memberSession)return; if(!memberList.children.length)memberList.innerHTML='<div class="member-empty">Loading…</div>'; try{if(memberTab==='members'){const rows=await memberRpc('ability_chess_list_members',{p_search:memberSearch.value.trim()});memberList.replaceChildren();for(const m of rows||[]){const challenge=memberButton('Challenge',()=>createMemberChallenge(m.id));memberList.appendChild(memberRow(`${m.display_name} (@${m.username})`,`${m.is_online?'Online · ':''}Rating ${m.rating} · ${m.games_played} games`,[challenge]));}if(!rows?.length)memberList.innerHTML='<div class="member-empty">No matching members.</div>';}else{const rows=await memberRpc('ability_chess_list_member_challenges');const filtered=(rows||[]).filter(c=>memberTab==='open'?(c.challenge_type==='open'&&c.direction==='open'&&c.status==='pending'):(c.direction!=='open'||c.status==='accepted'));memberList.replaceChildren();for(const c of filtered){const who=c.other_display_name?`${c.other_display_name} (@${c.other_username})`:(c.challenge_type==='open'?'Open challenge':'Waiting for opponent');const settings=c.settings||{};const meta=`${c.challenge_type==='open'?'Open':'Direct'} · ${settings.base||10}+${settings.increment||0} · ${c.status}`;const actions=[];if(c.status==='pending'&&(c.direction==='incoming'||c.direction==='open')) actions.push(memberButton('Accept',()=>acceptMemberChallenge(c.challenge_id)));if(c.status==='pending'&&c.direction==='incoming') actions.push(memberButton('Decline',()=>declineMemberChallenge(c.challenge_id)));if(c.status==='pending'&&c.direction==='outgoing') actions.push(memberButton('Cancel',()=>cancelMemberChallenge(c.challenge_id)));memberList.appendChild(memberRow(who,meta,actions));}if(!filtered.length)memberList.innerHTML='<div class="member-empty">No challenges here yet.</div>';await detectAcceptedChallenges(rows||[]);} }catch(e){memberList.innerHTML=`<div class="member-empty">${escapeHtml(e.message)}</div>`;} }
+  async function acceptMemberChallenge(id){
+    memberStatus.textContent='Accepting challenge…';
+    try{
+      const rows=await memberRpc('ability_chess_accept_member_challenge',{p_challenge_id:id});
+      const row=rows?.[0];
+      if(!row)throw new Error('Challenge could not be accepted.');
+      visibleMemberChallenge=null;
+      memberChallengeToast.hidden=true;
+      onlineSession={id:row.room_id,code:row.room_code,token:row.seat_token,color:row.assigned_color,role:'guest',version:Number(row.room_version),waiting:false,memberChallenge:id};
+      localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));
+      selectedGameMode='online';
+      newGame();
+      const cfg=row.room_settings||{};
+      const base=Number(cfg.base||10), increment=Number(cfg.increment||0), startingPoints=Number(cfg.startingPoints||0);
+      game.mode='online';
+      game.onlineStarted=true;
+      game.hostColor='w';
+      game.playerColor='b';
+      game.clocks={w:base*60,b:base*60};
+      game.initialTime=base*60;
+      game.increment=increment;
+      game.startingPoints=startingPoints;
+      game.points={w:startingPoints,b:startingPoints};
+      game.clockLastTick=performance.now();
+      game.lastMessage='Member challenge started. White to move.';
+      await syncOnlineState();
+      memberModal.hidden=true;
+      onlineModal.hidden=true;
+      showScreen('game');
+      gameModeLabel.innerHTML='Mode: <b>Online — Black</b>';
+      startOnlinePolling();
+      startClockLoop();
+      renderAbilities();
+      render();
+    }catch(e){memberStatus.textContent=e.message;}
+  }
   async function cancelMemberChallenge(id){try{await memberRpc('ability_chess_cancel_member_challenge',{p_challenge_id:id});memberStatus.textContent='Challenge cancelled.';await loadMemberList();}catch(e){memberStatus.textContent=e.message;}}
-  async function declineMemberChallenge(id){try{await memberRpc('ability_chess_decline_member_challenge',{p_challenge_id:id});memberStatus.textContent='Challenge declined.';await loadMemberList();}catch(e){memberStatus.textContent=e.message;}}
-  async function detectAcceptedChallenges(rows){for(const c of rows){if(c.status!=='accepted'||c.direction!=='outgoing'||handledChallengeIds.has(c.challenge_id)||onlineSession)continue;handledChallengeIds.add(c.challenge_id);onlineSession={id:c.room_id,code:c.room_code,token:c.seat_token,color:c.assigned_color,role:'host',version:Number(c.room_version),waiting:false,memberChallenge:c.challenge_id};localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));selectedGameMode='online';newGame();game.mode='online';game.onlineStarted=false;game.hostColor='w';game.playerColor='w';roomCodeDisplay.textContent=c.room_code;onlineSetup.hidden=true;onlineWaiting.hidden=false;onlineHostConfig.hidden=false;onlineStatus.textContent='Challenge accepted. Choose settings, then start the game.';memberModal.hidden=true;onlineModal.hidden=false;startOnlinePolling();break;}}
-  function startMemberPolling(){clearInterval(memberPollTimer);memberPollTimer=setInterval(()=>{if(memberSession&&memberModal.hidden)loadChallengeNotifications();else if(memberSession)loadMemberList();},2500);}
-  async function loadChallengeNotifications(){try{const rows=await memberRpc('ability_chess_list_member_challenges');await detectAcceptedChallenges(rows||[]);const incoming=(rows||[]).filter(c=>c.status==='pending'&&(c.direction==='incoming'||c.direction==='open'));openMembersBtn.textContent=incoming.length?`Member challenges (${incoming.length})`:'Open member lobby';}catch{}}
+  async function declineMemberChallenge(id){try{await memberRpc('ability_chess_decline_member_challenge',{p_challenge_id:id});if(visibleMemberChallenge?.challenge_id===id){visibleMemberChallenge=null;memberChallengeToast.hidden=true;}memberStatus.textContent='Challenge declined.';if(!memberModal.hidden)await loadMemberList();}catch(e){memberStatus.textContent=e.message;}}
+  async function detectAcceptedChallenges(rows){
+    for(const c of rows){
+      if(c.status!=='accepted'||c.direction!=='outgoing'||handledChallengeIds.has(c.challenge_id)||onlineSession)continue;
+      handledChallengeIds.add(c.challenge_id);
+      onlineSession={id:c.room_id,code:c.room_code,token:c.seat_token,color:c.assigned_color,role:'host',version:Number(c.room_version),waiting:false,memberChallenge:c.challenge_id};
+      localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));
+      memberModal.hidden=true;
+      onlineModal.hidden=true;
+      startOnlinePolling();
+      await pollOnlineRoom();
+      break;
+    }
+  }
+  function startMemberPolling(){clearInterval(memberPollTimer);memberPollTimer=setInterval(()=>{if(memberSession)loadChallengeNotifications();},2500);}
+  async function loadChallengeNotifications(){
+    try{
+      const rows=await memberRpc('ability_chess_list_member_challenges');
+      await detectAcceptedChallenges(rows||[]);
+      const directIncoming=(rows||[]).filter(c=>c.status==='pending'&&c.direction==='incoming'&&c.challenge_type==='direct');
+      const incomingCount=(rows||[]).filter(c=>c.status==='pending'&&(c.direction==='incoming'||c.direction==='open')).length;
+      openMembersBtn.textContent=incomingCount?`Member challenges (${incomingCount})`:'Open member lobby';
+      const incoming=directIncoming[0]||null;
+      if(incoming){
+        visibleMemberChallenge=incoming;
+        const who=incoming.other_display_name?`${incoming.other_display_name} (@${incoming.other_username})`:`@${incoming.other_username||'A member'}`;
+        const cfg=incoming.settings||{};
+        memberChallengeToastText.textContent=`${who} challenged you to a ${Number(cfg.base||10)}+${Number(cfg.increment||0)} game.`;
+        memberChallengeToast.hidden=false;
+      }else{
+        visibleMemberChallenge=null;
+        memberChallengeToast.hidden=true;
+      }
+    }catch{}
+  }
   async function openMemberLobby(){memberModal.hidden=false;memberStatus.textContent='';renderMemberAuth();if(memberSession){if(Date.now()/1000>(memberSession.expires_at||0)-30)await refreshMemberToken();await loadMyProfile();renderMemberTabs();await loadMemberList();startMemberPolling();}}
   function onlineState(){ const copy=JSON.parse(JSON.stringify(game)); delete copy.clockLastTick; delete copy.selected; delete copy.legalMoves; delete copy.turnLegalMoves; delete copy.activeAbility; delete copy.awaitingAbilityTarget; delete copy.abilitySelection; delete copy.selectedAsPremove; delete copy.premoveQueue; return copy; }
   function restoreOnlineState(state){
@@ -2702,6 +2770,8 @@
   homeLocalBtn.addEventListener('click', () => startFromHome('local'));
   homeOnlineBtn.addEventListener('click',()=>{onlineModal.hidden=false;onlineSetup.hidden=false;onlineWaiting.hidden=true;onlineStatus.textContent='';joinCodeInput.value='';});
   openMembersBtn.addEventListener('click',()=>{onlineModal.hidden=true;openMemberLobby();});
+  acceptMemberChallengeToastBtn.addEventListener('click',()=>{if(visibleMemberChallenge)acceptMemberChallenge(visibleMemberChallenge.challenge_id);});
+  declineMemberChallengeToastBtn.addEventListener('click',()=>{if(visibleMemberChallenge)declineMemberChallenge(visibleMemberChallenge.challenge_id);});
   document.querySelectorAll('.members-nav-btn').forEach(b=>b.addEventListener('click',openMemberLobby));
   closeMemberBtn.addEventListener('click',()=>{memberModal.hidden=true;});
   memberModal.addEventListener('click',e=>{if(e.target===memberModal)memberModal.hidden=true;});
