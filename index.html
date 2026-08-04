@@ -36,6 +36,9 @@
   .dark{background:var(--dark);color:#111}
   .selected{outline:4px solid #44c2ff;outline-offset:-4px}
   .sq.last-move::before{content:'';position:absolute;inset:0;background:rgba(246,232,72,.58);z-index:1;pointer-events:none}
+  .sq.king-in-check{box-shadow:inset 0 0 0 5px #ef4444,inset 0 0 24px rgba(239,68,68,.72)}
+  .premove-ghost{position:absolute;inset:7%;z-index:5;opacity:.58;pointer-events:none;filter:saturate(.85) drop-shadow(0 2px 2px rgba(0,0,0,.45))}
+  .connection-status{display:inline-flex;align-items:center;gap:6px;margin-left:8px;font-size:11px;color:#aeb8c3;font-weight:700}.connection-status::before{content:'';width:8px;height:8px;border-radius:50%;background:#94a3b8}.connection-status.connected::before{background:#22c55e}.connection-status.reconnecting::before{background:#f59e0b;animation:pulse 1s infinite}.connection-status.disconnected::before{background:#ef4444}@keyframes pulse{50%{opacity:.35}}
   .legal::after{content:'';width:18%;height:18%;border-radius:50%;background:rgba(0,0,0,.35);position:absolute}
   .capture::after{content:'';position:absolute;inset:8%;border-radius:50%;border:4px solid rgba(180,0,0,.7)}
   .bomb-target{outline:4px solid var(--danger);outline-offset:-4px}
@@ -274,7 +277,7 @@
       <article class="guide-card"><h2>Phase Step <span class="guide-cost">7 points · Queen</span></h2><p>Every queen may pass through exactly one friendly piece on a normal queen line and land on an empty square beyond it. It cannot jump an enemy, pass more than one piece, or capture while jumping. Lets the queen escape friendly congestion.</p></article>
       <article class="guide-card"><h2>Royal Step <span class="guide-cost">7 points · King</span></h2><p>The king additionally moves and captures like a knight, but may never land on an attacked square. It is not castling. Offers tactical escapes and surprise captures.</p></article>
       <article class="guide-card"><h2>Escape Route <span class="guide-cost">6 points · King</span></h2><p>The king additionally moves exactly two squares horizontally, vertically, or diagonally. It cannot begin in attack; the intermediate square must be empty and safe; the destination must be safe and may capture. It is not castling and moves no rook. Enables carefully screened long escapes.</p></article>
-    </div><div class="guide-rule"><b>Core scoring:</b> pawn 1, knight 3, bishop 3, rook 5, queen 9. Kings are captured rather than checkmated. You may use at most one ability per turn, and abilities are used before the normal move.</div>
+    </div><div class="guide-rule"><b>Core scoring:</b> pawn 1, knight 3, bishop 3, rook 5, queen 9. Games may end by checkmate or king capture. Stalemate is not declared while the player has a legal ability escape. Draws also include agreement, threefold repetition, the fifty-move rule, and insufficient material. You may use at most one ability per turn.</div>
   </main>
 </div>
 <div id="settingsScreen" class="content-screen screen">
@@ -313,7 +316,7 @@
         <button id="newGameBtn">New Game</button>
       </div>
     </div>
-    <div class="clock-row"><div id="whiteClock" class="clock active"><span>White</span><span id="whiteClockTime" class="clock-time">10:00</span></div><div id="blackClock" class="clock"><span>Black</span><span id="blackClockTime" class="clock-time">10:00</span></div></div>
+    <div class="clock-row"><div id="whiteClock" class="clock active"><span>White</span><span id="whiteClockTime" class="clock-time">10:00</span></div><div id="blackClock" class="clock"><span>Black</span><span id="blackClockTime" class="clock-time">10:00</span></div></div><div id="connectionStatus" class="connection-status connected" hidden>Connected</div>
     <div class="board-shell"><div id="board" class="board" role="grid" aria-label="Ability Chess board"></div><svg id="annotationLayer" class="annotation-layer" viewBox="0 0 8 8" preserveAspectRatio="none" aria-hidden="true"></svg></div>
   </div>
 
@@ -324,7 +327,7 @@
       <div id="whiteBank" class="bank"><b>White points:</b> <span id="whitePoints">0</span></div>
       <div id="blackBank" class="bank"><b>Black points:</b> <span id="blackPoints">0</span></div>
     </div>
-    <div class="legend">Shielded pieces cannot be captured until that side's next turn. Bomb destroys a 3×3 zone and the initiating piece, but it cannot be used if either king is in the blast. Kings are captured rather than checkmated, but the opposing king cannot be captured during Double Move. Purple markers indicate permanently upgraded pieces.</div>
+    <div class="legend">Shielded pieces cannot be captured until that side's next turn. Bomb destroys a 3×3 zone and the initiating piece, but it cannot be used if either king is in the blast. Checkmate and direct king capture are both winning outcomes, but the opposing king cannot be captured during Double Move. Purple markers indicate permanently upgraded pieces.</div>
 
     <h2 style="margin-top:14px">Abilities &amp; Upgrades</h2>
     <div class="ability-tabs" role="tablist" aria-label="Abilities and upgrades">
@@ -457,6 +460,7 @@
   const blackClock = document.getElementById('blackClock');
   const whiteClockTime = document.getElementById('whiteClockTime');
   const blackClockTime = document.getElementById('blackClockTime');
+  const connectionStatus=document.getElementById('connectionStatus');
   const premovesSetting = document.getElementById('premovesSetting');
   const legalMarkersSetting = document.getElementById('legalMarkersSetting');
   const soundSetting = document.getElementById('soundSetting');
@@ -693,7 +697,15 @@
 
   const SUPABASE_URL='https://cczvdpofddjghqoeiqew.supabase.co';
   const SUPABASE_KEY='sb_publishable_1j0iGD0GxwBdhac9suyPSw_5CPJGvaM';
-  let onlineSession=null, onlinePollTimer=null, onlineSyncing=false;
+  let onlineSession=null, onlinePollTimer=null, onlineSyncing=false, onlineConnectionState='connected', onlineLastSuccess=0;
+  function setOnlineConnectionStatus(status){
+    onlineConnectionState=status;
+    if(!connectionStatus)return;
+    connectionStatus.hidden=game?.mode!=='online';
+    connectionStatus.className=`connection-status ${status}`;
+    connectionStatus.textContent=status==='connected'?'Connected':status==='reconnecting'?'Reconnecting…':'Disconnected';
+  }
+
   async function supabaseRpc(name,body){
     const res=await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`,{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
     const data=await res.json().catch(()=>null); if(!res.ok) throw new Error(data?.message||data?.hint||'Online request failed.'); return data;
@@ -821,7 +833,7 @@
     }catch{}
   }
   async function openMemberLobby(){memberModal.hidden=false;memberStatus.textContent='';renderMemberAuth();if(memberSession){if(Date.now()/1000>(memberSession.expires_at||0)-30)await refreshMemberToken();await loadMyProfile();renderMemberTabs();await loadMemberList();startMemberPolling();}}
-  function onlineState(){ const copy=JSON.parse(JSON.stringify(game)); delete copy.clockLastTick; delete copy.selected; delete copy.legalMoves; delete copy.turnLegalMoves; delete copy.activeAbility; delete copy.awaitingAbilityTarget; delete copy.abilitySelection; delete copy.selectedAsPremove; delete copy.premoveQueue; return copy; }
+  function onlineState(){ const copy=JSON.parse(JSON.stringify(game)); delete copy.clockLastTick; delete copy.selected; delete copy.legalMoves; delete copy.turnLegalMoves; delete copy.activeAbility; delete copy.awaitingAbilityTarget; delete copy.abilitySelection; delete copy.selectedAsPremove; delete copy.premoveQueue; delete copy.endAnnounced; return copy; }
   function restoreOnlineState(state){
     const previousGame=game;
     const previousSelection = game?.selectedAsPremove && game?.selected ? {...game.selected} : null;
@@ -840,7 +852,7 @@
       const newCount=state?.board?.flat?.().filter(Boolean).length ?? oldCount;
       window.setTimeout(()=>newCount<oldCount ? playCaptureSound() : playMoveSound(),25);
     }
-    game=state; game.upgradeLimit=Number(game.upgradeLimit ?? 3); game.abilitiesEnabled=game.abilitiesEnabled!==false; game.upgradesEnabled=game.upgradesEnabled!==false; game.mode='online'; game.playerColor=keepColor; onlineSession.color=keepColor; game.drawOffer=game.drawOffer || null; game.rematchChallenge=game.rematchChallenge || null; game.clockLastTick=performance.now();
+    game=state; if(game.over && !previousGame?.over) game.endAnnounced=false; game.upgradeLimit=Number(game.upgradeLimit ?? 3); game.abilitiesEnabled=game.abilitiesEnabled!==false; game.upgradesEnabled=game.upgradesEnabled!==false; game.mode='online'; game.playerColor=keepColor; onlineSession.color=keepColor; game.drawOffer=game.drawOffer || null; game.rematchChallenge=game.rematchChallenge || null; game.clockLastTick=performance.now();
     game.selected=null; game.selectedAsPremove=false; game.legalMoves=[]; game.turnLegalMoves=allLegalMoves(game,game.turn); game.premoveQueue=previousPremoveQueue; game.premove=previousPremoveQueue[0]||null;
     if(moveChanged && !game.over && inCheck(game, keepColor)) window.setTimeout(playCheckBuzz, 45);
     if(previousSelection){
@@ -860,13 +872,13 @@
   async function syncOnlineState(){
     if(!onlineSession||onlineSyncing||!game||game.mode!=='online') return; onlineSyncing=true;
     try{ const rows=await supabaseRpc('update_ability_chess_room',{p_room_id:onlineSession.id,p_seat_token:onlineSession.token,p_expected_version:onlineSession.version,p_game_state:onlineState(),p_status:game.over?'finished':'active'}); const row=rows?.[0]; if(row) onlineSession.version=Number(row.new_version); }
-    catch(e){ if(!String(e.message).toLowerCase().includes('version')) game.lastMessage=e.message; } finally{onlineSyncing=false;}
+    catch(e){ setOnlineConnectionStatus('reconnecting'); if(!String(e.message).toLowerCase().includes('version')) game.lastMessage=e.message; } finally{onlineSyncing=false;}
   }
   async function pollOnlineRoom(){
     if(!onlineSession||onlineSyncing) return;
     try{
       const rows=await supabaseRpc('get_ability_chess_room',{p_room_id:onlineSession.id,p_seat_token:onlineSession.token});
-      const row=rows?.[0]; if(!row)return;
+      const row=rows?.[0]; if(!row)return; onlineLastSuccess=Date.now(); setOnlineConnectionStatus('connected');
       const v=Number(row.room_version);
       if(v>onlineSession.version){
         onlineSession.version=v;
@@ -884,7 +896,7 @@
         startClockLoop();
         render();
       }
-    }catch(e){onlineStatus.textContent=e.message;}
+    }catch(e){onlineStatus.textContent=e.message; setOnlineConnectionStatus(onlineLastSuccess&&Date.now()-onlineLastSuccess<10000?'reconnecting':'disconnected');}
   }
   function startOnlinePolling(){ clearInterval(onlinePollTimer); onlinePollTimer=setInterval(pollOnlineRoom,600); }
   function stopOnline(){ clearInterval(onlinePollTimer); onlinePollTimer=null; onlineSession=null; }
@@ -977,12 +989,15 @@
       resultDetail:null,
       drawOffer:null,
       rematchChallenge:null,
+      halfmoveClock:0,
+      positionCounts:{},
       log:[],
       clocks:{w:Number(baseTimeSlider.value)*60,b:Number(baseTimeSlider.value)*60},
       initialTime:Number(baseTimeSlider.value)*60,
       increment:Number(incrementSlider.value),
       clockLastTick:performance.now()
     };
+    recordPosition(game);
     if (game.mode === 'online') {
       game.lastMessage = 'Online play needs a server or realtime backend, so this offline file leaves it as a placeholder. Local and bot modes work.';
       game.mode = 'local';
@@ -1096,6 +1111,7 @@
       for(let cc=0;cc<8;cc++){
         const p = state.board[rr][cc];
         if (!p || colorOf(p)!==byColor) continue;
+        if(isFrozenPiece(state,rr,cc,byColor)) continue;
         const moves = pseudoMoves(state, rr, cc, true);
         if (moves.some(m => m.to.r===r && m.to.c===c)) return true;
       }
@@ -1233,33 +1249,36 @@
     return !!game && !game.over && !!color && game.turn !== color;
   }
 
-  function premoveMovesFor(r,c){
-    const color=humanPremoveColor(),piece=pieceAt(game.board,r,c);if(!color||!piece||colorOf(piece)!==color)return[];
-    const temp=cloneState(game);temp.turn=color;
-    const moves=pseudoMoves(temp,r,c,false).map(m=>({...m}));
+  function premovePreviewState(){
+    const preview=cloneState(game); preview.turn=humanPremoveColor();
+    for(const q of premoveQueue()){
+      const p=pieceAt(preview.board,q.from.r,q.from.c); if(!p) continue;
+      preview.board[q.to.r][q.to.c]=p; preview.board[q.from.r][q.from.c]=null;
+      if(p[1]==='p'&&isPromotionRank(p[0],q.to.r)) preview.board[q.to.r][q.to.c]=p[0]+(q.promotion||'q');
+    }
+    return preview;
+  }
 
-    // Recapture premoves must be queueable onto a square currently occupied by
-    // one of our own pieces. The opponent may capture that piece before our
-    // turn, making the queued capture legal. Normal pseudo-move generation
-    // correctly excludes friendly destinations, so preview each friendly
-    // occupied square as though it held an enemy piece and retain only moves
-    // that actually reach that square. The move is fully revalidated against
-    // the real position immediately before execution.
+  function premovePreviewPieceAt(r,c){ return pieceAt(premovePreviewState().board,r,c); }
+
+  function premoveMovesFor(r,c){
+    const color=humanPremoveColor(),preview=premovePreviewState(),piece=pieceAt(preview.board,r,c);if(!color||!piece||colorOf(piece)!==color)return[];
+    preview.turn=color;
+    const moves=pseudoMoves(preview,r,c,false).map(m=>({...m}));
+
+    // A recapture may be queued onto a square occupied by a friendly piece in
+    // the preview. If the opponent captures it, execution revalidates the move.
     for(let tr=0;tr<8;tr++) for(let tc=0;tc<8;tc++){
       if(tr===r&&tc===c) continue;
-      const target=pieceAt(game.board,tr,tc);
+      const target=pieceAt(preview.board,tr,tc);
       if(!target||colorOf(target)!==color) continue;
-      const probe=cloneState(game);probe.turn=color;
+      const probe=cloneState(preview);probe.turn=color;
       probe.board[tr][tc]=other(color)+typeOf(target);
       const recapture=pseudoMoves(probe,r,c,false).find(m=>m.to.r===tr&&m.to.c===tc);
-      if(recapture&&!moves.some(m=>m.to.r===tr&&m.to.c===tc)){
-        moves.push({...recapture,capture:true,premoveRecapture:true});
-      }
+      if(recapture&&!moves.some(m=>m.to.r===tr&&m.to.c===tc))moves.push({...recapture,capture:true,premoveRecapture:true});
     }
-
-    // Pawns may also queue diagonal captures before an enemy target arrives.
     if(typeOf(piece)==='p'){
-      const up=upgradeFor(game,color,'p'),dir=color==='w'?-1:1,dirs=up==='veteran'?[dir,-dir]:[dir];
+      const up=upgradeFor(preview,color,'p'),dir=color==='w'?-1:1,dirs=up==='veteran'?[dir,-dir]:[dir];
       for(const d of dirs)for(const dc of[-1,1])if(inBounds(r+d,c+dc)&&!moves.some(m=>m.to.r===r+d&&m.to.c===c+dc))moves.push({from:{r,c},to:{r:r+d,c:c+dc},capture:true,premoveRecapture:true});
     }
     return moves;
@@ -1277,7 +1296,7 @@
 
   function selectPremovePiece(r,c){
     const color = humanPremoveColor();
-    const piece = pieceAt(game.board,r,c);
+    const piece = premovePreviewPieceAt(r,c);
     if (!piece || colorOf(piece)!==color) return false;
     game.selected={r,c};
     game.selectedAsPremove=true;
@@ -1288,7 +1307,7 @@
   }
 
   function queuePremove(move){
-    const piece = pieceAt(game.board,move.from.r,move.from.c);
+    const piece = premovePreviewPieceAt(move.from.r,move.from.c);
     if (!piece) return;
     primeGameAudio();
     const queue=premoveQueue();
@@ -1565,39 +1584,64 @@
     return false;
   }
 
+  function positionKey(state){
+    const upgrades=JSON.stringify(state.upgrades||{});
+    const statuses=JSON.stringify({shielded:state.shielded,frozen:state.frozen,ambushed:state.ambushed,fortified:state.fortified,portals:state.portals});
+    return `${state.board.map(r=>r.map(x=>x||'--').join('')).join('/')}|${state.turn}|${JSON.stringify(state.castlingRights||{})}|${JSON.stringify(state.enPassant||null)}|${upgrades}|${statuses}`;
+  }
+
+  function recordPosition(state){
+    state.positionCounts=state.positionCounts||{};
+    const key=positionKey(state);
+    state.positionCounts[key]=(state.positionCounts[key]||0)+1;
+    return state.positionCounts[key];
+  }
+
+  function abilityCanProduceLegalContinuation(state,color){
+    if(state.abilitiesEnabled===false || state.abilityUsed) return false;
+    const points=state.points?.[color]||0;
+    const affordable=id=>{const d=ABILITIES.find(a=>a.id===id);return d&&points>=d.cost;};
+    // Double Move can be selected whenever the player can make at least one legal king-saving move.
+    if(affordable('double') && allLegalMoves(state,color).length) return true;
+    // Freeze may neutralize a checking non-king piece, after which a normal legal reply must exist.
+    if(affordable('freeze')){
+      for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+        const p=pieceAt(state.board,r,c); if(!p||colorOf(p)!==other(color)||typeOf(p)==='k')continue;
+        const t=cloneState(state); t.turn=color; t.frozen=t.frozen||{w:null,b:null}; t.frozen[other(color)]={r,c};
+        if(!inCheck(t,color) && allLegalMoves(t,color).length) return true;
+      }
+    }
+    // Teleport, swap, recall, bomb, shield and fortify can alter king safety; test conservative legal targets.
+    if(affordable('teleport')){
+      for(let r=0;r<8;r++)for(let c=0;c<8;c++){const p=pieceAt(state.board,r,c);if(!p||colorOf(p)!==color||typeOf(p)==='k')continue;for(let rr=0;rr<8;rr++)for(let cc=0;cc<8;cc++)if(!pieceAt(state.board,rr,cc)){const t=cloneState(state);t.board[rr][cc]=p;t.board[r][c]=null;if(!inCheck(t,color))return true;}}
+    }
+    return false;
+  }
+
+  function hasAnyTurnAction(state,color){
+    return allLegalMoves(state,color).length>0 || abilityCanProduceLegalContinuation(state,color);
+  }
+
   function evaluateGameStatus(){
     if (!game || game.over) return;
-    const whiteKing=findKing(game,'w');
-    const blackKing=findKing(game,'b');
+    const whiteKing=findKing(game,'w'), blackKing=findKing(game,'b');
     if(!whiteKing || !blackKing){
       const winner=whiteKing?'w':'b';
-      endGame(winner,'king capture',`${winner==='w'?'White':'Black'} wins by capturing the king.`);
-      return;
+      endGame(winner,'king capture',`${winner==='w'?'White':'Black'} wins by capturing the king.`); return;
     }
-    if(isInsufficientMaterial(game)){
-      endGame(null,'insufficient material','Draw by insufficient material.');
-      return;
-    }
-    const moves=allLegalMoves(game,game.turn);
-    game.turnLegalMoves=moves;
+    if(isInsufficientMaterial(game)){ endGame(null,'insufficient material','Draw by insufficient material.'); return; }
+    if((game.halfmoveClock||0)>=100){ endGame(null,'fifty-move rule','Draw by the fifty-move rule.'); return; }
+    const repetitionCount=recordPosition(game);
+    if(repetitionCount>=3){ endGame(null,'threefold repetition','Draw by threefold repetition.'); return; }
+    const moves=allLegalMoves(game,game.turn); game.turnLegalMoves=moves;
     const check=inCheck(game,game.turn);
-    if(moves.length===0){
-      if(check){
-        // Ability Chess retains the previously chosen king-capture rule:
-        // a trapped side passes, allowing the opposing king capture.
-        const trapped=game.turn;
-        game.turn=other(game.turn);
-        game.clockLastTick=performance.now();
-        clearTurnFlagsForNextPlayer();
-        game.lastMessage=`${trapped==='w'?'White':'Black'} has no legal escape. Turn passes; the king may now be captured.`;
-        log(`${trapped==='w'?'White':'Black'} had no legal escape; turn passed.`);
-        return;
-      }
-      endGame(null,'stalemate','Draw by stalemate.');
-      return;
+    const abilityEscape=abilityCanProduceLegalContinuation(game,game.turn);
+    if(moves.length===0 && !abilityEscape){
+      if(check){ endGame(other(game.turn),'checkmate',`${other(game.turn)==='w'?'White':'Black'} wins by checkmate.`); return; }
+      endGame(null,'stalemate','Draw by stalemate.'); return;
     }
     game.winner=null;
-    game.lastMessage=`${game.turn==='w'?'White':'Black'} to move${check?' — king under attack':''}.`;
+    game.lastMessage=`${game.turn==='w'?'White':'Black'} to move${check?' — king under attack':''}${moves.length===0&&abilityEscape?' — use an ability to escape':''}.`;
   }
 
   const HIDDEN_AMBUSH_LOG='__ABILITY_CHESS_HIDDEN_AMBUSH__';
@@ -1943,6 +1987,7 @@
     else pendingMoveAnimation = null;
     if (target) addPoints(game.turn, target);
 
+    game.halfmoveClock = (piece[1]==='p' || target) ? 0 : Number(game.halfmoveClock||0)+1;
     const next = applyMoveToState(game, move);
     if (!next) return;
     game.board = next.board;
@@ -2005,7 +2050,7 @@
 
     if (isPremoveWindow()) {
       const color=humanPremoveColor();
-      const piece=pieceAt(game.board,r,c);
+      const piece=premovePreviewPieceAt(r,c);
       if (game.selected && game.selected.r===r && game.selected.c===c) {
         game.selected=null; game.selectedAsPremove=false; game.legalMoves=[];
         game.lastMessage=premoveQueue().length?`${premoveQueue().length} premove${premoveQueue().length===1?'':'s'} queued.`:'Premove selection cleared.';
@@ -2038,7 +2083,6 @@
     if (game.selected){
       const chosen = game.legalMoves.find(m => m.to.r===r && m.to.c===c);
       if (chosen) return makeMove(chosen);
-      if (rejectMoveDuringCheck()) return;
     }
     if (piece && colorOf(piece)===game.turn){
       game.selected = {r,c};
@@ -2130,7 +2174,6 @@
       return;
     }
     dragState = null;
-    if (!wasPremove && rejectMoveDuringCheck()) return;
     onSquareClick(r,c);
   }
 
@@ -2641,8 +2684,8 @@
     const incoming=available && !!game.drawOffer && game.drawOffer!==actor;
     const outgoing=available && !!game.drawOffer && game.drawOffer===actor;
     offerDrawBtn.hidden=!available || incoming;
-    offerDrawBtn.disabled=!available || outgoing;
-    offerDrawBtn.textContent=outgoing ? 'Draw Offered' : 'Offer Draw';
+    offerDrawBtn.disabled=!available;
+    offerDrawBtn.textContent=outgoing ? 'Cancel Draw Offer' : 'Offer Draw';
     acceptDrawBtn.hidden=game?.mode==='online' || !incoming;
     declineDrawBtn.hidden=game?.mode==='online' || !incoming;
     drawOfferToast.hidden=!(game?.mode==='online' && incoming);
@@ -2675,6 +2718,7 @@
     whiteBankEl.hidden = privateOnlineBank && game.playerColor!=='w';
     blackBankEl.hidden = privateOnlineBank && game.playerColor!=='b';
     renderClocks();
+    if(connectionStatus){connectionStatus.hidden=game?.mode!=='online';if(game?.mode==='online')setOnlineConnectionStatus(onlineConnectionState);}
     renderDrawControls();
     renderRematchControls();
     renderUpgrades();
@@ -2689,6 +2733,7 @@
         sq.className = 'sq ' + (((r+c)%2===0) ? 'light' : 'dark');
         if (game?.lastMove && ((game.lastMove.from.r===r && game.lastMove.from.c===c) || (game.lastMove.to.r===r && game.lastMove.to.c===c))) sq.classList.add('last-move');
         const p = game?.board?.[r]?.[c];
+        if(p&&typeOf(p)==='k'&&inCheck(game,colorOf(p)))sq.classList.add('king-in-check');
         sq.innerHTML = p ? pieceMarkup(p) : '';
         if(p){const upId=upgradeFor(game,colorOf(p),typeOf(p));if(upId){const up=upgradeDefinition(upId);const marker=document.createElement('span');marker.className=`upgrade-marker upgrade-marker-${typeOf(p)}`;marker.textContent='▲';marker.tabIndex=0;marker.setAttribute('role','img');marker.setAttribute('aria-label',`${up.name} upgrade. ${up.rule}`);marker.title=`${up.name} upgrade`;const tip=document.createElement('span');tip.className='piece-upgrade-tooltip';tip.textContent=`${up.name}: ${up.rule} This upgrade affects every friendly ${PIECE_NAMES[up.type].toLowerCase()}.`;sq.append(marker,tip);}}
         if (sel && sel.r===r && sel.c===c) sq.classList.add(game?.selectedAsPremove ? 'premove-selected' : 'selected');
@@ -2827,6 +2872,10 @@ ${portalTitle}` : portalTitle;
         sq.title = algebraic(r,c);
         sq.setAttribute('role', 'gridcell');
         sq.setAttribute('aria-label', `${algebraic(r,c)}${p ? `, ${p[0]==='w'?'white':'black'} ${({p:'pawn',n:'knight',b:'bishop',r:'rook',q:'queen',k:'king'})[p[1]]}` : ', empty'}`);
+        if(game && Array.isArray(game.premoveQueue)){
+          const idx=game.premoveQueue.findIndex(pm=>pm.to.r===r&&pm.to.c===c);
+          if(idx>=0){const preview=premovePreviewState();const gp=pieceAt(preview.board,r,c);if(gp){const ghost=document.createElement('div');ghost.className='premove-ghost';ghost.innerHTML=pieceSvg(gp);sq.appendChild(ghost);}}
+        }
         boardEl.appendChild(sq);
       }
     }
@@ -2993,14 +3042,15 @@ ${portalTitle}` : portalTitle;
 
   newGameBtn.addEventListener('click', () => { getAudioContext(); if(game?.mode==='online'){showHome();return;} newGame(); });
   offerDrawBtn.addEventListener('click',()=>{
-    if(!game || game.over || game.mode==='bot' || game.drawOffer) return;
-    const offering=drawActorColor();
-    if(!offering) return;
-    game.drawOffer=offering;
-    game.lastMessage=`${offering==='w'?'White':'Black'} offered a draw.`;
-    game.log.push(`${offering==='w'?'White':'Black'} offered a draw.`);
-    render();
-    if(game.mode==='online') queueMicrotask(syncOnlineState);
+    if(!game || game.over || game.mode==='bot') return;
+    const offering=drawActorColor(); if(!offering) return;
+    if(game.drawOffer===offering){
+      game.drawOffer=null; game.lastMessage=`${offering==='w'?'White':'Black'} canceled the draw offer.`; log(`${offering==='w'?'White':'Black'} canceled the draw offer.`);
+    } else {
+      if(game.drawOffer) return;
+      game.drawOffer=offering; game.lastMessage=`${offering==='w'?'White':'Black'} offered a draw.`; log(`${offering==='w'?'White':'Black'} offered a draw.`);
+    }
+    render(); if(game.mode==='online') queueMicrotask(syncOnlineState);
   });
   acceptDrawBtn.addEventListener('click',()=>{
     if(!game || game.over || !game.drawOffer) return;
