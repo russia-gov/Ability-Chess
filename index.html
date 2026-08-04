@@ -556,6 +556,31 @@
   try{ memberSession=JSON.parse(localStorage.getItem('abilityChessMemberSession')||'null'); }catch{}
   function authHeaders(){ return {apikey:SUPABASE_KEY,Authorization:`Bearer ${memberSession?.access_token||SUPABASE_KEY}`,'Content-Type':'application/json'}; }
   async function authRequest(path,body){ const res=await fetch(`${SUPABASE_URL}/auth/v1/${path}`,{method:'POST',headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify(body)}); const data=await res.json().catch(()=>null); if(!res.ok) throw new Error(data?.msg||data?.message||data?.error_description||'Authentication failed.'); return data; }
+  function appRedirectUrl(){ return `${window.location.origin}${window.location.pathname}`; }
+  function importAuthRedirectSession(){
+    const hash=new URLSearchParams(window.location.hash.replace(/^#/,'').trim());
+    const query=new URLSearchParams(window.location.search);
+    const errorDescription=hash.get('error_description')||query.get('error_description');
+    if(errorDescription){
+      sessionStorage.setItem('abilityChessAuthMessage',decodeURIComponent(errorDescription.replace(/\+/g,' ')));
+      history.replaceState(null,'',window.location.pathname);
+      return false;
+    }
+    const accessToken=hash.get('access_token');
+    const refreshToken=hash.get('refresh_token');
+    if(!accessToken)return false;
+    const expiresIn=Number(hash.get('expires_in')||3600);
+    saveMemberSession({
+      access_token:accessToken,
+      refresh_token:refreshToken,
+      token_type:hash.get('token_type')||'bearer',
+      expires_in:expiresIn,
+      expires_at:Math.floor(Date.now()/1000)+expiresIn
+    });
+    sessionStorage.setItem('abilityChessAuthMessage','Email confirmed. You are now signed in.');
+    history.replaceState(null,'',window.location.pathname);
+    return true;
+  }
   async function memberRpc(name,body={}){ const res=await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`,{method:'POST',headers:authHeaders(),body:JSON.stringify(body)}); const data=await res.json().catch(()=>null); if(res.status===401){ clearMemberSession(); throw new Error('Your session expired. Please sign in again.'); } if(!res.ok) throw new Error(data?.message||data?.hint||'Member request failed.'); return data; }
   function saveMemberSession(session){ memberSession=session; localStorage.setItem('abilityChessMemberSession',JSON.stringify(session)); }
   function clearMemberSession(){ memberSession=null; memberProfile=null; localStorage.removeItem('abilityChessMemberSession'); clearInterval(memberPollTimer); memberPollTimer=null; renderMemberAuth(); }
@@ -2670,7 +2695,7 @@
   closeMemberBtn.addEventListener('click',()=>{memberModal.hidden=true;});
   memberModal.addEventListener('click',e=>{if(e.target===memberModal)memberModal.hidden=true;});
   memberSignInBtn.addEventListener('click',async()=>{memberStatus.textContent='Signing in…';try{const data=await authRequest('token?grant_type=password',{email:memberEmail.value.trim(),password:memberPassword.value});data.expires_at=Math.floor(Date.now()/1000)+(data.expires_in||3600);saveMemberSession(data);memberStatus.textContent='Signed in.';await loadMyProfile();renderMemberTabs();await loadMemberList();startMemberPolling();}catch(e){memberStatus.textContent=e.message;}});
-  memberSignUpBtn.addEventListener('click',async()=>{memberStatus.textContent='Creating account…';try{const data=await authRequest('signup',{email:memberEmail.value.trim(),password:memberPassword.value,data:{display_name:memberEmail.value.split('@')[0]}});if(data.access_token){data.expires_at=Math.floor(Date.now()/1000)+(data.expires_in||3600);saveMemberSession(data);memberStatus.textContent='Account created.';await loadMyProfile();renderMemberTabs();await loadMemberList();startMemberPolling();}else memberStatus.textContent='Account created. Check your email to confirm, then sign in.';}catch(e){memberStatus.textContent=e.message;}});
+  memberSignUpBtn.addEventListener('click',async()=>{memberStatus.textContent='Creating account…';try{const redirect=encodeURIComponent(appRedirectUrl());const data=await authRequest(`signup?redirect_to=${redirect}`,{email:memberEmail.value.trim(),password:memberPassword.value,data:{display_name:memberEmail.value.split('@')[0]}});if(data.access_token){data.expires_at=Math.floor(Date.now()/1000)+(data.expires_in||3600);saveMemberSession(data);memberStatus.textContent='Account created.';await loadMyProfile();renderMemberTabs();await loadMemberList();startMemberPolling();}else memberStatus.textContent='Account created. Check your email and use the confirmation link; it will return you to this site.';}catch(e){memberStatus.textContent=e.message;}});
   memberSignOutBtn.addEventListener('click',()=>{clearMemberSession();memberStatus.textContent='Signed out.';});
   saveProfileBtn.addEventListener('click',async()=>{memberStatus.textContent='Saving profile…';try{const rows=await memberRpc('ability_chess_update_profile',{p_username:profileUsername.value.trim(),p_display_name:profileDisplayName.value.trim()});memberProfile=rows?.[0];renderMemberAuth();memberStatus.textContent='Profile saved.';}catch(e){memberStatus.textContent=e.message;}});
   document.querySelectorAll('.member-tab').forEach(b=>b.addEventListener('click',async()=>{memberTab=b.dataset.memberTab;renderMemberTabs();await loadMemberList();}));
@@ -2701,9 +2726,12 @@
   lightColorInput.addEventListener('input',()=>{settings.light=lightColorInput.value;saveSettings();});
   darkColorInput.addEventListener('input',()=>{settings.dark=darkColorInput.value;saveSettings();});
   resetSettingsBtn.addEventListener('click',()=>{settings={...DEFAULT_SETTINGS};saveSettings();});
+  importAuthRedirectSession();
   buildBoardPresets(); applySettings();
   renderAbilities();
   renderMemberAuth();
+  const authMessage=sessionStorage.getItem('abilityChessAuthMessage');
+  if(authMessage){ memberStatus.textContent=authMessage; sessionStorage.removeItem('abilityChessAuthMessage'); memberModal.hidden=false; }
   if(memberSession){ loadMyProfile(); startMemberPolling(); }
   renderHomeBoard();
   baseTimeOutput.textContent=`${baseTimeSlider.value} min`; incrementOutput.textContent=`${incrementSlider.value} sec`;
