@@ -402,6 +402,20 @@
   const baseTimeOutput = document.getElementById('baseTimeOutput');
   const incrementOutput = document.getElementById('incrementOutput');
   const upgradeLimitSlider=document.getElementById('upgradeLimitSlider'), upgradeLimitOutput=document.getElementById('upgradeLimitOutput'), abilitiesEnabledToggle=document.getElementById('abilitiesEnabledToggle'), upgradesEnabledToggle=document.getElementById('upgradesEnabledToggle');
+  const abilitiesTabBtn=document.getElementById('abilitiesTabBtn'), upgradesTabBtn=document.getElementById('upgradesTabBtn'), abilitiesPanelSection=document.getElementById('abilitiesPanelSection'), upgradesPanelSection=document.getElementById('upgradesPanelSection');
+  function showAbilityPanel(which){
+    const showUpgrades=which==='upgrades';
+    if(!abilitiesPanelSection||!upgradesPanelSection)return;
+    abilitiesPanelSection.hidden=showUpgrades;
+    upgradesPanelSection.hidden=!showUpgrades;
+    abilitiesTabBtn?.classList.toggle('active',!showUpgrades);
+    upgradesTabBtn?.classList.toggle('active',showUpgrades);
+    abilitiesTabBtn?.setAttribute('aria-selected',String(!showUpgrades));
+    upgradesTabBtn?.setAttribute('aria-selected',String(showUpgrades));
+    if(showUpgrades)renderUpgrades();
+  }
+  abilitiesTabBtn?.addEventListener('click',()=>showAbilityPanel('abilities'));
+  upgradesTabBtn?.addEventListener('click',()=>showAbilityPanel('upgrades'));
   const onlineUpgradeLimitSlider=document.getElementById('onlineUpgradeLimitSlider'), onlineUpgradeLimitOutput=document.getElementById('onlineUpgradeLimitOutput'), onlineAbilitiesEnabledToggle=document.getElementById('onlineAbilitiesEnabledToggle'), onlineUpgradesEnabledToggle=document.getElementById('onlineUpgradesEnabledToggle');
   const whiteClock = document.getElementById('whiteClock');
   const blackClock = document.getElementById('blackClock');
@@ -704,11 +718,7 @@
       gameModeLabel.innerHTML='Mode: <b>Online — Black</b>';
       startOnlinePolling();
       startClockLoop();
-      const abilitiesTabBtn=document.getElementById('abilitiesTabBtn'),upgradesTabBtn=document.getElementById('upgradesTabBtn'),abilitiesPanelSection=document.getElementById('abilitiesPanelSection'),upgradesPanelSection=document.getElementById('upgradesPanelSection');
-  function showAbilityPanel(which){const upgrades=which==='upgrades';abilitiesPanelSection.hidden=upgrades;upgradesPanelSection.hidden=!upgrades;abilitiesTabBtn.classList.toggle('active',!upgrades);upgradesTabBtn.classList.toggle('active',upgrades);abilitiesTabBtn.setAttribute('aria-selected',String(!upgrades));upgradesTabBtn.setAttribute('aria-selected',String(upgrades));if(upgrades)renderUpgrades();}
-  abilitiesTabBtn?.addEventListener('click',()=>showAbilityPanel('abilities'));upgradesTabBtn?.addEventListener('click',()=>showAbilityPanel('upgrades'));
-
-  renderAbilities();
+      renderAbilities();
       render();
     }catch(e){memberStatus.textContent=e.message;}
   }
