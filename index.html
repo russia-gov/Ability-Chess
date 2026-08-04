@@ -35,6 +35,7 @@
   .light{background:var(--light);color:#111}
   .dark{background:var(--dark);color:#111}
   .selected{outline:4px solid #44c2ff;outline-offset:-4px}
+  .sq.last-move::before{content:'';position:absolute;inset:0;background:rgba(246,232,72,.58);z-index:1;pointer-events:none}
   .legal::after{content:'';width:18%;height:18%;border-radius:50%;background:rgba(0,0,0,.35);position:absolute}
   .capture::after{content:'';position:absolute;inset:8%;border-radius:50%;border:4px solid rgba(180,0,0,.7)}
   .bomb-target{outline:4px solid var(--danger);outline-offset:-4px}
@@ -52,9 +53,9 @@
   h2{margin:0 0 10px;font-size:18px}
   .status{min-height:52px;padding:10px 12px;background:#151a20;border-radius:10px;line-height:1.35}
   .small{color:var(--muted);font-size:13px}
-  .abilities{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:10px}
-  .ability{position:relative;padding:9px 7px;border-radius:9px;background:#151a20;border:1px solid #2e3945;text-align:center!important;min-height:42px}
-  .ability-tooltip{position:absolute;z-index:30;left:50%;bottom:calc(100% + 9px);width:230px;transform:translateX(-50%) translateY(4px);padding:9px 10px;border-radius:9px;background:#090c10;color:#f2f4f8;border:1px solid #435064;box-shadow:0 10px 28px rgba(0,0,0,.45);font-size:12px;line-height:1.35;text-align:left;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .12s ease,transform .12s ease}
+  .abilities{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:7px}
+  .ability{position:relative;padding:9px 7px;border-radius:9px;background:#202832;border:1px solid #465467;text-align:center!important;min-height:42px;box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
+  .ability-tooltip{position:absolute;z-index:30;left:50%;bottom:calc(100% + 9px);width:230px;transform:translateX(-50%) translateY(4px);padding:9px 10px;border-radius:9px;background:#111820;color:#f8fafc;border:1px solid #6b7b90;box-shadow:0 12px 32px rgba(0,0,0,.72);font-size:12px;line-height:1.35;text-align:left;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .12s ease,transform .12s ease}
   .ability:hover .ability-tooltip,.ability:focus-visible .ability-tooltip{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
   .ability.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(77,163,255,.28) inset}
   .ability.move-consuming{border-color:#ef4444;box-shadow:0 0 0 1px rgba(239,68,68,.42) inset}
@@ -69,7 +70,7 @@
   button:focus-visible,select:focus-visible,.ability:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
   .ability{width:100%;text-align:left;color:var(--text);cursor:pointer}
   .ability:hover:not(:disabled){transform:translateY(-1px)}
-  .ability:disabled{opacity:.45;cursor:not-allowed}
+  .ability:disabled{opacity:1;cursor:not-allowed;background:#171d24;border-color:#303b48;color:#8793a1}.ability:disabled .name,.ability:disabled .cost{opacity:.58}.ability:disabled .ability-tooltip{opacity:1;color:#f8fafc}
   .board-shell{position:relative;width:min(100%,640px);aspect-ratio:1/1;margin:0 auto}
   .annotation-layer{position:absolute;inset:0;width:100%;height:100%;z-index:6;pointer-events:none;overflow:visible}
   .sq.user-highlight::before{content:'';position:absolute;inset:0;background:rgba(239,68,68,.48);z-index:1;pointer-events:none}
@@ -143,9 +144,12 @@
   .member-modal{position:fixed;inset:0;z-index:22000;display:grid;place-items:center;background:rgba(5,8,12,.8);padding:18px}.member-modal[hidden]{display:none}.member-card{width:min(920px,96vw);max-height:90vh;overflow:auto;background:#20262e;border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:22px;box-shadow:0 22px 60px rgba(0,0,0,.5)}.member-card h2{margin:0 0 8px}.member-auth{display:grid;grid-template-columns:1fr 1fr;gap:12px}.member-auth input,.member-toolbar input{min-width:0;background:#13181e;color:white;border:1px solid #465363;border-radius:10px;padding:11px 12px;font-size:15px}.member-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.member-tab.active{border-color:var(--warn);background:#3b3021}.member-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}.member-toolbar input{flex:1 1 220px}.member-list{display:grid;gap:10px}.member-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;background:#171c22;border:1px solid #354150;border-radius:12px;padding:12px}.member-name{font-weight:800}.member-meta{color:var(--muted);font-size:13px;margin-top:3px}.member-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.member-empty{color:var(--muted);padding:20px;text-align:center;background:#171c22;border-radius:12px}.member-profilebar{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;background:#171c22;border-radius:12px;padding:12px;margin-bottom:14px}.member-close{width:100%;margin-top:16px}.profile-edit{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:10px}.profile-edit input{background:#13181e;color:white;border:1px solid #465363;border-radius:10px;padding:10px}.online-member-btn{width:100%;margin-top:10px;background:#2a3d32;border-color:#49735a}.challenge-badge{display:inline-block;padding:3px 7px;border-radius:999px;background:#3b3021;color:#ffc56d;font-size:11px;font-weight:800;margin-left:6px}.online-dot{color:#68d391}.member-status{min-height:22px;color:#cbd3db;margin-top:8px}@media(max-width:640px){.member-auth,.profile-edit{grid-template-columns:1fr}.member-row{grid-template-columns:1fr}.member-actions{justify-content:flex-start}}
 
   .ability-tabs{display:flex;gap:8px;margin:10px 0}.ability-tab{flex:1}.ability-tab.active{background:#3b82f6;border-color:#60a5fa;color:white}
+  .ability-panel-section,.upgrade-panel{max-height:min(52vh,500px);overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:3px 7px 8px 3px;border-radius:10px;background:#121820;border:1px solid rgba(255,255,255,.08)}
+  .ability-panel-section::-webkit-scrollbar,.upgrade-panel::-webkit-scrollbar{width:10px}.ability-panel-section::-webkit-scrollbar-thumb,.upgrade-panel::-webkit-scrollbar-thumb{background:#465467;border-radius:999px;border:2px solid #121820}.ability-panel-section::-webkit-scrollbar-track,.upgrade-panel::-webkit-scrollbar-track{background:#121820;border-radius:999px}
+  .ability-panel-section{scrollbar-color:#465467 #121820;scrollbar-width:thin}.upgrade-panel{scrollbar-color:#465467 #121820;scrollbar-width:thin}
   .upgrade-panel[hidden],.ability-panel-section[hidden]{display:none!important}.upgrade-capacity{font-weight:800;margin:4px 0 10px;color:#dbeafe}
-  .upgrade-groups{display:grid;gap:10px}.upgrade-group{border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:9px;background:#171c22}.upgrade-group-title{font-weight:800;text-transform:capitalize;margin-bottom:7px;color:#e5e7eb}
-  .upgrade-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.upgrade{position:relative;text-align:left;padding:8px 9px;border:1px solid rgba(255,255,255,.12);border-radius:9px;background:#222a33;color:#eef2f7}.upgrade:hover:not(:disabled),.upgrade:focus-visible:not(:disabled){border-color:#a78bfa;background:#2d253e}.upgrade.owned{border-color:#34d399;background:#14352c}.upgrade[aria-disabled="true"]{opacity:.52;cursor:not-allowed}.upgrade-name{display:block;font-weight:800}.upgrade-meta{display:block;font-size:11px;color:#b8c0ca;margin-top:2px}.upgrade-tooltip,.piece-upgrade-tooltip{display:none;position:absolute;z-index:90;width:260px;max-width:min(260px,70vw);padding:10px;border:1px solid rgba(255,255,255,.16);border-radius:9px;background:#0f141a;color:#eef2f7;box-shadow:0 12px 32px rgba(0,0,0,.5);font-size:12px;line-height:1.45;pointer-events:none;white-space:normal}.upgrade-tooltip{left:4px;bottom:calc(100% + 7px)}.upgrade:hover .upgrade-tooltip,.upgrade:focus-visible .upgrade-tooltip{display:block}.upgrade-marker{position:absolute;right:3px;top:3px;width:14px;height:14px;border-radius:50%;background:#8b5cf6;border:2px solid #f5f3ff;box-shadow:0 1px 4px #000;z-index:7;font-size:9px;line-height:10px;text-align:center;color:white;font-weight:900}.sq:hover .piece-upgrade-tooltip,.sq:focus-within .piece-upgrade-tooltip{display:block}.piece-upgrade-tooltip{left:18px;top:18px}.sq{position:relative}.upgrade-guide-heading{grid-column:1/-1;margin:18px 0 0;font-size:28px}.upgrade-guide-intro{grid-column:1/-1;background:#171c22;border-left:4px solid #8b5cf6;padding:14px 16px;border-radius:10px;color:#cbd3db;line-height:1.5}
+  .upgrade-groups{display:grid;gap:10px;padding:7px}.upgrade-group{border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:9px;background:#171c22}.upgrade-group-title{font-weight:800;text-transform:capitalize;margin-bottom:7px;color:#e5e7eb}
+  .upgrade-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.upgrade{position:relative;text-align:left;padding:8px 9px;border:1px solid rgba(255,255,255,.12);border-radius:9px;background:#222a33;color:#eef2f7}.upgrade:hover:not(:disabled),.upgrade:focus-visible:not(:disabled){border-color:#a78bfa;background:#352b49}.upgrade.owned{border-color:#34d399;background:#14352c}.upgrade[aria-disabled="true"]{opacity:1;cursor:not-allowed;background:#171d24;border-color:#303b48;color:#8793a1}.upgrade[aria-disabled="true"] .upgrade-name,.upgrade[aria-disabled="true"] .upgrade-meta{opacity:.58}.upgrade-name{display:block;font-weight:800}.upgrade-meta{display:block;font-size:11px;color:#b8c0ca;margin-top:2px}.upgrade-tooltip,.piece-upgrade-tooltip{display:none;position:absolute;z-index:90;width:260px;max-width:min(260px,70vw);padding:10px;border:1px solid rgba(255,255,255,.16);border-radius:9px;background:#111820;color:#f8fafc;box-shadow:0 14px 36px rgba(0,0,0,.76);font-size:12px;line-height:1.45;pointer-events:none;white-space:normal}.upgrade-tooltip{left:4px;bottom:calc(100% + 7px)}.upgrade:hover .upgrade-tooltip,.upgrade:focus-visible .upgrade-tooltip{display:block}.upgrade-marker{position:absolute;right:3px;top:3px;width:14px;height:14px;border-radius:50%;background:#8b5cf6;border:2px solid #f5f3ff;box-shadow:0 1px 4px #000;z-index:7;font-size:9px;line-height:10px;text-align:center;color:white;font-weight:900}.sq:hover .piece-upgrade-tooltip,.sq:focus-within .piece-upgrade-tooltip{display:block}.piece-upgrade-tooltip{left:18px;top:18px}.sq{position:relative}.upgrade-guide-heading{grid-column:1/-1;margin:18px 0 0;font-size:28px}.upgrade-guide-intro{grid-column:1/-1;background:#171c22;border-left:4px solid #8b5cf6;padding:14px 16px;border-radius:10px;color:#cbd3db;line-height:1.5}
   @media(max-width:560px){.upgrade-buttons{grid-template-columns:1fr}}
 
 </style>
@@ -897,6 +901,7 @@
       fortified:{w:null,b:null},
       portals:{w:null,b:null},
       lastMoveByColor:{w:null,b:null},
+      lastMove:null,
       abilitySelection:null,
       castlingRights:{w:{k:true,q:true},b:{k:true,q:true}},
       enPassant:null,
@@ -955,7 +960,8 @@
       ambushed:{w:state.ambushed?.w?{...state.ambushed.w}:null,b:state.ambushed?.b?{...state.ambushed.b}:null},
       fortified:{w:state.fortified?.w?{squares:state.fortified.w.squares.map(x=>({...x}))}:null,b:state.fortified?.b?{squares:state.fortified.b.squares.map(x=>({...x}))}:null},
       portals:{w:state.portals?.w?{a:{...state.portals.w.a},b:{...state.portals.w.b}}:null,b:state.portals?.b?{a:{...state.portals.b.a},b:{...state.portals.b.b}}:null},
-      lastMoveByColor:{w:state.lastMoveByColor?.w?JSON.parse(JSON.stringify(state.lastMoveByColor.w)):null,b:state.lastMoveByColor?.b?JSON.parse(JSON.stringify(state.lastMoveByColor.b)):null}
+      lastMoveByColor:{w:state.lastMoveByColor?.w?JSON.parse(JSON.stringify(state.lastMoveByColor.w)):null,b:state.lastMoveByColor?.b?JSON.parse(JSON.stringify(state.lastMoveByColor.b)):null},
+      lastMove:state.lastMove?JSON.parse(JSON.stringify(state.lastMove)):null
     };
   }
 
@@ -1552,13 +1558,20 @@
     finishTurn();
   }
 
+  function abilityPanelViewerColor(){
+    if(!game) return 'w';
+    if(game.mode==='online') return game.playerColor||game.turn;
+    if(game.mode==='bot') return 'w';
+    return game.turn;
+  }
+
   function renderUpgrades(){
     const host=document.getElementById('upgrades'),cap=document.getElementById('upgradeCapacity');if(!host||!game)return;
-    ensureUpgradeState(game);const actor=game.mode==='online'?(game.playerColor||game.turn):game.turn,owned=game.upgrades[actor]||{},count=Object.keys(owned).length,limit=Math.max(0,Number(game.upgradeLimit ?? 3));cap.textContent=`Upgrades: ${count}/${limit}${game.upgradesEnabled===false?' — disabled':''}`;host.replaceChildren();
+    ensureUpgradeState(game);const actor=abilityPanelViewerColor(),owned=game.upgrades[actor]||{},count=Object.keys(owned).length,limit=Math.max(0,Number(game.upgradeLimit ?? 3));cap.textContent=`Upgrades: ${count}/${limit}${game.upgradesEnabled===false?' — disabled':''}`;host.replaceChildren();
     for(const type of['p','n','b','r','q','k']){
       const group=document.createElement('section');group.className='upgrade-group';const title=document.createElement('div');title.className='upgrade-group-title';title.textContent=PIECE_NAMES[type];const buttons=document.createElement('div');buttons.className='upgrade-buttons';
       for(const up of UPGRADES.filter(u=>u.type===type)){
-        const b=document.createElement('button');b.type='button';b.className='upgrade';const isOwned=owned[type]===up.id;let reason='';if(owned[type]&&!isOwned)reason=`${upgradeDefinition(owned[type])?.name||'another upgrade'} is already owned for this piece type`;else if(game.upgradesEnabled===false&&!isOwned)reason='upgrades are disabled for this game';else if(count>=limit&&!isOwned)reason=`all ${limit} upgrade slot${limit===1?' is':'s are'} occupied`;else if(game.points[actor]<up.cost&&!isOwned)reason='not enough material points';else if(game.mode==='online'&&game.turn!==actor&&!isOwned)reason='it is not your turn';else if(game.over&&!isOwned)reason='the game is over';
+        const b=document.createElement('button');b.type='button';b.className='upgrade';const isOwned=owned[type]===up.id;let reason='';if(owned[type]&&!isOwned)reason=`${upgradeDefinition(owned[type])?.name||'another upgrade'} is already owned for this piece type`;else if(game.upgradesEnabled===false&&!isOwned)reason='upgrades are disabled for this game';else if(count>=limit&&!isOwned)reason=`all ${limit} upgrade slot${limit===1?' is':'s are'} occupied`;else if(game.points[actor]<up.cost&&!isOwned)reason='not enough material points';else if(game.turn!==actor&&!isOwned)reason='it is not your turn';else if(game.over&&!isOwned)reason='the game is over';
         if(isOwned)b.classList.add('owned');if(isOwned||reason)b.setAttribute('aria-disabled','true');b.setAttribute('aria-label',`${up.name}, ${PIECE_NAMES[type]}, ${up.cost} points. ${upgradeTooltipText(up,reason)}`);b.innerHTML=`<span class="upgrade-name">${up.name}${isOwned?' ✓':''}</span><span class="upgrade-meta">${PIECE_NAMES[type]} · ${up.cost} points</span><span class="upgrade-tooltip">${upgradeTooltipText(up,reason)}</span>`;b.addEventListener('click',()=>{if(!isOwned&&!reason)purchaseUpgrade(up.id)});buttons.appendChild(b);
       }group.append(title,buttons);host.appendChild(group);
     }
@@ -1616,6 +1629,7 @@
     game.points[game.turn] -= 4;
     game.abilityUsed = true;
     log(`${game.turn==='w'?'White':'Black'} teleported ${algebraic(from.r,from.c)} to ${algebraic(r,c)}.`);
+    game.lastMove={from:{...from},to:{r,c}};
     game.activeAbility = null;
     game.awaitingAbilityTarget = false;
     game.selected = null;
@@ -1784,6 +1798,7 @@
     const portalText=move.portalExit?` via portal to ${algebraic(actualTo.r,actualTo.c)}`:'';
     log(`${game.turn==='w'?'White':'Black'}: ${algebraic(move.from.r,move.from.c)} → ${algebraic(move.to.r,move.to.c)}${portalText}${suffix}${promo}`);
     game.lastMoveByColor[game.turn]={piece,from:{...move.from},to:{...actualTo},resultPiece:piece[1]==='p'&&(actualTo.r===0||actualTo.r===7)?piece[0]+(move.promotion||'q'):piece};
+    game.lastMove={from:{...move.from},to:{...actualTo}};
 
     // Schedule sound independently of rendering/turn changes so bot and premove
     // audio cannot be swallowed by the following synchronous updates.
@@ -2510,6 +2525,7 @@
         const c=boardIsFlipped()?7-displayC:displayC;
         const sq = document.createElement('div');
         sq.className = 'sq ' + (((r+c)%2===0) ? 'light' : 'dark');
+        if (game?.lastMove && ((game.lastMove.from.r===r && game.lastMove.from.c===c) || (game.lastMove.to.r===r && game.lastMove.to.c===c))) sq.classList.add('last-move');
         const p = game?.board?.[r]?.[c];
         sq.innerHTML = p ? pieceMarkup(p) : '';
         if(p){const upId=upgradeFor(game,colorOf(p),typeOf(p));if(upId){const up=upgradeDefinition(upId);const marker=document.createElement('span');marker.className='upgrade-marker';marker.textContent='▲';marker.setAttribute('aria-label',`${up.name} upgrade`);const tip=document.createElement('span');tip.className='piece-upgrade-tooltip';tip.textContent=`${up.name}: ${up.rule} This upgrade affects every friendly ${PIECE_NAMES[up.type].toLowerCase()}.`;sq.append(marker,tip);sq.title=`${up.name} — ${up.rule}`;}}
@@ -2673,7 +2689,8 @@
       const ab = ABILITIES.find(a => a.id===el.dataset.id);
       const active = game?.activeAbility === ab.id;
       el.classList.toggle('active', active);
-      const disabled = !game || game.over || game.points[game.turn] < ab.cost || game.abilityUsed || (game.mode==='bot' && game.turn==='b');
+      const viewerColor=abilityPanelViewerColor();
+      const disabled = !game || game.over || game.abilitiesEnabled===false || game.points[viewerColor] < ab.cost || game.abilityUsed || game.turn!==viewerColor;
       el.disabled = disabled && !active;
     });
   }
