@@ -298,7 +298,12 @@
     <p class="small">Create a profile to challenge a specific member or post an open challenge anyone can accept.</p>
     <div id="memberSignedOut">
       <div class="member-auth"><input id="memberEmail" type="email" placeholder="Email address" autocomplete="email"><input id="memberPassword" type="password" placeholder="Password (6+ characters)" autocomplete="current-password"></div>
-      <div class="row" style="margin-top:10px"><button id="memberSignInBtn" type="button">Sign in</button><button id="memberSignUpBtn" type="button">Create account</button></div>
+      <div class="row" style="margin-top:10px"><button id="memberSignInBtn" type="button">Sign in</button><button id="memberSignUpBtn" type="button">Create account</button><button id="memberForgotPasswordBtn" type="button">Forgot password</button></div>
+    </div>
+    <div id="memberRecovery" hidden>
+      <p class="small">Choose a new password for your Ability Chess account.</p>
+      <div class="member-auth"><input id="memberNewPassword" type="password" placeholder="New password (6+ characters)" autocomplete="new-password"><input id="memberConfirmPassword" type="password" placeholder="Confirm new password" autocomplete="new-password"></div>
+      <div class="row" style="margin-top:10px"><button id="memberSavePasswordBtn" type="button">Save new password</button><button id="memberCancelRecoveryBtn" type="button">Cancel</button></div>
     </div>
     <div id="memberSignedIn" hidden>
       <div class="member-profilebar"><div><div id="memberIdentity" class="member-name"></div><div id="memberStats" class="member-meta"></div></div><button id="memberSignOutBtn" type="button">Sign out</button></div>
@@ -577,7 +582,13 @@
       expires_in:expiresIn,
       expires_at:Math.floor(Date.now()/1000)+expiresIn
     });
-    sessionStorage.setItem('abilityChessAuthMessage','Email confirmed. You are now signed in.');
+    const authType=hash.get('type')||query.get('type');
+    if(authType==='recovery'){
+      sessionStorage.setItem('abilityChessRecoveryMode','1');
+      sessionStorage.setItem('abilityChessAuthMessage','Password-reset link accepted. Choose a new password below.');
+    }else{
+      sessionStorage.setItem('abilityChessAuthMessage','Email confirmed. You are now signed in.');
+    }
     history.replaceState(null,'',window.location.pathname);
     return true;
   }
@@ -585,7 +596,7 @@
   function saveMemberSession(session){ memberSession=session; localStorage.setItem('abilityChessMemberSession',JSON.stringify(session)); }
   function clearMemberSession(){ memberSession=null; memberProfile=null; localStorage.removeItem('abilityChessMemberSession'); clearInterval(memberPollTimer); memberPollTimer=null; renderMemberAuth(); }
   async function refreshMemberToken(){ if(!memberSession?.refresh_token)return false; try{const data=await authRequest('token?grant_type=refresh_token',{refresh_token:memberSession.refresh_token}); data.expires_at=Math.floor(Date.now()/1000)+(data.expires_in||3600); saveMemberSession(data);return true;}catch{return false;} }
-  function renderMemberAuth(){ const signed=!!memberSession?.access_token; memberSignedOut.hidden=signed; memberSignedIn.hidden=!signed; openMembersBtn.textContent=signed?'Open member lobby':'Sign in for member challenges'; if(!signed){memberList.replaceChildren();return;} if(memberProfile){memberIdentity.textContent=`${memberProfile.display_name} (@${memberProfile.username})`;memberStats.textContent=`Rating ${memberProfile.rating} · ${memberProfile.games_played} games · ${memberProfile.wins}W ${memberProfile.losses}L ${memberProfile.draws}D`;profileUsername.value=memberProfile.username;profileDisplayName.value=memberProfile.display_name;} }
+  function renderMemberAuth(){ const signed=!!memberSession?.access_token; const recovering=sessionStorage.getItem('abilityChessRecoveryMode')==='1'; memberRecovery.hidden=!recovering; memberSignedOut.hidden=signed||recovering; memberSignedIn.hidden=!signed||recovering; openMembersBtn.textContent=signed&&!recovering?'Open member lobby':'Sign in for member challenges'; if(!signed||recovering){memberList.replaceChildren();return;} if(memberProfile){memberIdentity.textContent=`${memberProfile.display_name} (@${memberProfile.username})`;memberStats.textContent=`Rating ${memberProfile.rating} · ${memberProfile.games_played} games · ${memberProfile.wins}W ${memberProfile.losses}L ${memberProfile.draws}D`;profileUsername.value=memberProfile.username;profileDisplayName.value=memberProfile.display_name;} }
   async function loadMyProfile(){ if(!memberSession)return; try{const rows=await memberRpc('ability_chess_get_my_profile');memberProfile=rows?.[0]||null;renderMemberAuth();}catch(e){memberStatus.textContent=e.message;} }
   function challengeSettings(){ return {base:Number(baseTimeSlider.value),increment:Number(incrementSlider.value),startingPoints:0}; }
   async function createMemberChallenge(challengedId=null){ memberStatus.textContent=challengedId?'Sending challenge…':'Posting open challenge…'; try{selectedGameMode='online';newGame();game.mode='online';game.onlineStarted=false;game.hostColor='w';game.playerColor='w';stopClockLoop();await memberRpc('ability_chess_create_member_challenge',{p_game_state:onlineState(),p_settings:challengeSettings(),p_challenged_id:challengedId});memberStatus.textContent=challengedId?'Challenge sent.':'Open challenge posted.';memberTab='mine';renderMemberTabs();await loadMemberList();startMemberPolling();}catch(e){memberStatus.textContent=e.message;} }
@@ -2696,6 +2707,9 @@
   memberModal.addEventListener('click',e=>{if(e.target===memberModal)memberModal.hidden=true;});
   memberSignInBtn.addEventListener('click',async()=>{memberStatus.textContent='Signing in…';try{const data=await authRequest('token?grant_type=password',{email:memberEmail.value.trim(),password:memberPassword.value});data.expires_at=Math.floor(Date.now()/1000)+(data.expires_in||3600);saveMemberSession(data);memberStatus.textContent='Signed in.';await loadMyProfile();renderMemberTabs();await loadMemberList();startMemberPolling();}catch(e){memberStatus.textContent=e.message;}});
   memberSignUpBtn.addEventListener('click',async()=>{memberStatus.textContent='Creating account…';try{const redirect=encodeURIComponent(appRedirectUrl());const data=await authRequest(`signup?redirect_to=${redirect}`,{email:memberEmail.value.trim(),password:memberPassword.value,data:{display_name:memberEmail.value.split('@')[0]}});if(data.access_token){data.expires_at=Math.floor(Date.now()/1000)+(data.expires_in||3600);saveMemberSession(data);memberStatus.textContent='Account created.';await loadMyProfile();renderMemberTabs();await loadMemberList();startMemberPolling();}else memberStatus.textContent='Account created. Check your email and use the confirmation link; it will return you to this site.';}catch(e){memberStatus.textContent=e.message;}});
+  memberForgotPasswordBtn.addEventListener('click',async()=>{const email=memberEmail.value.trim();if(!email){memberStatus.textContent='Enter your email address first.';memberEmail.focus();return;}memberStatus.textContent='Sending password-reset email…';try{const redirect=encodeURIComponent(appRedirectUrl());await authRequest(`recover?redirect_to=${redirect}`,{email});memberStatus.textContent='Password-reset email sent. Open its link on this device; it will return you here to choose a new password.';}catch(e){memberStatus.textContent=e.message;}});
+  memberSavePasswordBtn.addEventListener('click',async()=>{const password=memberNewPassword.value;const confirm=memberConfirmPassword.value;if(password.length<6){memberStatus.textContent='The new password must contain at least 6 characters.';return;}if(password!==confirm){memberStatus.textContent='The passwords do not match.';return;}if(!memberSession?.access_token){memberStatus.textContent='This password-reset link is no longer valid. Request a new one.';return;}memberStatus.textContent='Saving new password…';try{const res=await fetch(`${SUPABASE_URL}/auth/v1/user`,{method:'PUT',headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${memberSession.access_token}`,'Content-Type':'application/json'},body:JSON.stringify({password})});const data=await res.json().catch(()=>null);if(!res.ok)throw new Error(data?.msg||data?.message||'Could not update the password.');sessionStorage.removeItem('abilityChessRecoveryMode');memberNewPassword.value='';memberConfirmPassword.value='';memberStatus.textContent='Password changed. You are now signed in.';renderMemberAuth();await loadMyProfile();renderMemberTabs();await loadMemberList();startMemberPolling();}catch(e){memberStatus.textContent=e.message;}});
+  memberCancelRecoveryBtn.addEventListener('click',()=>{sessionStorage.removeItem('abilityChessRecoveryMode');clearMemberSession();memberStatus.textContent='Password reset cancelled.';renderMemberAuth();});
   memberSignOutBtn.addEventListener('click',()=>{clearMemberSession();memberStatus.textContent='Signed out.';});
   saveProfileBtn.addEventListener('click',async()=>{memberStatus.textContent='Saving profile…';try{const rows=await memberRpc('ability_chess_update_profile',{p_username:profileUsername.value.trim(),p_display_name:profileDisplayName.value.trim()});memberProfile=rows?.[0];renderMemberAuth();memberStatus.textContent='Profile saved.';}catch(e){memberStatus.textContent=e.message;}});
   document.querySelectorAll('.member-tab').forEach(b=>b.addEventListener('click',async()=>{memberTab=b.dataset.memberTab;renderMemberTabs();await loadMemberList();}));
@@ -2732,7 +2746,8 @@
   renderMemberAuth();
   const authMessage=sessionStorage.getItem('abilityChessAuthMessage');
   if(authMessage){ memberStatus.textContent=authMessage; sessionStorage.removeItem('abilityChessAuthMessage'); memberModal.hidden=false; }
-  if(memberSession){ loadMyProfile(); startMemberPolling(); }
+  if(sessionStorage.getItem('abilityChessRecoveryMode')==='1'){ memberModal.hidden=false; renderMemberAuth(); }
+  else if(memberSession){ loadMyProfile(); startMemberPolling(); }
   renderHomeBoard();
   baseTimeOutput.textContent=`${baseTimeSlider.value} min`; incrementOutput.textContent=`${incrementSlider.value} sec`;
   onlineStartingPointsOutput.textContent=`${onlineStartingPointsSlider.value} point${onlineStartingPointsSlider.value==='1'?'':'s'}`;
