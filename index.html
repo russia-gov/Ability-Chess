@@ -149,7 +149,7 @@
   .ability-panel-section{scrollbar-color:#465467 #121820;scrollbar-width:thin}.upgrade-panel{scrollbar-color:#465467 #121820;scrollbar-width:thin}
   .upgrade-panel[hidden],.ability-panel-section[hidden]{display:none!important}.upgrade-capacity{font-weight:800;margin:4px 0 10px;color:#dbeafe}
   .upgrade-groups{display:grid;gap:10px;padding:7px}.upgrade-group{border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:9px;background:#171c22}.upgrade-group-title{font-weight:800;text-transform:capitalize;margin-bottom:7px;color:#e5e7eb}
-  .upgrade-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.upgrade{position:relative;text-align:left;padding:8px 9px;border:1px solid rgba(255,255,255,.12);border-radius:9px;background:#222a33;color:#eef2f7}.upgrade:hover:not(:disabled),.upgrade:focus-visible:not(:disabled){border-color:#a78bfa;background:#352b49}.upgrade.owned{border-color:#34d399;background:#14352c}.upgrade[aria-disabled="true"]{opacity:1;cursor:not-allowed;background:#171d24;border-color:#303b48;color:#8793a1}.upgrade[aria-disabled="true"] .upgrade-name,.upgrade[aria-disabled="true"] .upgrade-meta{opacity:.58}.upgrade-name{display:block;font-weight:800}.upgrade-meta{display:block;font-size:11px;color:#b8c0ca;margin-top:2px}.upgrade-tooltip,.piece-upgrade-tooltip{display:none;position:absolute;z-index:90;width:260px;max-width:min(260px,70vw);padding:10px;border:1px solid rgba(255,255,255,.16);border-radius:9px;background:#111820;color:#f8fafc;box-shadow:0 14px 36px rgba(0,0,0,.76);font-size:12px;line-height:1.45;pointer-events:none;white-space:normal}.upgrade-tooltip{left:4px;bottom:calc(100% + 7px)}.upgrade:hover .upgrade-tooltip,.upgrade:focus-visible .upgrade-tooltip{display:block}.upgrade-marker{position:absolute;right:3px;top:3px;width:14px;height:14px;border-radius:50%;background:#8b5cf6;border:2px solid #f5f3ff;box-shadow:0 1px 4px #000;z-index:7;font-size:9px;line-height:10px;text-align:center;color:white;font-weight:900}.sq:hover .piece-upgrade-tooltip,.sq:focus-within .piece-upgrade-tooltip{display:block}.piece-upgrade-tooltip{left:18px;top:18px}.sq{position:relative}.upgrade-guide-heading{grid-column:1/-1;margin:18px 0 0;font-size:28px}.upgrade-guide-intro{grid-column:1/-1;background:#171c22;border-left:4px solid #8b5cf6;padding:14px 16px;border-radius:10px;color:#cbd3db;line-height:1.5}
+  .upgrade-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.upgrade{position:relative;text-align:left;padding:8px 9px;border:1px solid rgba(255,255,255,.12);border-radius:9px;background:#222a33;color:#eef2f7}.upgrade:hover:not(:disabled),.upgrade:focus-visible:not(:disabled){border-color:#a78bfa;background:#352b49}.upgrade.owned{border-color:#34d399;background:#14352c}.upgrade[aria-disabled="true"]{opacity:1;cursor:not-allowed;background:#171d24;border-color:#303b48;color:#8793a1}.upgrade[aria-disabled="true"] .upgrade-name,.upgrade[aria-disabled="true"] .upgrade-meta{opacity:.58}.upgrade-name{display:block;font-weight:800}.upgrade-meta{display:block;font-size:11px;color:#b8c0ca;margin-top:2px}.upgrade-tooltip,.piece-upgrade-tooltip{display:none;position:absolute;z-index:90;width:260px;max-width:min(260px,70vw);padding:10px;border:1px solid rgba(255,255,255,.16);border-radius:9px;background:#111820;color:#f8fafc;box-shadow:0 14px 36px rgba(0,0,0,.76);font-size:12px;line-height:1.45;pointer-events:none;white-space:normal}.upgrade-tooltip{left:4px;bottom:calc(100% + 7px)}.upgrade:hover .upgrade-tooltip,.upgrade:focus-visible .upgrade-tooltip{display:block}.upgrade-marker{position:absolute;right:3px;top:3px;width:14px;height:14px;border-radius:50%;background:#8b5cf6;border:2px solid #f5f3ff;box-shadow:0 1px 4px #000;z-index:7;font-size:9px;line-height:10px;text-align:center;color:white;font-weight:900}.upgrade-marker-k{background:#f97316;border-color:#ffedd5}.upgrade-marker-p{background:#9333ea;border-color:#f3e8ff}.upgrade-marker-r{background:#dc2626;border-color:#fee2e2}.upgrade-marker-b{background:#16a34a;border-color:#dcfce7}.upgrade-marker-n{background:#2563eb;border-color:#dbeafe}.upgrade-marker-q{background:#eab308;border-color:#fef9c3;color:#422006}.sq:hover .piece-upgrade-tooltip,.sq:focus-within .piece-upgrade-tooltip{display:block}.piece-upgrade-tooltip{left:18px;top:18px}.sq{position:relative}.upgrade-guide-heading{grid-column:1/-1;margin:18px 0 0;font-size:28px}.upgrade-guide-intro{grid-column:1/-1;background:#171c22;border-left:4px solid #8b5cf6;padding:14px 16px;border-radius:10px;color:#cbd3db;line-height:1.5}
   @media(max-width:560px){.upgrade-buttons{grid-template-columns:1fr}}
 
 
@@ -628,6 +628,32 @@
     playWoodImpact({delay:0.065, volume:0.55, pitch:155, brightness:1350, duration:0.115});
   }
 
+  function playCheckBuzz(){
+    if (!settings.sound) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const start = ctx.currentTime + 0.035;
+
+    // A short, restrained electrical-style buzz distinct from move/capture sounds.
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(118, start);
+    osc.frequency.linearRampToValueAtTime(92, start + 0.16);
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(720, start);
+    filter.Q.setValueAtTime(1.1, start);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(0.12, start + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.18);
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(start);
+    osc.stop(start + 0.19);
+  }
+
   function playFailureSound(){
     if (!settings.sound) return;
     const ctx = getAudioContext();
@@ -816,6 +842,7 @@
     }
     game=state; game.upgradeLimit=Number(game.upgradeLimit ?? 3); game.abilitiesEnabled=game.abilitiesEnabled!==false; game.upgradesEnabled=game.upgradesEnabled!==false; game.mode='online'; game.playerColor=keepColor; onlineSession.color=keepColor; game.drawOffer=game.drawOffer || null; game.rematchChallenge=game.rematchChallenge || null; game.clockLastTick=performance.now();
     game.selected=null; game.selectedAsPremove=false; game.legalMoves=[]; game.turnLegalMoves=allLegalMoves(game,game.turn); game.premoveQueue=previousPremoveQueue; game.premove=previousPremoveQueue[0]||null;
+    if(moveChanged && !game.over && inCheck(game, keepColor)) window.setTimeout(playCheckBuzz, 45);
     if(previousSelection){
       const piece=pieceAt(game.board,previousSelection.r,previousSelection.c);
       if(piece && colorOf(piece)===keepColor){
@@ -1208,11 +1235,32 @@
 
   function premoveMovesFor(r,c){
     const color=humanPremoveColor(),piece=pieceAt(game.board,r,c);if(!color||!piece||colorOf(piece)!==color)return[];
-    const temp=cloneState(game);temp.turn=color;const raw=pseudoMoves(temp,r,c,false);const moves=raw.map(m=>({...m,premoveRecapture:!!pieceAt(game.board,m.to.r,m.to.c)&&colorOf(pieceAt(game.board,m.to.r,m.to.c))===color}));
-    // Pawns may queue diagonal captures before a target arrives.
+    const temp=cloneState(game);temp.turn=color;
+    const moves=pseudoMoves(temp,r,c,false).map(m=>({...m}));
+
+    // Recapture premoves must be queueable onto a square currently occupied by
+    // one of our own pieces. The opponent may capture that piece before our
+    // turn, making the queued capture legal. Normal pseudo-move generation
+    // correctly excludes friendly destinations, so preview each friendly
+    // occupied square as though it held an enemy piece and retain only moves
+    // that actually reach that square. The move is fully revalidated against
+    // the real position immediately before execution.
+    for(let tr=0;tr<8;tr++) for(let tc=0;tc<8;tc++){
+      if(tr===r&&tc===c) continue;
+      const target=pieceAt(game.board,tr,tc);
+      if(!target||colorOf(target)!==color) continue;
+      const probe=cloneState(game);probe.turn=color;
+      probe.board[tr][tc]=other(color)+typeOf(target);
+      const recapture=pseudoMoves(probe,r,c,false).find(m=>m.to.r===tr&&m.to.c===tc);
+      if(recapture&&!moves.some(m=>m.to.r===tr&&m.to.c===tc)){
+        moves.push({...recapture,capture:true,premoveRecapture:true});
+      }
+    }
+
+    // Pawns may also queue diagonal captures before an enemy target arrives.
     if(typeOf(piece)==='p'){
       const up=upgradeFor(game,color,'p'),dir=color==='w'?-1:1,dirs=up==='veteran'?[dir,-dir]:[dir];
-      for(const d of dirs)for(const dc of[-1,1])if(inBounds(r+d,c+dc)&&!moves.some(m=>m.to.r===r+d&&m.to.c===c+dc))moves.push({from:{r,c},to:{r:r+d,c:c+dc},capture:true});
+      for(const d of dirs)for(const dc of[-1,1])if(inBounds(r+d,c+dc)&&!moves.some(m=>m.to.r===r+d&&m.to.c===c+dc))moves.push({from:{r,c},to:{r:r+d,c:c+dc},capture:true,premoveRecapture:true});
     }
     return moves;
   }
@@ -1246,7 +1294,8 @@
     const queue=premoveQueue();
     queue.push({
       from:{...move.from}, to:{...move.to},
-      promotion:move.promotion || (piece[1]==='p' && isPromotionRank(piece[0], move.to.r) ? 'q' : null)
+      promotion:move.promotion || (piece[1]==='p' && isPromotionRank(piece[0], move.to.r) ? 'q' : null),
+      premoveRecapture:!!move.premoveRecapture
     });
     syncPremoveAlias();
     game.selected = null;
@@ -1443,6 +1492,7 @@
     clearTurnFlagsForNextPlayer();
     evaluateGameStatus();
     if (game.over) { render(); return; }
+    if (inCheck(game, game.turn)) playCheckBuzz();
     refreshSelectedMovesFromTurnCache();
     render();
     if (!schedulePremoveIfReady()) maybeBotTurn();
@@ -1943,6 +1993,7 @@
     }
     if (game.movesRemaining <= 0) finishTurn();
     else {
+      if (inCheck(game, other(movingColor))) playCheckBuzz();
       game.lastMessage = `Double Move active. ${game.movesRemaining} move left.`;
       render();
     }
@@ -2639,7 +2690,7 @@
         if (game?.lastMove && ((game.lastMove.from.r===r && game.lastMove.from.c===c) || (game.lastMove.to.r===r && game.lastMove.to.c===c))) sq.classList.add('last-move');
         const p = game?.board?.[r]?.[c];
         sq.innerHTML = p ? pieceMarkup(p) : '';
-        if(p){const upId=upgradeFor(game,colorOf(p),typeOf(p));if(upId){const up=upgradeDefinition(upId);const marker=document.createElement('span');marker.className='upgrade-marker';marker.textContent='▲';marker.tabIndex=0;marker.setAttribute('role','img');marker.setAttribute('aria-label',`${up.name} upgrade. ${up.rule}`);marker.title=`${up.name} upgrade`;const tip=document.createElement('span');tip.className='piece-upgrade-tooltip';tip.textContent=`${up.name}: ${up.rule} This upgrade affects every friendly ${PIECE_NAMES[up.type].toLowerCase()}.`;sq.append(marker,tip);}}
+        if(p){const upId=upgradeFor(game,colorOf(p),typeOf(p));if(upId){const up=upgradeDefinition(upId);const marker=document.createElement('span');marker.className=`upgrade-marker upgrade-marker-${typeOf(p)}`;marker.textContent='▲';marker.tabIndex=0;marker.setAttribute('role','img');marker.setAttribute('aria-label',`${up.name} upgrade. ${up.rule}`);marker.title=`${up.name} upgrade`;const tip=document.createElement('span');tip.className='piece-upgrade-tooltip';tip.textContent=`${up.name}: ${up.rule} This upgrade affects every friendly ${PIECE_NAMES[up.type].toLowerCase()}.`;sq.append(marker,tip);}}
         if (sel && sel.r===r && sel.c===c) sq.classList.add(game?.selectedAsPremove ? 'premove-selected' : 'selected');
         const queuedPremoves=Array.isArray(game?.premoveQueue)?game.premoveQueue:(game?.premove?[game.premove]:[]);
         if (queuedPremoves.some(pm=>pm.from.r===r&&pm.from.c===c)) sq.classList.add('premove-origin');
