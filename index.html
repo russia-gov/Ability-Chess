@@ -336,7 +336,7 @@
         <button id="newGameBtn">New Game</button>
       </div>
     </div>
-    <div id="analysisBanner" class="analysis-banner">Analysis mode — use ← and → to replay the game.</div>
+    <div id="analysisBanner" class="analysis-banner">Analysis mode — use ← and → to replay the game. The move log and status icons update with each position.</div>
     <div class="clock-row"><div id="whiteClock" class="clock active"><span>White</span><span id="whiteClockTime" class="clock-time">10:00</span></div><div id="blackClock" class="clock"><span>Black</span><span id="blackClockTime" class="clock-time">10:00</span></div></div><div id="connectionStatus" class="connection-status connected" hidden>Connected</div>
     <div class="board-shell"><div id="board" class="board" role="grid" aria-label="Ability Chess board"></div><svg id="annotationLayer" class="annotation-layer" viewBox="0 0 8 8" preserveAspectRatio="none" aria-hidden="true"></svg></div>
   </div>
@@ -701,13 +701,28 @@
     if(!settings.sound)return;
     const ctx=getAudioContext();if(!ctx)return;
     const start=ctx.currentTime+0.01;
-    const osc=ctx.createOscillator(), gain=ctx.createGain();
-    osc.type=seconds<=5?'square':'sine';
-    osc.frequency.setValueAtTime(seconds<=5?880:660,start);
-    gain.gain.setValueAtTime(0.0001,start);
-    gain.gain.exponentialRampToValueAtTime(seconds<=5?0.16:0.11,start+0.008);
-    gain.gain.exponentialRampToValueAtTime(0.0001,start+(seconds<=5?0.11:0.16));
-    osc.connect(gain);gain.connect(ctx.destination);osc.start(start);osc.stop(start+0.18);
+    const urgent=seconds<=5;
+    const critical=seconds<=10;
+    const pulses=urgent?3:(critical?2:2);
+    const spacing=urgent?0.105:(critical?0.13:0.15);
+    const duration=urgent?0.085:0.11;
+    const volume=urgent?0.34:(critical?0.29:0.24);
+    const baseFrequency=urgent?940:(critical?790:680);
+    for(let i=0;i<pulses;i++){
+      const t=start+i*spacing;
+      const osc=ctx.createOscillator();
+      const gain=ctx.createGain();
+      const filter=ctx.createBiquadFilter();
+      osc.type=urgent?'square':'triangle';
+      osc.frequency.setValueAtTime(baseFrequency+(i%2?90:0),t);
+      filter.type='lowpass';
+      filter.frequency.setValueAtTime(urgent?2600:2100,t);
+      gain.gain.setValueAtTime(0.0001,t);
+      gain.gain.exponentialRampToValueAtTime(volume,t+0.006);
+      gain.gain.exponentialRampToValueAtTime(0.0001,t+duration);
+      osc.connect(filter);filter.connect(gain);gain.connect(ctx.destination);
+      osc.start(t);osc.stop(t+duration+0.02);
+    }
   }
 
   function humanClockColors(){
@@ -720,7 +735,7 @@
 
   function checkLowTimeWarning(color,before,after){
     if(!humanClockColors().includes(color))return;
-    const thresholds=[30,10,5,4,3,2,1];
+    const thresholds=[30,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1];
     const warned=lowTimeWarnings[color]||(lowTimeWarnings[color]=new Set());
     for(const t of thresholds){if(before>t&&after<=t&&!warned.has(t)){warned.add(t);playTimeWarning(t);break;}}
   }
@@ -2000,20 +2015,25 @@
     completeUpgradePurchase(up,color,null);
   }
 
-  function abilityPanelViewerColor(){
-    if(!game) return 'w';
-    if(game.mode==='online') return game.playerColor||game.turn;
-    if(game.mode==='bot') return 'w';
-    return game.turn;
+  function analysisDisplayState(){
+    return historyViewIndex!==null ? (game?.historySnapshots?.[historyViewIndex]||game) : game;
+  }
+
+  function abilityPanelViewerColor(state=analysisDisplayState()){
+    if(!state) return 'w';
+    if(game?.mode==='analysis') return game?.playerColor||state.turn||'w';
+    if(state.mode==='online') return state.playerColor||state.turn;
+    if(state.mode==='bot') return 'w';
+    return state.turn;
   }
 
   function renderUpgrades(){
-    const host=document.getElementById('upgrades'),cap=document.getElementById('upgradeCapacity');if(!host||!game)return;
-    ensureUpgradeState(game);const actor=abilityPanelViewerColor(),owned=game.upgrades[actor]||{},count=Object.keys(owned).length,limit=Math.max(0,Number(game.upgradeLimit ?? 3));cap.textContent=`Upgrades: ${count}/${limit}${game.upgradesEnabled===false?' — disabled':''}`;host.replaceChildren();
+    const host=document.getElementById('upgrades'),cap=document.getElementById('upgradeCapacity');const state=analysisDisplayState();if(!host||!state)return;
+    ensureUpgradeState(state);const actor=abilityPanelViewerColor(state),owned=state.upgrades[actor]||{},count=Object.keys(owned).length,limit=Math.max(0,Number(state.upgradeLimit ?? 3));cap.textContent=`Upgrades: ${count}/${limit}${state.upgradesEnabled===false?' — disabled':''}`;host.replaceChildren();
     for(const type of['p','n','b','r','q','k']){
       const group=document.createElement('section');group.className='upgrade-group';const title=document.createElement('div');title.className='upgrade-group-title';title.textContent=PIECE_NAMES[type];const buttons=document.createElement('div');buttons.className='upgrade-buttons';
       for(const up of UPGRADES.filter(u=>u.type===type)){
-        const b=document.createElement('button');b.type='button';b.className='upgrade';const isOwned=owned[type]===up.id;let reason='';if(game.upgradesEnabled===false&&!isOwned)reason='upgrades are disabled for this game';else if(limit<=0&&!isOwned)reason='this game has no upgrade slots';else if(game.points[actor]<up.cost&&!isOwned)reason='not enough material points';else if(game.turn!==actor&&!isOwned)reason='it is not your turn';else if(game.over&&!isOwned)reason='the game is over';
+        const b=document.createElement('button');b.type='button';b.className='upgrade';const isOwned=owned[type]===up.id;let reason='';if(state.upgradesEnabled===false&&!isOwned)reason='upgrades are disabled for this game';else if(limit<=0&&!isOwned)reason='this game has no upgrade slots';else if(state.points[actor]<up.cost&&!isOwned)reason='not enough material points';else if(state.turn!==actor&&!isOwned)reason='it is not your turn';else if(state.over&&!isOwned)reason='the game is over';
         const replacementNeeded=!isOwned&&(!!owned[type]||count>=limit);const replacementNote=replacementNeeded?' Purchasing this will ask which owned upgrade to replace.':'';
         if(isOwned)b.classList.add('owned');if(isOwned||reason)b.setAttribute('aria-disabled','true');const tipText=upgradeTooltipText(up,reason)+replacementNote;b.setAttribute('aria-label',`${up.name}, ${PIECE_NAMES[type]}, ${up.cost} points. ${tipText}`);b.setAttribute('title',tipText);b.innerHTML=`<span class="upgrade-name">${up.name}${isOwned?' ✓':''}</span><span class="upgrade-meta">${PIECE_NAMES[type]} · ${up.cost} points${replacementNeeded?' · replace':''}</span><span class="upgrade-tooltip">${tipText}</span>`;
         // Keep the full floating description available for owned, unaffordable,
@@ -2929,10 +2949,11 @@
   }
 
   function renderAbilities(){
+    const state=analysisDisplayState();
     abilitiesEl.replaceChildren();
     for(const ab of ABILITIES){
       const button=document.createElement('button'); button.type='button'; button.className='ability'; if(ab.consumesMove) button.classList.add('move-consuming'); button.dataset.id=ab.id;
-      if(game?.abilitiesEnabled===false){button.setAttribute('aria-disabled','true');} button.setAttribute('aria-label',`${ab.name}, costs ${ab.cost} points. ${ab.desc}${game?.abilitiesEnabled===false?' Abilities are disabled for this game.':''}`); button.title=ab.desc;
+      if(state?.abilitiesEnabled===false){button.setAttribute('aria-disabled','true');} button.setAttribute('aria-label',`${ab.name}, costs ${ab.cost} points. ${ab.desc}${state?.abilitiesEnabled===false?' Abilities are disabled for this game.':''}`); button.title=ab.desc;
       const name=document.createElement('span'); name.className='name'; name.textContent=ab.name;
       const cost=document.createElement('span'); cost.className='cost'; cost.textContent=` ${ab.cost}`;
       const tip=document.createElement('span'); tip.className='ability-tooltip'; tip.textContent=ab.desc;
@@ -3063,8 +3084,9 @@
   function render(){
     if(game) ensureUpgradeState(game);
     if(game && game.selectedAbility==='disarm') game.selectedAbility=null;
-    whitePointsEl.textContent = game ? game.points.w : 0;
-    blackPointsEl.textContent = game ? game.points.b : 0;
+    const sidebarState=analysisDisplayState();
+    whitePointsEl.textContent = sidebarState ? sidebarState.points.w : 0;
+    blackPointsEl.textContent = sidebarState ? sidebarState.points.b : 0;
     const privateOnlineBank = game?.mode==='online' && !!game?.playerColor;
     whiteBankEl.hidden = privateOnlineBank && game.playerColor!=='w';
     blackBankEl.hidden = privateOnlineBank && game.playerColor!=='b';
@@ -3072,7 +3094,7 @@
     if(connectionStatus){connectionStatus.hidden=game?.mode!=='online';if(game?.mode==='online')setOnlineConnectionStatus(onlineConnectionState);}
     renderDrawControls();
     renderRematchControls();
-    renderUpgrades();
+    renderAbilities();
     boardEl.innerHTML = '';
     const sel = game?.selected;
     const legal = game?.legalMoves || [];
@@ -3102,11 +3124,11 @@
         if (renderState?.shielded?.b?.r===r && renderState?.shielded?.b?.c===c) sq.classList.add('shielded');
         if (renderState?.frozen?.w?.r===r && renderState?.frozen?.w?.c===c) sq.classList.add('frozen');
         if (renderState?.frozen?.b?.r===r && renderState?.frozen?.b?.c===c) sq.classList.add('frozen');
-        const canSeeWhiteAmbush = game?.mode!=='online' || game?.playerColor==='w';
-        const canSeeBlackAmbush = game?.mode!=='online' || game?.playerColor==='b';
-        if (canSeeWhiteAmbush && game?.ambushed?.w?.r===r && game?.ambushed?.w?.c===c) sq.classList.add('ambushed');
-        if (canSeeBlackAmbush && game?.ambushed?.b?.r===r && game?.ambushed?.b?.c===c) sq.classList.add('ambushed');
-        if (squareInFortify(game,'w',r,c)||squareInFortify(game,'b',r,c)) sq.classList.add('fortified');
+        const canSeeWhiteAmbush = game?.mode==='analysis' || renderState?.mode!=='online' || game?.playerColor==='w';
+        const canSeeBlackAmbush = game?.mode==='analysis' || renderState?.mode!=='online' || game?.playerColor==='b';
+        if (canSeeWhiteAmbush && renderState?.ambushed?.w?.r===r && renderState?.ambushed?.w?.c===c) sq.classList.add('ambushed');
+        if (canSeeBlackAmbush && renderState?.ambushed?.b?.r===r && renderState?.ambushed?.b?.c===c) sq.classList.add('ambushed');
+        if (squareInFortify(renderState,'w',r,c)||squareInFortify(renderState,'b',r,c)) sq.classList.add('fortified');
         const portalColor = portalSquareOwnerAt(renderState,r,c);
         if (portalColor) sq.classList.add('portal-square');
         appendSquareStatusMarkers(sq,r,c,renderState);
@@ -3230,9 +3252,11 @@
     renderAnnotations();
     statusEl.textContent = historyViewIndex!==null ? `Reviewing move ${historyViewIndex} of ${Math.max(0,(game?.historySnapshots?.length||1)-1)}. Use ← and → to navigate.` : (game ? game.lastMessage : 'Press New Game to start.');
     logEl.replaceChildren();
-    if (game && game.log.length) {
-      for (const entry of game.log) {
-        const visibleEntry=visibleLogEntry(entry);
+    const logState=renderState||game;
+    if (logState && Array.isArray(logState.log) && logState.log.length) {
+      for (const entry of logState.log) {
+        const text=String(entry);
+        const visibleEntry=text.startsWith(HIDDEN_AMBUSH_LOG) ? ((game?.mode==='analysis'||logState.over)?text.slice(HIDDEN_AMBUSH_LOG.length):null) : text;
         if(visibleEntry===null) continue;
         const line = document.createElement('div');
         line.textContent = visibleEntry;
@@ -3253,10 +3277,11 @@
     requestAnimationFrame(renderShieldMoveWarning);
     document.querySelectorAll('.ability').forEach(el => {
       const ab = ABILITIES.find(a => a.id===el.dataset.id);
-      const active = game?.activeAbility === ab.id;
+      const panelState=analysisDisplayState();
+      const active = panelState?.activeAbility === ab.id;
       el.classList.toggle('active', active);
-      const viewerColor=abilityPanelViewerColor();
-      const disabled = !game || game.over || game.abilitiesEnabled===false || game.points[viewerColor] < ab.cost || game.abilityUsed || game.turn!==viewerColor;
+      const viewerColor=abilityPanelViewerColor(panelState);
+      const disabled = !panelState || game?.mode==='analysis' || panelState.over || panelState.abilitiesEnabled===false || panelState.points[viewerColor] < ab.cost || panelState.abilityUsed || panelState.turn!==viewerColor;
       el.disabled = false;
       if(disabled && !active) el.setAttribute('aria-disabled','true'); else el.removeAttribute('aria-disabled');
     });
