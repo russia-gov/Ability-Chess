@@ -263,9 +263,9 @@
   <main class="play-hub-main"><div class="play-hub-shell">
     <section class="play-hub-preview"><h1>Play Ability Chess</h1><p>Choose a quick preset, challenge a friend, or build a custom game. The three numbers represent time control, starting points, and maximum simultaneous upgrades.</p><div id="playHubBoard" class="home-board"></div></section>
     <aside class="play-control-panel">
-      <section class="play-section"><h2>Play online</h2><p>Choose a setup to enter the live matching queue. The next player choosing the same setup will be paired with you automatically.</p><div id="onlinePresetGrid" class="preset-grid"></div><button id="presetOnlineBtn" class="play-primary" type="button">Find a game</button><button id="cancelSeekBtn" type="button" hidden>Cancel seek</button><div id="presetOnlineStatus" class="play-inline-status"></div></section>
-      <section class="play-section"><h2>Play a friend</h2><p>Search for a member, choose a preset, and send a challenge.</p><input id="playFriendSearch" class="play-input" placeholder="Search friends or members"><div id="playFriendResults" class="play-friend-results"></div><select id="friendPresetSelect" class="play-select"></select><button id="sendFriendChallengeBtn" class="play-primary" type="button">Send challenge</button><div id="friendChallengeStatus" class="play-inline-status"></div></section>
-      <section class="play-section"><h2>Custom game</h2><p>Choose every game setting, then enter a matching queue or challenge a selected member.</p><div class="custom-grid"><label>Minutes<input id="customBase" class="play-input" type="number" min="1" max="60" value="10"></label><label>Increment<input id="customIncrement" class="play-input" type="number" min="0" max="30" value="0"></label><label>Starting points<input id="customPoints" class="play-input" type="number" min="0" max="30" value="0"></label><label>Max upgrades<input id="customUpgrades" class="play-input" type="number" min="0" max="6" value="3"></label></div><div class="game-rule-row"><label><input id="customAbilities" type="checkbox" checked> Abilities</label><label><input id="customUpgradeRules" type="checkbox" checked> Upgrades</label></div><input id="customFriendSearch" class="play-input" placeholder="Optional: search a specific player"><div id="customFriendResults" class="play-friend-results"></div><div class="custom-actions"><button id="customOnlineBtn" type="button">Find online game</button><button id="customFriendBtn" class="game-toast-primary" type="button">Challenge player</button></div><div id="customStatus" class="play-inline-status"></div></section>
+      <section class="play-section"><h2>Play online</h2><p>Choose a setup to enter the live matching queue. The next player choosing the same setup will be paired with you automatically.</p><div id="onlinePresetGrid" class="preset-grid"></div><div class="game-rule-row"><label><input id="onlineRatedToggle" type="checkbox" checked> Rated game</label></div><button id="presetOnlineBtn" class="play-primary" type="button">Find a game</button><button id="cancelSeekBtn" type="button" hidden>Cancel seek</button><div id="presetOnlineStatus" class="play-inline-status"></div></section>
+      <section class="play-section"><h2>Play a friend</h2><p>Search for a member, choose a preset, and send a challenge.</p><input id="playFriendSearch" class="play-input" placeholder="Search friends or members"><div id="playFriendResults" class="play-friend-results"></div><select id="friendPresetSelect" class="play-select"></select><div class="game-rule-row"><label><input id="friendRatedToggle" type="checkbox" checked> Rated game</label></div><button id="sendFriendChallengeBtn" class="play-primary" type="button">Send challenge</button><div id="friendChallengeStatus" class="play-inline-status"></div></section>
+      <section class="play-section"><h2>Custom game</h2><p>Choose every game setting, then enter a matching queue or challenge a selected member.</p><div class="custom-grid"><label>Minutes<input id="customBase" class="play-input" type="number" min="1" max="60" value="10"></label><label>Increment<input id="customIncrement" class="play-input" type="number" min="0" max="30" value="0"></label><label>Starting points<input id="customPoints" class="play-input" type="number" min="0" max="30" value="0"></label><label>Max upgrades<input id="customUpgrades" class="play-input" type="number" min="0" max="6" value="3"></label></div><div class="game-rule-row"><label><input id="customAbilities" type="checkbox" checked> Abilities</label><label><input id="customUpgradeRules" type="checkbox" checked> Upgrades</label><label><input id="customRatedToggle" type="checkbox" checked> Rated game</label></div><input id="customFriendSearch" class="play-input" placeholder="Optional: search a specific player"><div id="customFriendResults" class="play-friend-results"></div><div class="custom-actions"><button id="customOnlineBtn" type="button">Find online game</button><button id="customFriendBtn" class="game-toast-primary" type="button">Challenge player</button></div><div id="customStatus" class="play-inline-status"></div></section>
     </aside>
   </div></main>
 </div>
@@ -441,7 +441,7 @@
     <div class="slider-row"><label for="challengeIncrementSlider">Increment</label><input id="challengeIncrementSlider" type="range" min="0" max="30" step="1" value="0"><output id="challengeIncrementOutput">0 sec</output></div>
     <div class="slider-row"><label for="challengeStartingPointsSlider">Starting points</label><input id="challengeStartingPointsSlider" type="range" min="0" max="30" step="1" value="0"><output id="challengeStartingPointsOutput">0 points</output></div>
     <div class="slider-row"><label for="challengeUpgradeLimitSlider">Upgrade slots</label><input id="challengeUpgradeLimitSlider" type="range" min="0" max="6" step="1" value="3"><output id="challengeUpgradeLimitOutput">3 types</output></div>
-    <div class="game-rule-row"><label><input id="challengeAbilitiesEnabledToggle" type="checkbox" checked> Abilities enabled</label><label><input id="challengeUpgradesEnabledToggle" type="checkbox" checked> Upgrades enabled</label></div>
+    <div class="game-rule-row"><label><input id="challengeAbilitiesEnabledToggle" type="checkbox" checked> Abilities enabled</label><label><input id="challengeUpgradesEnabledToggle" type="checkbox" checked> Upgrades enabled</label><label><input id="challengeRatedEnabledToggle" type="checkbox" checked> Rated game</label></div>
     <div class="online-color-row"><label><input type="radio" name="challengeHostColor" value="w" checked> Play White</label><label><input type="radio" name="challengeHostColor" value="b"> Play Black</label></div>
     <div class="challenge-setup-actions"><button id="cancelMemberChallengeSetupBtn" type="button">Cancel</button><button id="sendMemberChallengeBtn" class="game-toast-primary" type="button">Send challenge</button></div>
   </section>
@@ -829,7 +829,7 @@
 
   const SUPABASE_URL='https://cczvdpofddjghqoeiqew.supabase.co';
   const SUPABASE_KEY='sb_publishable_1j0iGD0GxwBdhac9suyPSw_5CPJGvaM';
-  let onlineSession=null, onlinePollTimer=null, onlineSyncing=false, onlineConnectionState='connected', onlineLastSuccess=0;
+  let onlineSession=null, onlinePollTimer=null, onlineSyncing=false, onlinePollInFlight=false, onlineSyncQueued=false, onlineLocalRevision=0, onlineConnectionState='connected', onlineLastSuccess=0;
   let liveSeekSession=null, liveSeekPollTimer=null, liveSeekStatusTarget=null;
   function setOnlineConnectionStatus(status){
     onlineConnectionState=status;
@@ -840,7 +840,7 @@
   }
 
   async function supabaseRpc(name,body){
-    const res=await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`,{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`,{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${memberSession?.access_token||SUPABASE_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
     const data=await res.json().catch(()=>null); if(!res.ok) throw new Error(data?.message||data?.hint||'Online request failed.'); return data;
   }
 
@@ -949,18 +949,18 @@
   }
   function memberChallengeSettings(){
     const hostColor=document.querySelector('input[name="challengeHostColor"]:checked')?.value||'w';
-    return {base:Number(challengeBaseTimeSlider.value),increment:Number(challengeIncrementSlider.value),startingPoints:Number(challengeStartingPointsSlider.value),upgradeLimit:Number(challengeUpgradeLimitSlider.value),abilitiesEnabled:challengeAbilitiesEnabledToggle.checked,upgradesEnabled:challengeUpgradesEnabledToggle.checked,hostColor};
+    return {base:Number(challengeBaseTimeSlider.value),increment:Number(challengeIncrementSlider.value),startingPoints:Number(challengeStartingPointsSlider.value),upgradeLimit:Number(challengeUpgradeLimitSlider.value),abilitiesEnabled:challengeAbilitiesEnabledToggle.checked,upgradesEnabled:challengeUpgradesEnabledToggle.checked,rated:document.getElementById('challengeRatedEnabledToggle')?.checked!==false,hostRating:Number(memberProfile?.rating||1200),guestRating:Number(pendingChallengeTarget?.rating||1200),hostColor};
   }
-  function challengeSummary(cfg){return `${Number(cfg.base||10)}+${Number(cfg.increment||0)} · ${Number(cfg.startingPoints||0)} starting points · abilities ${cfg.abilitiesEnabled===false?'off':'on'} · upgrades ${cfg.upgradesEnabled===false?'off':'on'} · ${Number(cfg.upgradeLimit??3)} upgrade slots`;}
+  function challengeSummary(cfg){return `${cfg.rated?'Rated':'Unrated'} · ${Number(cfg.base||10)}+${Number(cfg.increment||0)} · ${Number(cfg.startingPoints||0)} starting points · abilities ${cfg.abilitiesEnabled===false?'off':'on'} · upgrades ${cfg.upgradesEnabled===false?'off':'on'} · ${Number(cfg.upgradeLimit??3)} upgrade slots`;}
   function updateMemberChallengeSetupOutputs(){challengeBaseTimeOutput.textContent=`${challengeBaseTimeSlider.value} min`;challengeIncrementOutput.textContent=`${challengeIncrementSlider.value} sec`;challengeStartingPointsOutput.textContent=`${challengeStartingPointsSlider.value} point${challengeStartingPointsSlider.value==='1'?'':'s'}`;challengeUpgradeLimitOutput.textContent=`${challengeUpgradeLimitSlider.value} type${challengeUpgradeLimitSlider.value==='1'?'':'s'}`;}
-  function openMemberChallengeSetup(member=null){pendingChallengeTarget=member;challengeBaseTimeSlider.value=baseTimeSlider.value;challengeIncrementSlider.value=incrementSlider.value;challengeStartingPointsSlider.value=onlineStartingPointsSlider.value||0;challengeUpgradeLimitSlider.value=upgradeLimitSlider.value;challengeAbilitiesEnabledToggle.checked=abilitiesEnabledToggle.checked;challengeUpgradesEnabledToggle.checked=upgradesEnabledToggle.checked;document.querySelector('input[name="challengeHostColor"][value="w"]').checked=true;updateMemberChallengeSetupOutputs();memberChallengeSetupTarget.textContent=member?`Challenge ${member.display_name} (@${member.username}). Choose the rules before sending.`:'Choose the rules before posting this open challenge.';sendMemberChallengeBtn.textContent=member?'Send challenge':'Post open challenge';memberChallengeSetupModal.hidden=false;}
-  async function createMemberChallenge(challengedId=null){const cfg=memberChallengeSettings();const target=pendingChallengeTarget;if(!challengedId){memberStatus.textContent='Choose a specific member before sending a challenge.';memberChallengeSetupModal.hidden=true;pendingChallengeTarget=null;return;}memberStatus.textContent='Sending challenge…';sendMemberChallengeBtn.disabled=true;try{selectedGameMode='online';newGame();game.mode='online';game.onlineStarted=false;game.hostColor=cfg.hostColor;game.playerColor=cfg.hostColor;game.initialTime=cfg.base*60;game.increment=cfg.increment;game.startingPoints=cfg.startingPoints;game.clocks={w:cfg.base*60,b:cfg.base*60};game.points={w:cfg.startingPoints,b:cfg.startingPoints};game.upgradeLimit=cfg.upgradeLimit;game.abilitiesEnabled=cfg.abilitiesEnabled;game.upgradesEnabled=cfg.upgradesEnabled;stopClockLoop();const rows=await memberRpc('ability_chess_create_member_challenge',{p_game_state:onlineState(),p_settings:cfg,p_challenged_id:challengedId});const created=rows?.[0];memberChallengeSetupModal.hidden=true;pendingChallengeTarget=null;memberStatus.textContent=challengedId?'Challenge sent. You can cancel it from the notification or My challenges.':'Open challenge posted.';if(challengedId&&created?.challenge_id){showMemberChallengeToast('outgoing',{challenge_id:created.challenge_id,direction:'outgoing',challenge_type:'direct',status:'pending',settings:cfg,other_user_id:challengedId,other_username:target?.username||'',other_display_name:target?.display_name||''});}memberTab='mine';renderMemberTabs();await loadMemberList();startMemberPolling();await loadChallengeNotifications();}catch(e){memberStatus.textContent=e.message;console.error('Could not create member challenge',e);}finally{sendMemberChallengeBtn.disabled=false;}}
+  function openMemberChallengeSetup(member=null){pendingChallengeTarget=member;challengeBaseTimeSlider.value=baseTimeSlider.value;challengeIncrementSlider.value=incrementSlider.value;challengeStartingPointsSlider.value=onlineStartingPointsSlider.value||0;challengeUpgradeLimitSlider.value=upgradeLimitSlider.value;challengeAbilitiesEnabledToggle.checked=abilitiesEnabledToggle.checked;challengeUpgradesEnabledToggle.checked=upgradesEnabledToggle.checked;document.getElementById('challengeRatedEnabledToggle').checked=true;document.querySelector('input[name="challengeHostColor"][value="w"]').checked=true;updateMemberChallengeSetupOutputs();memberChallengeSetupTarget.textContent=member?`Challenge ${member.display_name} (@${member.username}). Choose the rules before sending.`:'Choose the rules before posting this open challenge.';sendMemberChallengeBtn.textContent=member?'Send challenge':'Post open challenge';memberChallengeSetupModal.hidden=false;}
+  async function createMemberChallenge(challengedId=null){const cfg=memberChallengeSettings();const target=pendingChallengeTarget;if(!challengedId){memberStatus.textContent='Choose a specific member before sending a challenge.';memberChallengeSetupModal.hidden=true;pendingChallengeTarget=null;return;}memberStatus.textContent='Sending challenge…';sendMemberChallengeBtn.disabled=true;try{selectedGameMode='online';newGame();game.mode='online';game.onlineStarted=false;game.hostColor=cfg.hostColor;game.playerColor=cfg.hostColor;game.initialTime=cfg.base*60;game.increment=cfg.increment;game.startingPoints=cfg.startingPoints;game.clocks={w:cfg.base*60,b:cfg.base*60};game.points={w:cfg.startingPoints,b:cfg.startingPoints};game.upgradeLimit=cfg.upgradeLimit;game.abilitiesEnabled=cfg.abilitiesEnabled;game.upgradesEnabled=cfg.upgradesEnabled;game.rated=!!cfg.rated;game.myRating=Number(memberProfile?.rating||1200);game.opponentRating=Number(target?.rating||cfg.guestRating||1200);stopClockLoop();const rows=await memberRpc('ability_chess_create_member_challenge',{p_game_state:onlineState(),p_settings:cfg,p_challenged_id:challengedId});const created=rows?.[0];memberChallengeSetupModal.hidden=true;pendingChallengeTarget=null;memberStatus.textContent=challengedId?'Challenge sent. You can cancel it from the notification or My challenges.':'Open challenge posted.';if(challengedId&&created?.challenge_id){showMemberChallengeToast('outgoing',{challenge_id:created.challenge_id,direction:'outgoing',challenge_type:'direct',status:'pending',settings:cfg,other_user_id:challengedId,other_username:target?.username||'',other_display_name:target?.display_name||''});}memberTab='mine';renderMemberTabs();await loadMemberList();startMemberPolling();await loadChallengeNotifications();}catch(e){memberStatus.textContent=e.message;console.error('Could not create member challenge',e);}finally{sendMemberChallengeBtn.disabled=false;}}
   function memberButton(label,handler,cls=''){const b=document.createElement('button');b.type='button';b.textContent=label;if(cls)b.className=cls;b.addEventListener('click',handler);return b;}
   function memberRow(title,meta,actions=[],isOwner=false){const row=document.createElement('div');row.className='member-row';const copy=document.createElement('div');copy.innerHTML=`<div class="member-name">${escapeHtml(title)}${isOwner?'<span class="owner-tag">Owner</span>':''}</div><div class="member-meta">${escapeHtml(meta)}</div>`;const acts=document.createElement('div');acts.className='member-actions';actions.forEach(a=>acts.appendChild(a));row.append(copy,acts);return row;}
   function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
   function renderMemberTabs(){document.querySelectorAll('.member-tab').forEach(b=>b.classList.toggle('active',b.dataset.memberTab===memberTab));memberSearch.hidden=memberTab!=='members';postOpenChallengeBtn.hidden=memberTab==='members';}
   async function loadMemberList(){ if(!memberSession)return; if(!memberList.children.length)memberList.innerHTML='<div class="member-empty">Loading…</div>'; try{if(memberTab==='members'){const rows=await memberRpc('ability_chess_list_members',{p_search:memberSearch.value.trim()});memberList.replaceChildren();for(const m of rows||[]){const challenge=memberButton('Challenge',()=>openMemberChallengeSetup(m));memberList.appendChild(memberRow(`${m.display_name} (@${m.username})`,`${m.is_online?'Online · ':''}Rating ${m.rating} · ${m.games_played} games`,[challenge],!!m.is_owner));}if(!rows?.length)memberList.innerHTML='<div class="member-empty">No matching members.</div>';}else{const rows=await memberRpc('ability_chess_list_member_challenges');const filtered=(rows||[]).filter(c=>memberTab==='open'?(c.challenge_type==='open'&&c.direction==='open'&&c.status==='pending'):(c.direction!=='open'||c.status==='accepted'));memberList.replaceChildren();for(const c of filtered){const who=c.other_display_name?`${c.other_display_name} (@${c.other_username})`:(c.challenge_type==='open'?'Open challenge':'Waiting for opponent');const settings=c.settings||{};const meta=`${c.challenge_type==='open'?'Open':'Direct'} · ${challengeSummary(settings)} · ${c.status}`;const actions=[];if(c.status==='pending'&&(c.direction==='incoming'||c.direction==='open')) actions.push(memberButton('Accept',()=>acceptMemberChallenge(c.challenge_id)));if(c.status==='pending'&&c.direction==='incoming') actions.push(memberButton('Decline',()=>declineMemberChallenge(c.challenge_id)));if(c.status==='pending'&&c.direction==='outgoing') actions.push(memberButton('Cancel',()=>cancelMemberChallenge(c.challenge_id)));memberList.appendChild(memberRow(who,meta,actions));}if(!filtered.length)memberList.innerHTML='<div class="member-empty">No challenges here yet.</div>';await detectAcceptedChallenges(rows||[]);} }catch(e){memberList.innerHTML=`<div class="member-empty">${escapeHtml(e.message)}</div>`;} }
-  async function acceptMemberChallenge(id){memberStatus.textContent='Accepting challenge…';try{const rows=await memberRpc('ability_chess_accept_member_challenge',{p_challenge_id:id});const row=rows?.[0];if(!row)throw new Error('Challenge could not be accepted.');visibleMemberChallenge=null;memberChallengeToast.hidden=true;onlineSession={id:row.room_id,code:row.room_code,token:row.seat_token,color:row.assigned_color,role:'guest',version:Number(row.room_version),waiting:false,memberChallenge:id};localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));selectedGameMode='online';newGame();restoreOnlineState(row.state||{});const cfg=row.room_settings||{};game.mode='online';game.onlineStarted=true;game.playerColor=row.assigned_color;game.hostColor=cfg.hostColor||other(row.assigned_color);game.initialTime=Number(cfg.base||10)*60;game.increment=Number(cfg.increment||0);game.startingPoints=Number(cfg.startingPoints||0);game.upgradeLimit=Math.max(0,Number(cfg.upgradeLimit??3));game.abilitiesEnabled=cfg.abilitiesEnabled!==false;game.upgradesEnabled=cfg.upgradesEnabled!==false;game.clocks={w:game.initialTime,b:game.initialTime};game.points={w:game.startingPoints,b:game.startingPoints};game.clockLastTick=performance.now();game.lastMessage='Member challenge started. White to move.';await syncOnlineState();memberModal.hidden=true;onlineModal.hidden=true;showScreen('game');gameModeLabel.innerHTML=`Mode: <b>Online — ${game.playerColor==='w'?'White':'Black'}</b>`;startOnlinePolling();startClockLoop();renderAbilities();render();}catch(e){memberStatus.textContent=e.message;}}
+  async function acceptMemberChallenge(id){memberStatus.textContent='Accepting challenge…';try{const rows=await memberRpc('ability_chess_accept_member_challenge',{p_challenge_id:id});const row=rows?.[0];if(!row)throw new Error('Challenge could not be accepted.');visibleMemberChallenge=null;memberChallengeToast.hidden=true;onlineSession={id:row.room_id,code:row.room_code,token:row.seat_token,color:row.assigned_color,role:'guest',version:Number(row.room_version),waiting:false,memberChallenge:id};localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));selectedGameMode='online';newGame();restoreOnlineState(row.state||{});const cfg=row.room_settings||{};game.mode='online';game.onlineStarted=true;game.playerColor=row.assigned_color;game.hostColor=cfg.hostColor||other(row.assigned_color);game.initialTime=Number(cfg.base||10)*60;game.increment=Number(cfg.increment||0);game.startingPoints=Number(cfg.startingPoints||0);game.upgradeLimit=Math.max(0,Number(cfg.upgradeLimit??3));game.abilitiesEnabled=cfg.abilitiesEnabled!==false;game.upgradesEnabled=cfg.upgradesEnabled!==false;game.rated=!!cfg.rated;game.myRating=Number(memberProfile?.rating||1200);game.opponentRating=Number(cfg.hostRating||1200);game.clocks={w:game.initialTime,b:game.initialTime};game.points={w:game.startingPoints,b:game.startingPoints};game.clockLastTick=performance.now();game.lastMessage='Member challenge started. White to move.';await syncOnlineState();memberModal.hidden=true;onlineModal.hidden=true;showScreen('game');gameModeLabel.innerHTML=`Mode: <b>Online — ${game.playerColor==='w'?'White':'Black'} · ${game.rated?'Rated':'Unrated'}</b>`;startOnlinePolling();startClockLoop();renderAbilities();render();}catch(e){memberStatus.textContent=e.message;}}
   async function cancelMemberChallenge(id){try{await memberRpc('ability_chess_cancel_member_challenge',{p_challenge_id:id});visibleOutgoingMemberChallenge=null;memberChallengeToast.hidden=true;memberStatus.textContent='Challenge cancelled.';if(!memberModal.hidden)await loadMemberList();await loadChallengeNotifications();}catch(e){memberStatus.textContent=e.message;}}
   async function declineMemberChallenge(id){try{await memberRpc('ability_chess_decline_member_challenge',{p_challenge_id:id});if(visibleMemberChallenge?.challenge_id===id){visibleMemberChallenge=null;memberChallengeToast.hidden=true;}memberStatus.textContent='Challenge declined.';if(!memberModal.hidden)await loadMemberList();}catch(e){memberStatus.textContent=e.message;}}
   async function launchAcceptedOutgoingChallenge(c){
@@ -978,13 +978,14 @@
     game.onlineStarted=true;
     game.playerColor=c.assigned_color;
     game.hostColor=c.assigned_color;
+    game.rated=!!room.room_settings?.rated;game.myRating=Number(memberProfile?.rating||1200);game.opponentRating=Number(room.room_settings?.guestRating||1200);
     game.clockLastTick=performance.now();
     memberModal.hidden=true;
     onlineModal.hidden=true;
     memberChallengeToast.hidden=true;
     visibleOutgoingMemberChallenge=null;
     showScreen('game');
-    gameModeLabel.innerHTML=`Mode: <b>Online — ${game.playerColor==='w'?'White':'Black'}</b>`;
+    gameModeLabel.innerHTML=`Mode: <b>Online — ${game.playerColor==='w'?'White':'Black'} · ${game.rated?'Rated':'Unrated'}</b>`;
     startOnlinePolling();
     startClockLoop();
     renderAbilities();
@@ -1067,9 +1068,14 @@
   }
 
   async function openMemberLobby(){memberModal.hidden=false;memberStatus.textContent='';renderMemberAuth();if(memberSession){if(Date.now()/1000>(memberSession.expires_at||0)-30)await refreshMemberToken();await loadMyProfile();renderMemberTabs();await loadMemberList();startMemberPolling();}}
-  function onlineState(){ const copy=JSON.parse(JSON.stringify(game)); delete copy.clockLastTick; delete copy.selected; delete copy.legalMoves; delete copy.turnLegalMoves; delete copy.activeAbility; delete copy.awaitingAbilityTarget; delete copy.abilitySelection; delete copy.selectedAsPremove; delete copy.premoveQueue; delete copy.endAnnounced; delete copy.historySaved; return copy; }
+  function markOnlineMutation(){
+    if(game?.mode==='online') onlineLocalRevision++;
+  }
+  function onlineState(){ const copy=JSON.parse(JSON.stringify(game)); delete copy.clockLastTick; delete copy.selected; delete copy.legalMoves; delete copy.turnLegalMoves; delete copy.activeAbility; delete copy.awaitingAbilityTarget; delete copy.abilitySelection; delete copy.selectedAsPremove; delete copy.premoveQueue; delete copy.endAnnounced; delete copy.historySaved; delete copy.myRating; delete copy.opponentRating; delete copy.ratingBefore; delete copy.ratingAfter; delete copy.ratingChange; return copy; }
   function restoreOnlineState(state){
     const previousGame=game;
+    const localMyRating=Number(previousGame?.myRating);
+    const localOpponentRating=Number(previousGame?.opponentRating);
     const previousSelection = game?.selectedAsPremove && game?.selected ? {...game.selected} : null;
     const previousPremoveQueue = Array.isArray(game?.premoveQueue)
       ? game.premoveQueue.map(pm=>({from:{...pm.from},to:{...pm.to},promotion:pm.promotion||null}))
@@ -1086,7 +1092,7 @@
       const newCount=state?.board?.flat?.().filter(Boolean).length ?? oldCount;
       window.setTimeout(()=>newCount<oldCount ? playCaptureSound() : playMoveSound(),25);
     }
-    game=state; if(!Array.isArray(game.historySnapshots)||!game.historySnapshots.length) game.historySnapshots=[historySnapshot()]; historyViewIndex=null; if(game.over && !previousGame?.over) game.endAnnounced=false; game.upgradeLimit=Number(game.upgradeLimit ?? 3); game.abilitiesEnabled=game.abilitiesEnabled!==false; game.upgradesEnabled=game.upgradesEnabled!==false; game.mode='online'; game.playerColor=keepColor; onlineSession.color=keepColor; game.drawOffer=game.drawOffer || null; game.rematchChallenge=game.rematchChallenge || null; game.clockLastTick=performance.now();
+    game=state; onlineLocalRevision=0; if(!Array.isArray(game.historySnapshots)||!game.historySnapshots.length) game.historySnapshots=[historySnapshot()]; historyViewIndex=null; if(game.over && !previousGame?.over) game.endAnnounced=false; game.upgradeLimit=Number(game.upgradeLimit ?? 3); game.abilitiesEnabled=game.abilitiesEnabled!==false; game.upgradesEnabled=game.upgradesEnabled!==false; game.mode='online'; game.playerColor=keepColor; if(Number.isFinite(localMyRating))game.myRating=localMyRating;if(Number.isFinite(localOpponentRating))game.opponentRating=localOpponentRating; onlineSession.color=keepColor; game.drawOffer=game.drawOffer || null; game.rematchChallenge=game.rematchChallenge || null; game.clockLastTick=performance.now();
     game.selected=null; game.selectedAsPremove=false; game.legalMoves=[]; game.turnLegalMoves=allLegalMoves(game,game.turn); game.premoveQueue=previousPremoveQueue; game.premove=previousPremoveQueue[0]||null;
     if(moveChanged && !game.over && inCheck(game, keepColor)) window.setTimeout(playCheckBuzz, 45);
     if(previousSelection){
@@ -1097,26 +1103,72 @@
         game.legalMoves=game.selectedAsPremove ? premoveMovesFor(previousSelection.r,previousSelection.c) : game.turnLegalMoves.filter(m=>m.from.r===previousSelection.r&&m.from.c===previousSelection.c);
       }
     }
-    gameModeLabel.innerHTML=`Mode: <b>Online — ${keepColor==='w'?'White':'Black'}</b>`;
+    gameModeLabel.innerHTML=`Mode: <b>Online — ${keepColor==='w'?'White':'Black'} · ${game.rated?'Rated':'Unrated'}</b>`;
     // A remotely accepted rematch changes the synchronized game from over to active.
     // Close the old game-over menu immediately so the challenger can play.
     if(previousGame?.over && !game.over) resultModal.hidden=true; resultModal.style.display='none';
     renderAbilities(); render(); if(game.over){ showGameOverPopup(); queueMicrotask(saveFinishedGameToHistory); } else if(game.onlineStarted!==false) { startClockLoop(); schedulePremoveIfReady(); }
   }
   async function syncOnlineState(){
-    if(!onlineSession||onlineSyncing||!game||game.mode!=='online') return; onlineSyncing=true;
-    try{ const rows=await supabaseRpc('update_ability_chess_room',{p_room_id:onlineSession.id,p_seat_token:onlineSession.token,p_expected_version:onlineSession.version,p_game_state:onlineState(),p_status:game.over?'finished':'active'}); const row=rows?.[0]; if(row) onlineSession.version=Number(row.new_version); }
-    catch(e){ setOnlineConnectionStatus('reconnecting'); if(!String(e.message).toLowerCase().includes('version')) game.lastMessage=e.message; } finally{onlineSyncing=false;}
+    if(!onlineSession||!game||game.mode!=='online') return;
+    if(onlineSyncing){ onlineSyncQueued=true; return; }
+    onlineSyncing=true;
+    const sentRevision=onlineLocalRevision;
+    const payload=onlineState();
+    try{
+      const rows=await supabaseRpc('update_ability_chess_room',{
+        p_room_id:onlineSession.id,
+        p_seat_token:onlineSession.token,
+        p_expected_version:onlineSession.version,
+        p_game_state:payload,
+        p_status:payload.over?'finished':'active'
+      });
+      const row=rows?.[0];
+      if(row){
+        onlineSession.version=Number(row.new_version);
+        localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));
+        onlineLastSuccess=Date.now();
+        setOnlineConnectionStatus('connected');
+      }
+    }catch(e){
+      setOnlineConnectionStatus('reconnecting');
+      const isVersion=String(e.message).toLowerCase().includes('version');
+      if(isVersion){
+        // Never discard an uncommitted local action. Refresh only the room
+        // version, then retry this exact local state against the new version.
+        try{
+          const rows=await supabaseRpc('get_ability_chess_room',{p_room_id:onlineSession.id,p_seat_token:onlineSession.token});
+          const row=rows?.[0];
+          if(row){ onlineSession.version=Number(row.room_version); onlineSyncQueued=true; }
+        }catch{}
+      }else game.lastMessage=e.message;
+    }finally{
+      onlineSyncing=false;
+      if(onlineSyncQueued || onlineLocalRevision!==sentRevision){
+        onlineSyncQueued=false;
+        queueMicrotask(syncOnlineState);
+      }
+    }
   }
   async function pollOnlineRoom(){
-    if(!onlineSession||onlineSyncing) return;
+    if(!onlineSession||onlinePollInFlight) return;
+    onlinePollInFlight=true;
+    const revisionAtStart=onlineLocalRevision;
+    const versionAtStart=onlineSession.version;
     try{
       const rows=await supabaseRpc('get_ability_chess_room',{p_room_id:onlineSession.id,p_seat_token:onlineSession.token});
       const row=rows?.[0]; if(!row)return; onlineLastSuccess=Date.now(); setOnlineConnectionStatus('connected');
       const v=Number(row.room_version);
-      if(v>onlineSession.version){
+      // A poll that began before a local action is stale. It may update neither
+      // the board nor the version used by that pending action.
+      const localChanged=onlineLocalRevision!==revisionAtStart;
+      if(v>onlineSession.version && !localChanged && !onlineSyncing){
         onlineSession.version=v;
+        localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));
         restoreOnlineState(row.state);
+      }else if(v>versionAtStart && localChanged){
+        onlineSyncQueued=true;
+        if(!onlineSyncing) queueMicrotask(syncOnlineState);
       }
       if(row.opponent_joined && onlineSession.role==='host' && onlineSession.waiting){
         onlineSession.waiting=false;
@@ -1131,9 +1183,13 @@
         render();
       }
     }catch(e){onlineStatus.textContent=e.message; setOnlineConnectionStatus(onlineLastSuccess&&Date.now()-onlineLastSuccess<10000?'reconnecting':'disconnected');}
+    finally{onlinePollInFlight=false;}
   }
-  function startOnlinePolling(){ clearInterval(onlinePollTimer); onlinePollTimer=setInterval(pollOnlineRoom,600); }
-  function stopOnline(){ clearInterval(onlinePollTimer); onlinePollTimer=null; onlineSession=null; }
+  function startOnlinePolling(){ clearInterval(onlinePollTimer); pollOnlineRoom(); onlinePollTimer=setInterval(pollOnlineRoom,250); }
+
+  window.addEventListener('focus',()=>{ if(onlineSession) pollOnlineRoom(); });
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&onlineSession) pollOnlineRoom(); });
+  function stopOnline(){ clearInterval(onlinePollTimer); onlinePollTimer=null; onlinePollInFlight=false; onlineSyncQueued=false; onlineSession=null; }
   async function createOnlineRoom(){
     primeGameAudio();
     createRoomBtn.disabled=true; onlineStatus.textContent='Creating room…';
@@ -1822,7 +1878,7 @@
     refreshSelectedMovesFromTurnCache();
     render();
     if (!schedulePremoveIfReady()) maybeBotTurn();
-    if(game.mode==='online') queueMicrotask(syncOnlineState);
+    if(game.mode==='online'){ markOnlineMutation(); queueMicrotask(syncOnlineState); }
   }
 
   function stopClockLoop(){
@@ -1837,7 +1893,7 @@
   }
 
   function gameHistorySettings(){
-    return {baseSeconds:Number(game?.initialTime||0),baseMinutes:Number(game?.initialTime||0)/60,increment:Number(game?.increment||0),startingPoints:Number(game?.startingPoints||0),upgradeLimit:Number(game?.upgradeLimit??3),abilitiesEnabled:game?.abilitiesEnabled!==false,upgradesEnabled:game?.upgradesEnabled!==false};
+    return {baseSeconds:Number(game?.initialTime||0),baseMinutes:Number(game?.initialTime||0)/60,increment:Number(game?.increment||0),startingPoints:Number(game?.startingPoints||0),upgradeLimit:Number(game?.upgradeLimit??3),abilitiesEnabled:game?.abilitiesEnabled!==false,upgradesEnabled:game?.upgradesEnabled!==false,rated:!!game?.rated,ratingBefore:game?.ratingBefore??null,ratingAfter:game?.ratingAfter??null,ratingChange:game?.ratingChange??null};
   }
   function historyResultForCurrentPlayer(winner){
     if(!winner)return'draw';
@@ -1852,15 +1908,17 @@
   }
   async function saveFinishedGameToHistory(){
     if(!memberSession?.access_token||!game?.over||game.historySaved)return;
+    normalizeFinishedResult();
     game.historySaved=true;
     try{
       const key=game.historyGameKey||(game.historyGameKey=onlineSession?.id||crypto.randomUUID());
+      if(game.mode==='online'&&game.rated){const ratingRows=await memberRpc('ability_chess_apply_rating_result',{p_game_key:key,p_result:historyResultForCurrentPlayer(game.winner),p_opponent_rating:Number(game.opponentRating||1200)});const rr=ratingRows?.[0];if(rr){game.ratingBefore=Number(rr.rating_before);game.ratingAfter=Number(rr.rating_after);game.ratingChange=Number(rr.rating_change);if(resultDetail&&!resultModal.hidden)resultDetail.textContent+=` Rating ${game.ratingChange>=0?'+':''}${game.ratingChange} (${game.ratingAfter}).`;await loadMyProfile();}}
       const replay={version:1,historySnapshots:game.historySnapshots||[],settings:gameHistorySettings(),playerColor:game.playerColor||null,mode:game.mode,final:{clocks:game.clocks||null,winner:game.winner??null,resultReason:game.resultReason||'',resultDetail:game.resultDetail||'',lastMessage:game.lastMessage||''}};
       await memberRpc('ability_chess_save_game_history',{p_game_key:key,p_mode:game.mode,p_player_color:game.playerColor||(game.mode==='bot'?'w':null),p_result:historyResultForCurrentPlayer(game.winner),p_result_reason:game.resultReason||'',p_opponent_name:opponentNameForHistory(),p_settings:gameHistorySettings(),p_replay:replay});
     }catch(e){game.historySaved=false;console.warn('Could not save game history',e);}
   }
   function historyResultLabel(row){return row.result==='win'?'Win':row.result==='loss'?'Loss':row.result==='draw'?'Draw':row.result==='white_win'?'White won':'Black won';}
-  function historySettingsText(cfg={}){const base=Number(cfg.baseMinutes??(Number(cfg.baseSeconds||0)/60));return `${Number.isInteger(base)?base:base.toFixed(1)}+${Number(cfg.increment||0)} · ${Number(cfg.startingPoints||0)} starting points · ${Number(cfg.upgradeLimit??3)} upgrade slots · ${cfg.abilitiesEnabled===false?'no abilities':'abilities'} · ${cfg.upgradesEnabled===false?'no upgrades':'upgrades'}`;}
+  function historySettingsText(cfg={}){const base=Number(cfg.baseMinutes??(Number(cfg.baseSeconds||0)/60));return `${cfg.rated?'Rated':'Unrated'} · ${Number.isInteger(base)?base:base.toFixed(1)}+${Number(cfg.increment||0)} · ${Number(cfg.startingPoints||0)} starting points · ${Number(cfg.upgradeLimit??3)} upgrade slots · ${cfg.abilitiesEnabled===false?'no abilities':'abilities'} · ${cfg.upgradesEnabled===false?'no upgrades':'upgrades'}${Number.isFinite(Number(cfg.ratingChange))?` · rating ${Number(cfg.ratingChange)>=0?'+':''}${Number(cfg.ratingChange)}`:''}`;}
   async function loadGameHistory(){
     historyList.replaceChildren();
     if(!memberSession?.access_token){historyList.innerHTML='<div class="history-empty">Sign in to save and view completed games.<br><button class="history-signin-btn" type="button">Sign in</button></div>';historyList.querySelector('button')?.addEventListener('click',openMemberLobby);return;}
@@ -1964,6 +2022,7 @@
 
   function showGameOverPopup(){
     if (!game || !game.over || game.endAnnounced) return;
+    normalizeFinishedResult();
     game.endAnnounced=true;
     resultTitle.textContent=resultHeading(game.winner);
     const reasonText=game.resultReason ? ` by ${game.resultReason}` : '';
@@ -2003,8 +2062,23 @@
   function recordPosition(state){
     state.positionCounts=state.positionCounts||{};
     const key=positionKey(state);
+    // Status checks may run more than once for the same unchanged position.
+    // Only a newly reached position counts toward threefold repetition.
+    if(state.lastRecordedPositionKey===key) return state.positionCounts[key]||1;
+    state.lastRecordedPositionKey=key;
     state.positionCounts[key]=(state.positionCounts[key]||0)+1;
     return state.positionCounts[key];
+  }
+
+  function normalizeFinishedResult(){
+    if(!game?.over)return;
+    const whiteKing=findKing(game,'w'),blackKing=findKing(game,'b');
+    if(!whiteKing||!blackKing){const winner=whiteKing?'w':'b';game.winner=winner;game.resultReason='king capture';game.resultDetail=`${winner==='w'?'White':'Black'} wins by capturing the king.`;return;}
+    // A terminal mating position always outranks automatic draw rules.
+    const moves=allLegalMoves(game,game.turn);
+    const check=inCheck(game,game.turn);
+    const abilityEscape=abilityCanProduceLegalContinuation(game,game.turn);
+    if(check&&moves.length===0&&!abilityEscape){const winner=other(game.turn);game.winner=winner;game.resultReason='checkmate';game.resultDetail=`${winner==='w'?'White':'Black'} wins by checkmate.`;}
   }
 
   function abilityCanProduceLegalContinuation(state,color){
@@ -2043,10 +2117,6 @@
       const winner=whiteKing?'w':'b';
       endGame(winner,'king capture',`${winner==='w'?'White':'Black'} wins by capturing the king.`); return;
     }
-    if(isInsufficientMaterial(game)){ endGame(null,'insufficient material','Draw by insufficient material.'); return; }
-    if((game.halfmoveClock||0)>=100){ endGame(null,'fifty-move rule','Draw by the fifty-move rule.'); return; }
-    const repetitionCount=recordPosition(game);
-    if(repetitionCount>=3){ endGame(null,'threefold repetition','Draw by threefold repetition.'); return; }
     const moves=allLegalMoves(game,game.turn); game.turnLegalMoves=moves;
     const check=inCheck(game,game.turn);
     const abilityEscape=abilityCanProduceLegalContinuation(game,game.turn);
@@ -2054,6 +2124,10 @@
       if(check){ endGame(other(game.turn),'checkmate',`${other(game.turn)==='w'?'White':'Black'} wins by checkmate.`); return; }
       endGame(null,'stalemate','Draw by stalemate.'); return;
     }
+    if(isInsufficientMaterial(game)){ endGame(null,'insufficient material','Draw by insufficient material.'); return; }
+    if((game.halfmoveClock||0)>=100){ endGame(null,'fifty-move rule','Draw by the fifty-move rule.'); return; }
+    const repetitionCount=recordPosition(game);
+    if(repetitionCount>=3){ endGame(null,'threefold repetition','Draw by threefold repetition.'); return; }
     game.winner=null;
     game.lastMessage=`${game.turn==='w'?'White':'Black'} to move${check?' — king under attack':''}${moves.length===0&&abilityEscape?' — use an ability to escape':''}.`;
   }
@@ -2428,6 +2502,7 @@
     game.enPassant = next.enPassant;
     game.shielded = next.shielded;
     game.frozen = next.frozen; game.ambushed=next.ambushed; game.fortified=next.fortified; game.portals=next.portals;
+    markOnlineMutation();
 
     const suffix = move.castle ? (move.castle==='k' ? ' (castles kingside)' : ' (castles queenside)')
       : move.enPassant ? ` x ${target} e.p.`
@@ -2475,6 +2550,7 @@
       if (inCheck(game, other(movingColor))) playCheckBuzz();
       game.lastMessage = `Double Move active. ${game.movesRemaining} move left.`;
       render();
+      if(game.mode==='online') queueMicrotask(syncOnlineState);
     }
   }
 
@@ -3578,7 +3654,7 @@
     onlineBaseTimeOutput.textContent=`${cfg.base} min`;onlineIncrementOutput.textContent=`${cfg.increment} sec`;onlineStartingPointsOutput.textContent=`${cfg.startingPoints} points`;onlineUpgradeLimitOutput.textContent=`${cfg.upgradeLimit} types`;
   }
   function liveSeekQueueKey(cfg){
-    return [Number(cfg.base),Number(cfg.increment),Number(cfg.startingPoints),Number(cfg.upgradeLimit),cfg.abilitiesEnabled!==false?1:0,cfg.upgradesEnabled!==false?1:0].join(':');
+    return [Number(cfg.base),Number(cfg.increment),Number(cfg.startingPoints),Number(cfg.upgradeLimit),cfg.abilitiesEnabled!==false?1:0,cfg.upgradesEnabled!==false?1:0,cfg.rated?1:0].join(':');
   }
   function stopLiveSeekPolling(){clearInterval(liveSeekPollTimer);liveSeekPollTimer=null;}
   function setSeekUi(waiting,message,target){
@@ -3591,13 +3667,13 @@
   function prepareLiveSeekState(cfg){
     selectedGameMode='online';newGame();game.mode='online';game.onlineStarted=true;game.hostColor='w';game.playerColor='w';
     game.initialTime=Number(cfg.base)*60;game.increment=Number(cfg.increment);game.startingPoints=Number(cfg.startingPoints);game.upgradeLimit=Number(cfg.upgradeLimit);
-    game.abilitiesEnabled=cfg.abilitiesEnabled!==false;game.upgradesEnabled=cfg.upgradesEnabled!==false;game.clocks={w:game.initialTime,b:game.initialTime};game.points={w:game.startingPoints,b:game.startingPoints};
+    game.abilitiesEnabled=cfg.abilitiesEnabled!==false;game.upgradesEnabled=cfg.upgradesEnabled!==false;game.rated=!!cfg.rated;game.myRating=Number(memberProfile?.rating||1200);game.clocks={w:game.initialTime,b:game.initialTime};game.points={w:game.startingPoints,b:game.startingPoints};
     game.clockLastTick=null;game.lastMessage='Matched game ready. White to move.';stopClockLoop();return onlineState();
   }
   function launchLiveSeekMatch(row,role){
     stopLiveSeekPolling();liveSeekSession=null;setSeekUi(false,'Match found! Starting game…',liveSeekStatusTarget);
     onlineSession={id:row.room_id,code:null,token:row.seat_token,color:row.assigned_color,role,version:Number(row.room_version),waiting:false,liveSeek:true};
-    localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));restoreOnlineState(row.state||{});game.onlineStarted=true;game.clockLastTick=performance.now();onlineModal.hidden=true;showScreen('game');startOnlinePolling();startClockLoop();renderAbilities();render();
+    localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));restoreOnlineState(row.state||{});const seekCfg=row.room_settings||{};game.onlineStarted=true;game.rated=!!seekCfg.rated;game.myRating=Number(memberProfile?.rating||1200);game.opponentRating=Number(row.opponent_rating||(role==='guest'?seekCfg.hostRating:seekCfg.guestRating)||1200);game.clockLastTick=performance.now();onlineModal.hidden=true;showScreen('game');gameModeLabel.innerHTML=`Mode: <b>Online — ${game.playerColor==='w'?'White':'Black'} · ${game.rated?'Rated':'Unrated'}</b>`;startOnlinePolling();startClockLoop();renderAbilities();render();
   }
   async function pollLiveSeek(){
     if(!liveSeekSession)return;
@@ -3608,8 +3684,8 @@
   }
   async function createLiveSeek(cfg,statusElTarget){
     if(liveSeekSession){statusElTarget.textContent='Cancel your current seek before starting another.';return;}
-    primeGameAudio();applyConfigToControls(cfg);setSeekUi(true,'Looking for an opponent with the same setup…',statusElTarget);
-    try{const state=prepareLiveSeekState(cfg);const settingsPayload={base:Number(cfg.base),increment:Number(cfg.increment),startingPoints:Number(cfg.startingPoints),upgradeLimit:Number(cfg.upgradeLimit),abilitiesEnabled:cfg.abilitiesEnabled!==false,upgradesEnabled:cfg.upgradesEnabled!==false,hostColor:'w'};
+    primeGameAudio();applyConfigToControls(cfg);setSeekUi(true,'Looking for a similarly rated opponent with the same setup…',statusElTarget);
+    try{const state=prepareLiveSeekState(cfg);if(cfg.rated&&!memberSession){throw new Error('Sign in to play a rated game.');}const settingsPayload={base:Number(cfg.base),increment:Number(cfg.increment),startingPoints:Number(cfg.startingPoints),upgradeLimit:Number(cfg.upgradeLimit),abilitiesEnabled:cfg.abilitiesEnabled!==false,upgradesEnabled:cfg.upgradesEnabled!==false,rated:!!cfg.rated,hostRating:Number(memberProfile?.rating||1200),hostColor:'w'};
       const rows=await supabaseRpc('ability_chess_create_or_match_seek',{p_queue_key:liveSeekQueueKey(cfg),p_game_state:state,p_settings:settingsPayload});const row=rows?.[0];if(!row)throw new Error('Matchmaking did not return a seek.');
       if(row.matched){launchLiveSeekMatch(row,'guest');return;}
       liveSeekSession={id:row.seek_id,token:row.seek_token,roomId:row.room_id};setSeekUi(true,'Seeking an opponent… You can cancel at any time.',statusElTarget);stopLiveSeekPolling();liveSeekPollTimer=setInterval(pollLiveSeek,700);
@@ -3625,7 +3701,7 @@
     if(!memberSession){statusTarget.textContent='Sign in from your profile before challenging a player.';openMemberLobby();return;}
     pendingChallengeTarget=member;
     challengeBaseTimeSlider.value=cfg.base;challengeIncrementSlider.value=cfg.increment;challengeStartingPointsSlider.value=cfg.startingPoints;challengeUpgradeLimitSlider.value=cfg.upgradeLimit;
-    challengeAbilitiesEnabledToggle.checked=cfg.abilitiesEnabled!==false;challengeUpgradesEnabledToggle.checked=cfg.upgradesEnabled!==false;
+    challengeAbilitiesEnabledToggle.checked=cfg.abilitiesEnabled!==false;challengeUpgradesEnabledToggle.checked=cfg.upgradesEnabled!==false;document.getElementById('challengeRatedEnabledToggle').checked=!!cfg.rated;
     document.querySelector('input[name="challengeHostColor"][value="w"]').checked=true;updateMemberChallengeSetupOutputs();
     statusTarget.textContent='Sending challenge…';
     await createMemberChallenge(member.id);
@@ -3637,7 +3713,7 @@
     if(!memberSession){container.innerHTML='<div class="member-empty">Sign in from your profile to search members.</div>';return;}
     try{const rows=await memberRpc('ability_chess_list_members',{p_search:term});for(const m of rows||[]){const row=document.createElement('div');row.className='play-friend-card';row.innerHTML=`<button type="button" class="sidebar-person-link"><div class="member-name">${escapeHtml(m.display_name)} (@${escapeHtml(m.username)})${m.is_owner?'<span class="owner-tag">Owner</span>':''}</div><div class="member-meta">${m.is_online?'Online · ':''}Rating ${m.rating}</div></button>`;row.querySelector('.sidebar-person-link').addEventListener('click',()=>viewMemberProfile(m));const b=document.createElement('button');b.type='button';b.textContent='Select';b.addEventListener('click',()=>{container.querySelectorAll('.play-friend-card').forEach(x=>x.classList.remove('selected'));row.classList.add('selected');selectCallback(m);});row.appendChild(b);container.appendChild(row);}if(!rows?.length)container.innerHTML='<div class="member-empty">No matching members.</div>';}catch(e){container.innerHTML=`<div class="member-empty">${escapeHtml(e.message)}</div>`;}
   }
-  function customConfig(){return {base:Math.max(1,Number(customBase.value||10)),increment:Math.max(0,Number(customIncrement.value||0)),startingPoints:Math.max(0,Number(customPoints.value||0)),upgradeLimit:Math.max(0,Math.min(6,Number(customUpgrades.value||3))),abilitiesEnabled:customAbilities.checked,upgradesEnabled:customUpgradeRules.checked,hostColor:'w'};}
+  function customConfig(){return {base:Math.max(1,Number(customBase.value||10)),increment:Math.max(0,Number(customIncrement.value||0)),startingPoints:Math.max(0,Number(customPoints.value||0)),upgradeLimit:Math.max(0,Math.min(6,Number(customUpgrades.value||3))),abilitiesEnabled:customAbilities.checked,upgradesEnabled:customUpgradeRules.checked,rated:document.getElementById('customRatedToggle')?.checked!==false,hostColor:'w'};}
   function injectSidebarAccounts(){
     document.querySelectorAll('.home-sidebar,.site-ribbon').forEach(sidebar=>{if(sidebar.querySelector('.sidebar-account'))return;const wrap=document.createElement('div');wrap.className='sidebar-account';wrap.innerHTML='<div class="sidebar-member-search"><input type="search" placeholder="Search members"><div class="sidebar-search-results" hidden></div></div><button class="sidebar-profile-link" type="button"><span class="sidebar-avatar">♙</span><span><span class="sidebar-profile-name">Sign in</span><span class="sidebar-profile-meta">Profile and account</span></span></button>';const input=wrap.querySelector('input'),results=wrap.querySelector('.sidebar-search-results'),profileBtn=wrap.querySelector('.sidebar-profile-link');let timer=null;input.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(async()=>{results.replaceChildren();if(!input.value.trim()){results.hidden=true;return;}if(!memberSession){results.hidden=false;results.innerHTML='<div class="member-empty">Sign in to search members.</div>';return;}try{const rows=await memberRpc('ability_chess_list_members',{p_search:input.value.trim()});for(const m of rows||[]){const row=document.createElement('div');row.className='sidebar-search-row';row.innerHTML=`<button type="button" class="sidebar-person-link"><div class="sidebar-search-name">${escapeHtml(m.display_name)}${m.is_owner?'<span class="owner-tag">Owner</span>':''}</div><div class="sidebar-search-meta">@${escapeHtml(m.username)} · ${m.rating}</div></button>`;row.querySelector('.sidebar-person-link').addEventListener('click',()=>{results.hidden=true;viewMemberProfile(m);});const challenge=document.createElement('button');challenge.type='button';challenge.textContent='Challenge';challenge.addEventListener('click',()=>{showScreen('play');selectedPlayFriend=m;playFriendSearch.value=m.username;playFriendResults.replaceChildren();friendChallengeStatus.textContent=`Selected ${m.display_name}.`;results.hidden=true;});row.appendChild(challenge);results.appendChild(row);}if(!rows?.length)results.innerHTML='<div class="member-empty">No matches.</div>';results.hidden=false;}catch(e){results.hidden=false;results.innerHTML=`<div class="member-empty">${escapeHtml(e.message)}</div>`;}},220);});profileBtn.addEventListener('click',()=>memberProfile?viewMemberProfile(memberProfile):openMemberLobby());sidebar.appendChild(wrap);});updateSidebarAccounts();
   }
@@ -3874,11 +3950,11 @@
   document.querySelectorAll('.settings-nav-btn').forEach(btn=>btn.addEventListener('click',()=>showScreen('settings')));
   document.querySelectorAll('.page-home-btn').forEach(btn=>btn.addEventListener('click',showHome));
   document.querySelectorAll('.page-play-btn').forEach(btn=>btn.addEventListener('click',()=>showScreen('play')));
-  presetOnlineBtn?.addEventListener('click',()=>createLiveSeek({...selectedOnlinePreset,abilitiesEnabled:true,upgradesEnabled:true,hostColor:'w'},presetOnlineStatus));
+  presetOnlineBtn?.addEventListener('click',()=>createLiveSeek({...selectedOnlinePreset,abilitiesEnabled:true,upgradesEnabled:true,rated:document.getElementById('onlineRatedToggle')?.checked!==false,hostColor:'w'},presetOnlineStatus));
   cancelSeekBtn?.addEventListener('click',cancelLiveSeek);
   playFriendSearch?.addEventListener('input',()=>{clearTimeout(playFriendSearch._t);playFriendSearch._t=setTimeout(()=>searchMembersForPlay(playFriendSearch,playFriendResults,m=>{selectedPlayFriend=m;friendChallengeStatus.textContent=`Selected ${m.display_name}.`;}),220);});
   customFriendSearch?.addEventListener('input',()=>{clearTimeout(customFriendSearch._t);customFriendSearch._t=setTimeout(()=>searchMembersForPlay(customFriendSearch,customFriendResults,m=>{selectedCustomFriend=m;customStatus.textContent=`Selected ${m.display_name}.`;}),220);});
-  sendFriendChallengeBtn?.addEventListener('click',()=>{const p=PLAY_PRESETS.find(x=>x.label===friendPresetSelect.value)||PLAY_PRESETS[0];sendPresetChallenge(selectedPlayFriend,{...p,abilitiesEnabled:true,upgradesEnabled:true,hostColor:'w'},friendChallengeStatus);});
+  sendFriendChallengeBtn?.addEventListener('click',()=>{const p=PLAY_PRESETS.find(x=>x.label===friendPresetSelect.value)||PLAY_PRESETS[0];sendPresetChallenge(selectedPlayFriend,{...p,abilitiesEnabled:true,upgradesEnabled:true,rated:document.getElementById('friendRatedToggle')?.checked!==false,hostColor:'w'},friendChallengeStatus);});
   customOnlineBtn?.addEventListener('click',()=>createLiveSeek(customConfig(),customStatus));
   customFriendBtn?.addEventListener('click',()=>sendPresetChallenge(selectedCustomFriend,customConfig(),customStatus));
   baseTimeSlider.addEventListener('input',()=>{baseTimeOutput.textContent=`${baseTimeSlider.value} min`;});
