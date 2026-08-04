@@ -2605,7 +2605,7 @@
     const outgoing=!!challenge && challenge.from===actor;
     rematchToast.hidden=!game?.over || (!incoming && !outgoing);
     rematchToastTitle.textContent=incoming?'Rematch challenge':'Challenge sent';
-    rematchToastText.textContent=incoming?'Your opponent wants to play again.':'Waiting for your opponent to accept.';
+    rematchToastText.textContent=incoming?'Your opponent wants to play again with the same time, increment, starting points, abilities, upgrades, and upgrade-slot limit.':'Waiting for your opponent to accept the same-settings rematch.';
     acceptRematchBtn.hidden=!incoming;
     declineRematchBtn.hidden=!incoming;
     cancelRematchBtn.hidden=!outgoing;
@@ -2900,23 +2900,43 @@ ${portalTitle}` : portalTitle;
     }
   });
 
+  function currentRematchSettings(){
+    return {
+      baseSeconds:Number(game?.initialTime || Math.max(game?.clocks?.w||0,game?.clocks?.b||0,Number(baseTimeSlider.value)*60)),
+      increment:Number(game?.increment||0),
+      startingPoints:Number(game?.startingPoints||0),
+      upgradeLimit:Number(game?.upgradeLimit ?? 3),
+      abilitiesEnabled:game?.abilitiesEnabled!==false,
+      upgradesEnabled:game?.upgradesEnabled!==false,
+      hostColor:game?.hostColor || null
+    };
+  }
+
   function beginOnlineRematch(){
     if(!game || game.mode!=='online' || !onlineSession) return;
-    const playerColor=game.playerColor, hostColor=game.hostColor || (onlineSession.role==='host'?playerColor:other(playerColor));
-    const baseSeconds=Number(game.initialTime || Math.max(game.clocks?.w||0,game.clocks?.b||0,Number(baseTimeSlider.value)*60));
-    const increment=Number(game.increment||0);
-    const upgradeLimit=Number(game.upgradeLimit ?? 3), abilitiesEnabled=game.abilitiesEnabled!==false, upgradesEnabled=game.upgradesEnabled!==false;
+    // Capture the synchronized challenge settings before newGame() clears the finished position.
+    const preserved={...currentRematchSettings(),...(game.rematchChallenge?.settings||{})};
+    const playerColor=game.playerColor;
+    const hostColor=preserved.hostColor || game.hostColor || (onlineSession.role==='host'?playerColor:other(playerColor));
+    const baseSeconds=Math.max(1,Number(preserved.baseSeconds||600));
+    const increment=Math.max(0,Number(preserved.increment||0));
+    const startingPoints=Math.max(0,Number(preserved.startingPoints||0));
+    const upgradeLimit=Math.max(0,Number(preserved.upgradeLimit ?? 3));
+    const abilitiesEnabled=preserved.abilitiesEnabled!==false;
+    const upgradesEnabled=preserved.upgradesEnabled!==false;
     selectedGameMode='local';
     newGame();
     game.mode='online'; game.onlineStarted=true; game.playerColor=playerColor; game.hostColor=hostColor;
-    game.clocks={w:baseSeconds,b:baseSeconds}; game.initialTime=baseSeconds; game.increment=increment; game.upgradeLimit=upgradeLimit; game.abilitiesEnabled=abilitiesEnabled; game.upgradesEnabled=upgradesEnabled;
-    game.rematchChallenge=null; game.lastMessage='Rematch started. White to move.'; game.clockLastTick=performance.now();
-    resultModal.hidden=true; render(); startClockLoop(); queueMicrotask(syncOnlineState);
+    game.clocks={w:baseSeconds,b:baseSeconds}; game.initialTime=baseSeconds; game.increment=increment;
+    game.startingPoints=startingPoints; game.points={w:startingPoints,b:startingPoints};
+    game.upgradeLimit=upgradeLimit; game.abilitiesEnabled=abilitiesEnabled; game.upgradesEnabled=upgradesEnabled;
+    game.rematchChallenge=null; game.lastMessage='Rematch started with the same settings. White to move.'; game.clockLastTick=performance.now();
+    resultModal.hidden=true; renderAbilities(); render(); startClockLoop(); queueMicrotask(syncOnlineState);
   }
 
   function offerOnlineRematch(){
     if(!game || game.mode!=='online' || !game.over || game.rematchChallenge) return;
-    game.rematchChallenge={from:game.playerColor,createdAt:Date.now()};
+    game.rematchChallenge={from:game.playerColor,createdAt:Date.now(),settings:currentRematchSettings()};
     render(); queueMicrotask(syncOnlineState);
   }
 
