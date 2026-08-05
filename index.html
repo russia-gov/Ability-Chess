@@ -238,7 +238,7 @@
   .tournament-score-card{background:#202831;border:1px solid #3b4855;border-radius:10px;padding:10px}.tournament-score-card span{display:block;color:#9eabb8;font-size:10px;text-transform:uppercase;letter-spacing:.06em}.tournament-score-card b{display:block;font-size:22px;margin-top:3px}
   .tournament-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:12px 12px 0}.tournament-tab{padding:9px 6px;font-weight:800}.tournament-tab.active{background:#3d4d2b;border-color:#779556}
   .tournament-panel{padding:12px;display:grid;gap:8px}.tournament-panel[hidden]{display:none}
-  .standing-row{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:9px;align-items:center;padding:10px;background:#171d24;border:1px solid #35414d;border-radius:10px}.standing-row.me{border-color:#88a95b;background:#26321f}.standing-rank{color:#9eabb8;font-weight:900;text-align:center}.standing-name{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.standing-points{font-weight:900;color:#f4c46f}
+  .tournament-standing-row{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 12px;background:#171d24;border:1px solid #35414d;border-radius:10px}.tournament-standing-row.me{border-color:#88a95b;background:#26321f}.tournament-rank{color:#9eabb8;font-weight:900;text-align:center}.tournament-standing-row>b{font-weight:900;color:#f4c46f;min-width:24px;text-align:right}.tournament-person>div{min-width:0;display:flex;align-items:center;gap:12px;flex-wrap:wrap}.tournament-person>div>span{display:inline-block;color:var(--muted);font-size:12px;white-space:nowrap}.tournament-person .clickable-profile-name{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .tournament-game-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:center;padding:10px;background:#171d24;border:1px solid #35414d;border-radius:10px}.tournament-game-row b{display:block}.tournament-game-row span{display:block;color:var(--muted);font-size:11px;margin-top:3px}.tournament-game-row button{padding:8px 10px}
   .tournament-chat-log{height:330px;overflow:auto;display:grid;align-content:start;gap:8px;padding:10px;background:#11161b;border:1px solid #35414d;border-radius:10px}.tournament-chat-message{padding:8px 9px;background:#202831;border-radius:9px;line-height:1.35;font-size:13px}.tournament-chat-message b{display:block;font-size:11px;color:#f4c46f;margin-bottom:2px}.tournament-chat-form{display:grid;grid-template-columns:1fr auto;gap:8px}.tournament-chat-form input{min-width:0;background:#0f1419;color:#eef2f7;border:1px solid #465363;border-radius:9px;padding:10px}.tournament-hub-empty{padding:22px;color:var(--muted);text-align:center;background:#171d24;border-radius:10px;line-height:1.5}.tournament-hub-status{min-height:18px;color:#c8d1da;font-size:12px;padding:0 12px 12px}
   .tournament-card.active-tournament{border-color:#88a95b;box-shadow:0 0 0 2px rgba(136,169,91,.18)}
@@ -262,6 +262,28 @@
   .tournament-person{display:grid;grid-template-columns:34px minmax(0,1fr);gap:8px;align-items:center}.tournament-avatar{width:34px;height:34px;border-radius:7px}.tournament-chat-message{display:grid!important;grid-template-columns:34px minmax(0,1fr);gap:8px;align-items:start}.tournament-chat-copy b{display:block}.tournament-chat-copy span{display:block}
   .profile-popover{position:fixed;z-index:2147483647;width:270px;max-width:calc(100vw - 24px);background:#20262e;border:1px solid #526071;border-radius:13px;padding:13px;box-shadow:0 20px 60px rgba(0,0,0,.6)}.profile-popover[hidden]{display:none}.profile-popover-head{display:grid;grid-template-columns:48px 1fr;gap:10px;align-items:center}.profile-popover-avatar{width:48px;height:48px}.profile-popover-name{font-weight:900}.profile-popover-handle{color:var(--muted);font-size:12px}.profile-popover-ratings{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0;color:#cbd3db;font-size:11px}.profile-popover button{width:100%}
   @media(max-width:980px){.game-screen.active .wrap{grid-template-columns:1fr}.game-board-column .board-shell{width:min(100%,640px)}.game-player-row{max-width:640px;margin:auto;width:100%;box-sizing:border-box}}
+
+  /* More breathing room throughout profile pages. */
+  .dedicated-profile-card{gap:24px;padding:30px}
+  .dedicated-profile-card>div:nth-child(2){display:grid;align-content:center;gap:7px}
+  .profile-page-actions{margin-top:2px;gap:12px}
+  .profile-tabs{gap:10px;padding-top:4px;padding-bottom:14px}
+  .profile-tab{padding:10px 14px}
+  .profile-tab-panel{margin-top:2px}
+  #profileBioPanel{display:grid;gap:18px}
+  .profile-bio{padding:18px;line-height:1.65}
+  .profile-page-stats{gap:14px}
+  .profile-rating-card,.profile-stat{padding:17px}
+  .profile-rating-card b,.profile-stat b{margin-bottom:5px}
+  .profile-rating-card small{margin-top:8px;line-height:1.45}
+  .profile-history,.awards-grid,.friends-panel{gap:14px}
+  .friend-row,.award-card{padding:14px}
+  @media(max-width:700px){
+    .dedicated-profile-card{padding:20px;gap:18px}
+    .profile-tabs{gap:8px}
+    .profile-tab{padding:9px 11px}
+    .profile-page-stats{gap:10px}
+  }
 
 </style>
 </head>
@@ -587,8 +609,8 @@
   const onlineUpgradeLimitSlider=document.getElementById('onlineUpgradeLimitSlider'), onlineUpgradeLimitOutput=document.getElementById('onlineUpgradeLimitOutput'), onlineAbilitiesEnabledToggle=document.getElementById('onlineAbilitiesEnabledToggle'), onlineUpgradesEnabledToggle=document.getElementById('onlineUpgradesEnabledToggle');
   const whiteClock = document.getElementById('whiteClock');
   const blackClock = document.getElementById('blackClock');
-  const whiteClockTime = document.getElementById('whiteClockTime');
-  const blackClockTime = document.getElementById('blackClockTime');
+  const whiteClockTime = whiteClock;
+  const blackClockTime = blackClock;
   const connectionStatus=document.getElementById('connectionStatus');
   const premovesSetting = document.getElementById('premovesSetting');
   const legalMarkersSetting = document.getElementById('legalMarkersSetting');
@@ -955,7 +977,7 @@
     startGlobalChallengeWatcher();
     queueMicrotask(()=>ensureChallengeInboxKey().catch(e=>console.warn('Could not load challenge inbox key',e)));
   }
-  function clearMemberSession(){ memberSession=null; memberProfile=null; memberChallengeInboxKey=null; localStorage.removeItem('abilityChessMemberSession'); localStorage.removeItem('abilityChessChallengeInboxKey'); clearInterval(memberPollTimer); memberPollTimer=null; clearInterval(globalChallengeWatcherTimer); globalChallengeWatcherTimer=null; renderMemberAuth(); }
+  function clearMemberSession(){ memberSession=null; memberProfile=null; memberChallengeInboxKey=null; localStorage.removeItem('abilityChessMemberSession'); localStorage.removeItem('abilityChessChallengeInboxKey'); clearInterval(memberPollTimer); memberPollTimer=null; clearInterval(globalChallengeWatcherTimer); globalChallengeWatcherTimer=null; clearInterval(tournamentMembershipTimer); tournamentMembershipTimer=null; renderMemberAuth(); }
   async function refreshMemberToken(){
     if(!memberSession?.refresh_token)return false;
     if(memberRefreshPromise)return memberRefreshPromise;
@@ -984,7 +1006,7 @@
     const key=`${category||'rapid'}_rating`;
     return Number(memberProfile?.[key]??memberProfile?.rating??1200);
   }
-  async function loadMyProfile(){ if(!memberSession)return; try{const rows=await memberRpc('ability_chess_get_my_profile_v2');memberProfile=rows?.[0]||null;try{const ratings=await memberRpc('ability_chess_get_my_ratings');if(memberProfile&&ratings?.[0])Object.assign(memberProfile,ratings[0]);try{const x=await memberRpc('ability_chess_profile_extras',{p_username:memberProfile.username});if(x?.[0])Object.assign(memberProfile,x[0]);}catch{}}catch{}renderMemberAuth();installSpecialNav();}catch(e){memberStatus.textContent=e.message;} }
+  async function loadMyProfile(){ if(!memberSession)return; try{const rows=await memberRpc('ability_chess_get_my_profile_v2');memberProfile=rows?.[0]||null;try{const ratings=await memberRpc('ability_chess_get_my_ratings');if(memberProfile&&ratings?.[0])Object.assign(memberProfile,ratings[0]);try{const x=await memberRpc('ability_chess_profile_extras',{p_username:memberProfile.username});if(x?.[0])Object.assign(memberProfile,x[0]);}catch{}}catch{}renderMemberAuth();installSpecialNav();startTournamentMembershipWatcher();}catch(e){memberStatus.textContent=e.message;} }
   async function ensureChallengeInboxKey(){
     if(memberChallengeInboxKey)return memberChallengeInboxKey;
     if(!memberSession?.access_token)return null;
@@ -1282,11 +1304,20 @@
     }catch(e){onlineStatus.textContent=e.message; setOnlineConnectionStatus(onlineLastSuccess&&Date.now()-onlineLastSuccess<10000?'reconnecting':'disconnected');}
     finally{onlinePollInFlight=false; applyPendingAuthoritativeOnlineState();}
   }
-  function startOnlinePolling(){ clearInterval(onlinePollTimer); pollOnlineRoom(); onlinePollTimer=setInterval(pollOnlineRoom,250); }
+  function startOnlinePolling(){
+    clearInterval(onlinePollTimer);
+    pollOnlineRoom();
+    onlinePollTimer=setInterval(()=>{
+      pollOnlineRoom();
+      if(onlineSession?.id&&memberSession&&(!activeGameContext||activeGameContext.room_id!==onlineSession.id)){
+        loadGameContext(onlineSession.id).catch(()=>{});
+      }
+    },250);
+  }
 
   window.addEventListener('focus',()=>{ if(onlineSession) pollOnlineRoom(); });
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&onlineSession) pollOnlineRoom(); });
-  function stopOnline(){ clearInterval(onlinePollTimer); onlinePollTimer=null; onlinePollInFlight=false; onlineSyncQueued=false; onlinePendingAuthoritative=null; onlineLocalRevision=0; onlineAckRevision=0; onlineSession=null; }
+  function stopOnline(){ clearInterval(onlinePollTimer); onlinePollTimer=null; onlinePollInFlight=false; onlineSyncQueued=false; onlinePendingAuthoritative=null; onlineLocalRevision=0; onlineAckRevision=0; onlineSession=null; activeGameContext=null; clearInterval(gameChatTimer); }
   async function createOnlineRoom(){
     primeGameAudio();
     createRoomBtn.disabled=true; onlineStatus.textContent='Creating room…';
@@ -4371,6 +4402,7 @@
 
   const ACTIVE_TOURNAMENT_KEY='abilityChessActiveTournamentId';
   let tournamentMatchTimer=null,tournamentHubTimer=null,tournamentSpectatorTimer=null,currentTournament=null;
+  let tournamentMembershipTimer=null,tournamentAutoPairing=false,tournamentAutoPairingId=null;
   const tournamentHub=document.getElementById('tournamentHub'),tournamentHubName=document.getElementById('tournamentHubName'),tournamentHubMeta=document.getElementById('tournamentHubMeta'),tournamentMyScore=document.getElementById('tournamentMyScore'),tournamentTotalGames=document.getElementById('tournamentTotalGames'),tournamentStandingsPanel=document.getElementById('tournamentStandingsPanel'),tournamentGamesPanel=document.getElementById('tournamentGamesPanel'),tournamentChatPanel=document.getElementById('tournamentChatPanel'),tournamentChatLog=document.getElementById('tournamentChatLog'),tournamentHubStatus=document.getElementById('tournamentHubStatus');
   function showTournamentTab(tab){document.querySelectorAll('.tournament-tab').forEach(b=>b.classList.toggle('active',b.dataset.tournamentTab===tab));tournamentStandingsPanel.hidden=tab!=='standings';tournamentGamesPanel.hidden=tab!=='games';tournamentChatPanel.hidden=tab!=='chat';if(tab==='chat')tournamentChatLog.scrollTop=tournamentChatLog.scrollHeight;}
   document.querySelectorAll('.tournament-tab').forEach(b=>b.addEventListener('click',()=>showTournamentTab(b.dataset.tournamentTab)));
@@ -4386,20 +4418,114 @@
   function openTournamentHub(t){currentTournament=t;localStorage.setItem(ACTIVE_TOURNAMENT_KEY,String(t.id));tournamentHub.hidden=false;tournamentHubName.textContent=t.name;tournamentHubMeta.textContent=`${t.format==='swiss'?`${t.rounds} round Swiss`:`${t.arena_minutes} minute Arena`} · ${t.base_minutes}+${t.increment_seconds} · ${t.rated?'Rated':'Unrated'}`;document.querySelectorAll('.tournament-card').forEach(c=>c.classList.toggle('active-tournament',c.dataset.tournamentId===String(t.id)));showTournamentTab('standings');clearInterval(tournamentHubTimer);refreshTournamentHub();tournamentHubTimer=setInterval(refreshTournamentHub,2500);}
   async function watchTournamentGame(g){if(!memberSession)throw new Error('Sign in to watch tournament games.');const gameId=g.game_id||g.id;clearInterval(tournamentSpectatorTimer);const refresh=async()=>{const rows=await memberRpc('ability_chess_tournament_spectate',{p_game_id:gameId});const r=Array.isArray(rows)?rows[0]:rows;if(!r?.state)throw new Error('This game is not available to watch.');applyOnlineState(r.state,r.room_settings||{});game.playerColor=null;game.lastMessage=r.room_status==='finished'?'Tournament game finished.':'Watching live tournament game.';stopClockLoop();renderAbilities();render();if(r.room_status==='finished')clearInterval(tournamentSpectatorTimer);};await refresh();showScreen('game');await loadGameContext(g.room_id);gameModeLabel.innerHTML=`Mode: <b>Watching ${escapeHtml(currentTournament?.name||'Tournament')}</b>`;tournamentSpectatorTimer=setInterval(()=>refresh().catch(e=>{clearInterval(tournamentSpectatorTimer);showToast(e.message);}),1200);}
   document.getElementById('tournamentChatForm')?.addEventListener('submit',async e=>{e.preventDefault();const input=document.getElementById('tournamentChatInput'),message=input.value.trim();if(!message||!currentTournament)return;try{await memberRpc('ability_chess_tournament_chat_send',{p_tournament_id:currentTournament.id,p_message:message});input.value='';await refreshTournamentHub();}catch(err){tournamentHubStatus.textContent=err.message;}});
-  async function launchTournamentGame(t){
-    if(!memberSession){openMemberLobby();return;}
-    const settings={baseMinutes:Number(t.base_minutes),incrementSeconds:Number(t.increment_seconds),startingPoints:Number(t.starting_points),maxUpgrades:Number(t.max_upgrades),abilitiesEnabled:!!t.abilities_enabled,upgradesEnabled:!!t.upgrades_enabled,rated:!!t.rated,tournamentId:t.id,tournamentName:t.name};
-    const initial=makeNewGame(settings);
-    const rows=await memberRpc('ability_chess_tournament_claim_game',{p_tournament_id:t.id,p_game_state:serializeOnlineGame(initial),p_settings:settings});
-    const r=Array.isArray(rows)?rows[0]:rows;
-    if(!r?.matched){showToast('Waiting for another tournament player…');clearTimeout(tournamentMatchTimer);tournamentMatchTimer=setTimeout(()=>launchTournamentGame(t).catch(e=>showToast(e.message)),1200);return;}
-    clearTimeout(tournamentMatchTimer);
-    onlineSession={id:r.room_id,token:r.seat_token,color:r.assigned_color,role:r.assigned_color==='w'?'host':'guest',version:Number(r.room_version||0),waiting:false,mode:'tournament'};
-    localStorage.setItem(ONLINE_SESSION_KEY,JSON.stringify(onlineSession));
-    applyOnlineState(r.state||initial,r.room_settings||settings);
-    showScreen('game');await loadGameContext(r.room_id);startOnlinePolling();
+  function tournamentGameSettings(t){
+    return {
+      base:Number(t.base_minutes||10),
+      increment:Number(t.increment_seconds||0),
+      startingPoints:Number(t.starting_points||0),
+      upgradeLimit:Number(t.max_upgrades??3),
+      abilitiesEnabled:t.abilities_enabled!==false,
+      upgradesEnabled:t.upgrades_enabled!==false,
+      rated:!!t.rated,
+      ratingCategory:ratingCategoryFor(Number(t.base_minutes||10)*60,Number(t.increment_seconds||0)),
+      tournamentId:t.id,
+      tournamentName:t.name
+    };
   }
-  async function loadTournaments(){const list=document.getElementById('tournamentList');if(!list)return;list.innerHTML='<div class="history-empty">Loading tournaments…</div>';try{const rows=await memberRpc('ability_chess_list_tournaments_v2');list.replaceChildren();if(!rows?.length){list.innerHTML='<div class="history-empty">No open tournaments.</div>';currentTournament=null;localStorage.removeItem(ACTIVE_TOURNAMENT_KEY);tournamentHub.hidden=true;clearInterval(tournamentHubTimer);return;}for(const t of rows){const c=document.createElement('article');c.className='tournament-card';c.dataset.tournamentId=String(t.id);const now=Date.now(),start=t.starts_at?new Date(t.starts_at).getTime():0,end=t.ends_at?new Date(t.ends_at).getTime():0;const active=(!start||now>=start)&&(!end||now<end);c.innerHTML=`${t.picture_url?`<img class="tournament-picture" src="${escapeHtml(t.picture_url)}" alt="">`:''}<h2>${escapeHtml(t.name)}</h2><p>${t.format==='swiss'?`${t.rounds} round Swiss`:`${t.arena_minutes} minute Arena`} · ${t.base_minutes}+${t.increment_seconds} · ${t.starting_points} points · ${t.max_upgrades} upgrades · ${t.rated?'Rated':'Unrated'}</p><p>${Number(t.players||0)} joined${t.starts_at?` · Starts ${escapeHtml(new Date(t.starts_at).toLocaleString())}`:''}${t.ends_at?` · Ends ${escapeHtml(new Date(t.ends_at).toLocaleString())}`:''}</p>`;const actions=document.createElement('div');actions.className='history-actions';const b=document.createElement('button');b.textContent=t.joined?'Leave tournament':'Join tournament';b.addEventListener('click',async()=>{if(!memberSession){openMemberLobby();return;}const joining=!t.joined;await memberRpc('ability_chess_set_tournament_joined',{p_tournament_id:t.id,p_joined:joining});if(joining){t.joined=true;openTournamentHub(t);}else if(currentTournament?.id===t.id){currentTournament=null;localStorage.removeItem(ACTIVE_TOURNAMENT_KEY);tournamentHub.hidden=true;clearInterval(tournamentHubTimer);}loadTournaments();});actions.appendChild(b);if(t.joined){const open=document.createElement('button');open.textContent='Open tournament';open.addEventListener('click',()=>openTournamentHub(t));actions.appendChild(open);}if(t.joined&&active){const play=document.createElement('button');play.textContent='Find tournament game';play.addEventListener('click',()=>launchTournamentGame(t).catch(e=>showToast(e.message)));actions.appendChild(play);}if(t.owner_can_delete){const del=document.createElement('button');del.className='danger';del.textContent='Delete';del.addEventListener('click',async()=>{if(!confirm(`Delete ${t.name}?`))return;await memberRpc('ability_chess_owner_delete_tournament',{p_tournament_id:t.id});loadTournaments();});actions.appendChild(del);}c.appendChild(actions);list.appendChild(c);}
+  function buildTournamentInitialState(t){
+    const cfg=tournamentGameSettings(t);
+    const previousMode=selectedGameMode;
+    selectedGameMode='local';
+    newGame();
+    stopClockLoop();
+    selectedGameMode=previousMode;
+    game.mode='online';
+    game.onlineStarted=true;
+    game.initialTime=cfg.base*60;
+    game.increment=cfg.increment;
+    game.clocks={w:game.initialTime,b:game.initialTime};
+    game.startingPoints=cfg.startingPoints;
+    game.points={w:cfg.startingPoints,b:cfg.startingPoints};
+    game.upgradeLimit=cfg.upgradeLimit;
+    game.abilitiesEnabled=cfg.abilitiesEnabled;
+    game.upgradesEnabled=cfg.upgradesEnabled;
+    game.rated=cfg.rated;
+    game.ratingCategory=cfg.ratingCategory;
+    game.clockLastTick=performance.now();
+    return {state:onlineState(),settings:cfg};
+  }
+  async function launchTournamentGame(t,{automatic=false}={}){
+    if(!memberSession){if(!automatic)openMemberLobby();return;}
+    if(tournamentAutoPairing&&tournamentAutoPairingId===String(t.id))return;
+    const now=Date.now(),start=t.starts_at?new Date(t.starts_at).getTime():0,end=t.ends_at?new Date(t.ends_at).getTime():0;
+    if(start&&now<start){if(!automatic)showToast(`Tournament starts ${new Date(t.starts_at).toLocaleString()}.`);return;}
+    if(end&&now>=end){if(!automatic)showToast('This tournament has ended.');return;}
+    tournamentAutoPairing=true;
+    tournamentAutoPairingId=String(t.id);
+    try{
+      const built=buildTournamentInitialState(t);
+      const rows=await memberRpc('ability_chess_tournament_claim_game',{
+        p_tournament_id:t.id,
+        p_game_state:built.state,
+        p_settings:built.settings
+      });
+      const r=Array.isArray(rows)?rows[0]:rows;
+      if(!r?.matched){
+        if(!automatic)showToast('Waiting for another tournament player…');
+        clearTimeout(tournamentMatchTimer);
+        tournamentMatchTimer=setTimeout(()=>{
+          tournamentAutoPairing=false;
+          tournamentAutoPairingId=null;
+          launchTournamentGame(t,{automatic}).catch(e=>{
+            tournamentAutoPairing=false;
+            tournamentAutoPairingId=null;
+            if(!automatic)showToast(e.message);
+          });
+        },1200);
+        return;
+      }
+      clearTimeout(tournamentMatchTimer);
+      onlineSession={id:r.room_id,token:r.seat_token,color:r.assigned_color,role:r.assigned_color==='w'?'host':'guest',version:Number(r.room_version||0),waiting:false,mode:'tournament'};
+      localStorage.setItem(ONLINE_SESSION_KEY,JSON.stringify(onlineSession));
+      applyOnlineState(r.state||built.state,r.room_settings||built.settings);
+      game.mode='online';
+      game.onlineStarted=true;
+      game.playerColor=r.assigned_color;
+      game.clockLastTick=performance.now();
+      showScreen('game');
+      await loadGameContext(r.room_id).catch(()=>{});
+      startOnlinePolling();
+      startClockLoop();
+      renderAbilities();
+      render();
+    }finally{
+      tournamentAutoPairing=false;
+      tournamentAutoPairingId=null;
+    }
+  }
+  async function checkJoinedSwissTournaments(){
+    if(!memberSession||onlineSession||tournamentAutoPairing)return;
+    try{
+      const rows=await memberRpc('ability_chess_list_tournaments_v2');
+      const now=Date.now();
+      const swiss=(rows||[]).find(t=>{
+        if(!t.joined||String(t.format).toLowerCase()!=='swiss')return false;
+        const start=t.starts_at?new Date(t.starts_at).getTime():0;
+        const end=t.ends_at?new Date(t.ends_at).getTime():0;
+        return (!start||now>=start)&&(!end||now<end)&&String(t.status).toLowerCase()!=='finished';
+      });
+      if(swiss)await launchTournamentGame(swiss,{automatic:true});
+    }catch(e){
+      console.warn('Swiss auto-pairing check failed',e);
+    }
+  }
+  function startTournamentMembershipWatcher(){
+    clearInterval(tournamentMembershipTimer);
+    if(!memberSession)return;
+    checkJoinedSwissTournaments();
+    tournamentMembershipTimer=setInterval(checkJoinedSwissTournaments,3000);
+  }
+  async function loadTournaments(){const list=document.getElementById('tournamentList');if(!list)return;list.innerHTML='<div class="history-empty">Loading tournaments…</div>';try{const rows=await memberRpc('ability_chess_list_tournaments_v2');list.replaceChildren();if(!rows?.length){list.innerHTML='<div class="history-empty">No open tournaments.</div>';currentTournament=null;localStorage.removeItem(ACTIVE_TOURNAMENT_KEY);tournamentHub.hidden=true;clearInterval(tournamentHubTimer);return;}for(const t of rows){const c=document.createElement('article');c.className='tournament-card';c.dataset.tournamentId=String(t.id);const now=Date.now(),start=t.starts_at?new Date(t.starts_at).getTime():0,end=t.ends_at?new Date(t.ends_at).getTime():0;const active=(!start||now>=start)&&(!end||now<end);c.innerHTML=`${t.picture_url?`<img class="tournament-picture" src="${escapeHtml(t.picture_url)}" alt="">`:''}<h2>${escapeHtml(t.name)}</h2><p>${t.format==='swiss'?`${t.rounds} round Swiss`:`${t.arena_minutes} minute Arena`} · ${t.base_minutes}+${t.increment_seconds} · ${t.starting_points} points · ${t.max_upgrades} upgrades · ${t.rated?'Rated':'Unrated'}</p><p>${Number(t.players||0)} joined${t.starts_at?` · Starts ${escapeHtml(new Date(t.starts_at).toLocaleString())}`:''}${t.ends_at?` · Ends ${escapeHtml(new Date(t.ends_at).toLocaleString())}`:''}</p>`;const actions=document.createElement('div');actions.className='history-actions';const b=document.createElement('button');b.textContent=t.joined?'Leave tournament':'Join tournament';b.addEventListener('click',async()=>{if(!memberSession){openMemberLobby();return;}const joining=!t.joined;await memberRpc('ability_chess_set_tournament_joined',{p_tournament_id:t.id,p_joined:joining});if(joining){t.joined=true;openTournamentHub(t);}else if(currentTournament?.id===t.id){currentTournament=null;localStorage.removeItem(ACTIVE_TOURNAMENT_KEY);tournamentHub.hidden=true;clearInterval(tournamentHubTimer);}loadTournaments();});actions.appendChild(b);if(t.joined){const open=document.createElement('button');open.textContent='Open tournament';open.addEventListener('click',()=>openTournamentHub(t));actions.appendChild(open);}if(t.joined&&active&&String(t.format).toLowerCase()==='arena'){const play=document.createElement('button');play.textContent='Find tournament game';play.addEventListener('click',()=>launchTournamentGame(t).catch(e=>showToast(e.message)));actions.appendChild(play);}else if(t.joined&&String(t.format).toLowerCase()==='swiss'){const note=document.createElement('span');note.className='small';note.textContent=active?'Pairing starts automatically.':'You will be paired automatically when the tournament starts.';actions.appendChild(note);}if(t.owner_can_delete){const del=document.createElement('button');del.className='danger';del.textContent='Delete';del.addEventListener('click',async()=>{if(!confirm(`Delete ${t.name}?`))return;await memberRpc('ability_chess_owner_delete_tournament',{p_tournament_id:t.id});loadTournaments();});actions.appendChild(del);}c.appendChild(actions);list.appendChild(c);}
       const joinedRows=rows.filter(t=>t.joined);
       const rememberedId=localStorage.getItem(ACTIVE_TOURNAMENT_KEY);
       const selected=
