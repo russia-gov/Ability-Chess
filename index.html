@@ -3863,6 +3863,21 @@
     if(!member?.username)return member;
     try{const rows=await memberRpc('ability_chess_get_profile_by_username',{p_username:member.username});const base=rows?.[0]||member;try{const extras=await memberRpc('ability_chess_profile_extras',{p_username:member.username});if(extras?.[0])Object.assign(base,extras[0]);}catch{}return base;}catch{return member;}
   }
+  function chooseProfileImage(currentBio,currentAvatar){
+    return new Promise(resolve=>{
+      const overlay=document.createElement('div');overlay.className='member-modal';
+      const card=document.createElement('div');card.className='member-card';card.style.width='min(560px,96vw)';
+      card.innerHTML=`<h2>Edit profile</h2><label class="profile-edit-extras">Short bio<textarea id="profileBioEditor" maxlength="500" rows="5"></textarea></label><label class="profile-edit-extras">Profile picture<input id="profilePictureFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label><div id="profilePicturePreview" class="profile-page-avatar" style="margin:12px 0">♙</div><div class="member-actions"><button type="button" id="profileEditCancel">Cancel</button><button type="button" id="profileEditSave">Save profile</button></div><div id="profileEditStatus" class="member-status"></div>`;
+      overlay.appendChild(card);document.body.appendChild(overlay);
+      const bio=card.querySelector('#profileBioEditor'),file=card.querySelector('#profilePictureFile'),preview=card.querySelector('#profilePicturePreview'),status=card.querySelector('#profileEditStatus');
+      bio.value=currentBio||'';let avatar=currentAvatar||'';
+      const drawPreview=()=>{preview.innerHTML=avatar?`<img src="${escapeHtml(avatar)}" alt="Profile picture preview">`:'♙';};drawPreview();
+      file.addEventListener('change',()=>{const selected=file.files?.[0];if(!selected)return;if(selected.size>8*1024*1024){status.textContent='Choose an image smaller than 8 MB.';file.value='';return;}const reader=new FileReader();reader.onerror=()=>status.textContent='The image could not be read.';reader.onload=()=>{const img=new Image();img.onerror=()=>status.textContent='The selected file is not a supported image.';img.onload=()=>{const size=256,canvas=document.createElement('canvas');canvas.width=size;canvas.height=size;const ctx=canvas.getContext('2d');const scale=Math.max(size/img.width,size/img.height),w=img.width*scale,h=img.height*scale;ctx.drawImage(img,(size-w)/2,(size-h)/2,w,h);avatar=canvas.toDataURL('image/jpeg',.84);drawPreview();status.textContent='Picture ready to save.';};img.src=reader.result;};reader.readAsDataURL(selected);});
+      card.querySelector('#profileEditCancel').addEventListener('click',()=>{overlay.remove();resolve(null);});
+      card.querySelector('#profileEditSave').addEventListener('click',()=>{const result={bio:bio.value.slice(0,500),avatar};overlay.remove();resolve(result);});
+      overlay.addEventListener('click',e=>{if(e.target===overlay){overlay.remove();resolve(null);}});
+    });
+  }
   async function viewMemberProfile(member,options={}){
     let m=member||memberProfile;if(!m){openMemberLobby();return;}m=await hydrateProfile(m);currentProfileMember=m;
     try{sessionStorage.setItem('abilityChessViewedProfile',JSON.stringify(m));}catch{}
@@ -3873,7 +3888,7 @@
     profilePageStats.innerHTML=categories.map(cat=>`<div class="profile-rating-card"><b>${Number(m[`${cat}_rating`]??1200)}</b><span>${cat[0].toUpperCase()+cat.slice(1)}</span><small>${Number(m[`${cat}_games`]||0)} games · ${Number(m[`${cat}_wins`]||0)}W ${Number(m[`${cat}_losses`]||0)}L ${Number(m[`${cat}_draws`]||0)}D</small></div>`).join('')+`<div class="profile-stat"><b>${Number(m.games_played||0)}</b><span>Total games</span></div><div class="profile-stat"><b>${Number(m.wins||0)}</b><span>Wins</span></div><div class="profile-stat"><b>${Number(m.losses||0)}</b><span>Losses</span></div><div class="profile-stat"><b>${Number(m.draws||0)}</b><span>Draws</span></div>`;
     profilePageActions.replaceChildren();profilePageHistory.replaceChildren();profilePageAwards.replaceChildren();profilePageFriends.replaceChildren();profilePageBio.textContent=m.bio||'No bio yet.';
     if(m.is_owner||m.is_staff){const badge=document.createElement('div');badge.className=`profile-role-badge ${m.is_owner?'owner':'staff'}`;badge.innerHTML=`<span>♞</span><span>${m.is_owner?'Owner':'Staff Member'}</span>`;profilePageActions.appendChild(badge);}
-    if(memberProfile&&m.id===memberProfile.id){const edit=document.createElement('button');edit.type='button';edit.textContent='Edit profile and account';edit.addEventListener('click',openMemberLobby);profilePageActions.appendChild(edit);const editProfile=document.createElement('button');editProfile.type='button';editProfile.textContent='Edit bio & picture';editProfile.addEventListener('click',async()=>{const bio=prompt('Short bio (up to 500 characters):',m.bio||'');if(bio===null)return;const avatar=prompt('Profile picture URL:',m.avatar_url||'');if(avatar===null)return;try{await memberRpc('ability_chess_update_profile_extras',{p_bio:bio,p_avatar_url:avatar});m.bio=bio;m.avatar_url=avatar;viewMemberProfile(m,{navigate:false});}catch(e){alert(e.message);}});profilePageActions.appendChild(editProfile);}else{const challenge=document.createElement('button');challenge.type='button';challenge.textContent='Challenge to a game';challenge.addEventListener('click',()=>{selectedPlayFriend=m;showScreen('play');playFriendSearch.value=m.username||'';friendChallengeStatus.textContent=`Selected ${m.display_name||m.username}.`;});profilePageActions.appendChild(challenge);const friend=document.createElement('button');friend.type='button';friend.textContent='Add friend';friend.addEventListener('click',async()=>{try{await memberRpc('ability_chess_send_friend_request',{p_recipient_id:m.id});friend.textContent='Request sent';friend.disabled=true;}catch(e){alert(e.message);}});profilePageActions.appendChild(friend);}
+    if(memberProfile&&m.id===memberProfile.id){const edit=document.createElement('button');edit.type='button';edit.textContent='Edit profile and account';edit.addEventListener('click',openMemberLobby);profilePageActions.appendChild(edit);const editProfile=document.createElement('button');editProfile.type='button';editProfile.textContent='Edit bio & picture';editProfile.addEventListener('click',async()=>{const edited=await chooseProfileImage(m.bio||'',m.avatar_url||'');if(!edited)return;try{await memberRpc('ability_chess_update_profile_extras',{p_bio:edited.bio,p_avatar_url:edited.avatar});m.bio=edited.bio;m.avatar_url=edited.avatar;if(memberProfile&&m.id===memberProfile.id)Object.assign(memberProfile,edited);updateSidebarAccounts();viewMemberProfile(m,{navigate:false});}catch(e){alert(e.message);}});profilePageActions.appendChild(editProfile);}else{const challenge=document.createElement('button');challenge.type='button';challenge.textContent='Challenge to a game';challenge.addEventListener('click',()=>{selectedPlayFriend=m;showScreen('play');playFriendSearch.value=m.username||'';friendChallengeStatus.textContent=`Selected ${m.display_name||m.username}.`;});profilePageActions.appendChild(challenge);const friend=document.createElement('button');friend.type='button';friend.textContent='Add friend';friend.addEventListener('click',async()=>{try{await memberRpc('ability_chess_send_friend_request',{p_recipient_id:m.id});friend.textContent='Request sent';friend.disabled=true;}catch(e){alert(e.message);}});profilePageActions.appendChild(friend);}
     if(memberProfile?.is_owner&&!m.is_owner){const promote=document.createElement('button');promote.type='button';promote.className='promote-button';promote.textContent=m.is_staff?'Remove staff role':'Promote to staff';promote.addEventListener('click',()=>ownerSetStaff(m,!m.is_staff));const history=document.createElement('button');history.type='button';history.textContent='View game history';history.addEventListener('click',()=>ownerLoadMemberHistory(m));const ban=document.createElement('button');ban.type='button';ban.className='danger-button';ban.textContent='Ban email and remove account';ban.addEventListener('click',()=>ownerBanMember(m));profilePageActions.append(promote,history,ban);}
     loadProfileHistoryPublic(m);loadProfileAwards(m);loadProfileFriends(m);showProfileTab('bio');
     showScreen('profile',{navigate:options.navigate!==false,replace:!!options.replace,extra:{user:m.username||''}});
@@ -3884,7 +3899,7 @@
     try{cached=JSON.parse(sessionStorage.getItem('abilityChessViewedProfile')||'null');}catch{}
     if(requested&&cached&&String(cached.username||'').toLowerCase()===requested.toLowerCase()){viewMemberProfile(cached,{navigate:false});return;}
     if(requested&&memberProfile&&String(memberProfile.username||'').toLowerCase()===requested.toLowerCase()){viewMemberProfile(memberProfile,{navigate:false});return;}
-    if(requested&&memberSession){
+    if(requested){
       try{
         const rows=await memberRpc('ability_chess_get_profile_by_username',{p_username:requested});
         const found=rows?.[0];
@@ -4229,7 +4244,6 @@
       else applyBrowserRoute();
     }
   })();
-})();
   window.addEventListener('resize',()=>{ if(shieldMoveWarningEl) renderShieldMoveWarning(); });
   window.addEventListener('scroll',()=>{ if(shieldMoveWarningEl) renderShieldMoveWarning(); },true);
 
@@ -4249,6 +4263,7 @@
   function installSpecialNav(){document.querySelectorAll('.home-nav').forEach(nav=>{if(!nav.querySelector('.tournaments-nav-btn')){const t=document.createElement('button');t.className='home-nav-item tournaments-nav-btn';t.type='button';t.innerHTML='<span class="home-nav-icon">♜</span>Tournaments';t.addEventListener('click',()=>showScreen('tournaments'));nav.appendChild(t);}if(memberProfile&&(memberProfile.is_owner||memberProfile.is_staff)&&!nav.querySelector('.admin-nav-btn')){const a=document.createElement('button');a.className='home-nav-item admin-nav-btn';a.type='button';a.innerHTML='<span class="home-nav-icon">⚑</span>Admin';a.addEventListener('click',()=>showScreen('admin'));nav.appendChild(a);}});}
   document.querySelectorAll('.tournaments-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('tournaments')));document.querySelectorAll('.admin-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('admin')));
   const originalUpdateSidebarAccounts=updateSidebarAccounts;updateSidebarAccounts=function(){originalUpdateSidebarAccounts();document.querySelectorAll('.sidebar-avatar').forEach(a=>{if(memberProfile?.avatar_url)a.innerHTML=`<img src="${escapeHtml(memberProfile.avatar_url)}" alt="">`;});installSpecialNav();};
+})();
 </script>
 </body>
 </html>
