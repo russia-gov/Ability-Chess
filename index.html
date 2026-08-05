@@ -281,7 +281,7 @@
 </div>
 
 <div id="tournamentsScreen" class="tournaments-screen screen"><aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item tournaments-nav-btn active" type="button"><span class="home-nav-icon">♜</span>Tournaments</button></nav></aside><main class="tournaments-main"><h1 class="page-title">Tournaments</h1><p class="page-lead">Join or leave open Swiss and Arena events.</p><div id="tournamentList" class="tournament-list"></div></main></div>
-<div id="adminScreen" class="admin-screen screen"><aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item admin-nav-btn active" type="button"><span class="home-nav-icon">⚑</span>Admin</button></nav></aside><main class="admin-main"><h1 class="page-title">Admin</h1><p class="page-lead">Create awards, grant awards, and—if you are the owner—create tournaments.</p><div class="admin-grid"><section class="admin-card"><h2>Create award</h2><input id="awardNameInput" placeholder="Award name"><textarea id="awardDescriptionInput" placeholder="Description"></textarea><input id="awardImageInput" placeholder="Image URL"><button id="createAwardBtn" type="button">Create award</button><div id="awardAdminStatus"></div></section><section class="admin-card"><h2>Give award</h2><input id="awardMemberSearch" placeholder="Search member"><div id="awardMemberResults"></div><select id="awardSelect"></select><button id="giveAwardBtn" type="button">Give award</button><div id="giveAwardStatus"></div></section><section id="tournamentAdminCard" class="admin-card"><h2>Create tournament</h2><div class="tournament-form"><input id="tournamentName" class="full" placeholder="Tournament name"><input id="tournamentPicture" class="full" placeholder="Picture URL"><select id="tournamentFormat"><option value="swiss">Swiss</option><option value="arena">Arena</option></select><input id="tournamentRounds" type="number" min="1" value="5" placeholder="Rounds"><input id="tournamentLength" type="number" min="5" value="60" placeholder="Arena minutes"><input id="tournamentBase" type="number" min="1" value="10" placeholder="Base minutes"><input id="tournamentIncrement" type="number" min="0" value="0" placeholder="Increment"><input id="tournamentPoints" type="number" min="0" value="0" placeholder="Starting points"><input id="tournamentUpgrades" type="number" min="0" value="3" placeholder="Max upgrades"><input id="tournamentStarts" class="full" type="datetime-local"><label><input id="tournamentAbilities" type="checkbox" checked> Abilities</label><label><input id="tournamentUpgradeRules" type="checkbox" checked> Upgrades</label><label><input id="tournamentRated" type="checkbox"> Rated</label><button id="createTournamentBtn" class="full" type="button">Create tournament</button></div><div id="tournamentAdminStatus"></div></section></div></main></div>
+<div id="adminScreen" class="admin-screen screen"><aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item admin-nav-btn active" type="button"><span class="home-nav-icon">⚑</span>Admin</button></nav></aside><main class="admin-main"><h1 class="page-title">Admin</h1><p class="page-lead">Create awards, grant awards, and—if you are the owner—create tournaments.</p><div class="admin-grid"><section class="admin-card"><h2>Create award</h2><input id="awardNameInput" placeholder="Award name"><textarea id="awardDescriptionInput" placeholder="Description"></textarea><input id="awardImageInput" placeholder="Image URL"><button id="createAwardBtn" type="button">Create award</button><div id="awardAdminStatus"></div></section><section class="admin-card"><h2>Give award</h2><input id="awardMemberSearch" placeholder="Search member"><div id="awardMemberResults"></div><select id="awardSelect"></select><button id="giveAwardBtn" type="button">Give award</button><div id="giveAwardStatus"></div></section><section id="tournamentAdminCard" class="admin-card"><h2>Create tournament</h2><div class="tournament-form"><input id="tournamentName" class="full" placeholder="Tournament name"><input id="tournamentPicture" class="full" placeholder="Picture URL"><select id="tournamentFormat"><option value="swiss">Swiss</option><option value="arena">Arena</option></select><input id="tournamentRounds" type="number" min="1" value="5" placeholder="Rounds"><input id="tournamentLength" type="number" min="5" value="60" placeholder="Arena minutes"><input id="tournamentBase" type="number" min="1" value="10" placeholder="Base minutes"><input id="tournamentIncrement" type="number" min="0" value="0" placeholder="Increment"><input id="tournamentPoints" type="number" min="0" value="0" placeholder="Starting points"><input id="tournamentUpgrades" type="number" min="0" value="3" placeholder="Max upgrades"><input id="tournamentStarts" class="full" type="datetime-local"><input id="tournamentEnds" class="full" type="datetime-local"><label><input id="tournamentAbilities" type="checkbox" checked> Abilities</label><label><input id="tournamentUpgradeRules" type="checkbox" checked> Upgrades</label><label><input id="tournamentRated" type="checkbox"> Rated</label><button id="createTournamentBtn" class="full" type="button">Create tournament</button></div><div id="tournamentAdminStatus"></div></section></div></main></div>
 <div id="onlineModal" class="online-modal" hidden>
   <section class="online-card" role="dialog" aria-modal="true" aria-labelledby="onlineTitle">
     <h2 id="onlineTitle">Online multiplayer</h2>
@@ -1107,9 +1107,10 @@
     }
     return false;
   }
-  function onlineState(){ const copy=JSON.parse(JSON.stringify(game)); copy.syncActionId=crypto.randomUUID(); copy.syncSentAt=Date.now(); delete copy.clockLastTick; delete copy.selected; delete copy.legalMoves; delete copy.turnLegalMoves; delete copy.activeAbility; delete copy.awaitingAbilityTarget; delete copy.abilitySelection; delete copy.selectedAsPremove; delete copy.premoveQueue; delete copy.endAnnounced; delete copy.historySaved; delete copy.myRating; delete copy.opponentRating; delete copy.ratingBefore; delete copy.ratingAfter; delete copy.ratingChange; return copy; }
+  function onlineState(){ const copy=JSON.parse(JSON.stringify(game)); copy.syncActionId=crypto.randomUUID(); copy.syncSentAt=Date.now(); delete copy.clockLastTick; delete copy.selected; delete copy.legalMoves; delete copy.turnLegalMoves; delete copy.activeAbility; delete copy.awaitingAbilityTarget; delete copy.abilitySelection; delete copy.selectedAsPremove; delete copy.premoveQueue; delete copy.endAnnounced; delete copy.resultDismissed; delete copy.historySaved; delete copy.myRating; delete copy.opponentRating; delete copy.ratingBefore; delete copy.ratingAfter; delete copy.ratingChange; return copy; }
   function restoreOnlineState(state){
     const previousGame=game;
+    const localResultDismissed=!!previousGame?.resultDismissed;
     const localMyRating=Number(previousGame?.myRating);
     const localOpponentRating=Number(previousGame?.opponentRating);
     const previousSelection = game?.selectedAsPremove && game?.selected ? {...game.selected} : null;
@@ -1128,7 +1129,7 @@
       const newCount=state?.board?.flat?.().filter(Boolean).length ?? oldCount;
       window.setTimeout(()=>newCount<oldCount ? playCaptureSound() : playMoveSound(),25);
     }
-    game=state; onlineLocalRevision=0; onlineAckRevision=0; if(!Array.isArray(game.historySnapshots)||!game.historySnapshots.length) game.historySnapshots=[historySnapshot()]; historyViewIndex=null; if(game.over && !previousGame?.over) game.endAnnounced=false; game.upgradeLimit=Number(game.upgradeLimit ?? 3); game.abilitiesEnabled=game.abilitiesEnabled!==false; game.upgradesEnabled=game.upgradesEnabled!==false; game.mode='online'; game.playerColor=keepColor; game.ratingCategory=game.ratingCategory||ratingCategoryFor(game.initialTime,game.increment);if(Number.isFinite(localMyRating))game.myRating=localMyRating;else game.myRating=currentRatingForCategory(game.ratingCategory);if(Number.isFinite(localOpponentRating))game.opponentRating=localOpponentRating; onlineSession.color=keepColor; game.drawOffer=game.drawOffer || null; game.rematchChallenge=game.rematchChallenge || null; game.clockLastTick=performance.now();
+    game=state; if(game.over)game.resultDismissed=localResultDismissed; onlineLocalRevision=0; onlineAckRevision=0; if(!Array.isArray(game.historySnapshots)||!game.historySnapshots.length) game.historySnapshots=[historySnapshot()]; historyViewIndex=null; if(game.over && !previousGame?.over) game.endAnnounced=false; game.upgradeLimit=Number(game.upgradeLimit ?? 3); game.abilitiesEnabled=game.abilitiesEnabled!==false; game.upgradesEnabled=game.upgradesEnabled!==false; game.mode='online'; game.playerColor=keepColor; game.ratingCategory=game.ratingCategory||ratingCategoryFor(game.initialTime,game.increment);if(Number.isFinite(localMyRating))game.myRating=localMyRating;else game.myRating=currentRatingForCategory(game.ratingCategory);if(Number.isFinite(localOpponentRating))game.opponentRating=localOpponentRating; onlineSession.color=keepColor; game.drawOffer=game.drawOffer || null; game.rematchChallenge=game.rematchChallenge || null; game.clockLastTick=performance.now();
     game.selected=null; game.selectedAsPremove=false; game.legalMoves=[]; game.turnLegalMoves=allLegalMoves(game,game.turn); game.premoveQueue=previousPremoveQueue; game.premove=previousPremoveQueue[0]||null;
     if(moveChanged && !game.over && inCheck(game, keepColor)) window.setTimeout(playCheckBuzz, 45);
     if(previousSelection){
@@ -1143,7 +1144,7 @@
     // A remotely accepted rematch changes the synchronized game from over to active.
     // Close the old game-over menu immediately so the challenger can play.
     if(previousGame?.over && !game.over) resultModal.hidden=true; resultModal.style.display='none';
-    renderAbilities(); render(); if(game.over){ showGameOverPopup(); queueMicrotask(saveFinishedGameToHistory); } else if(game.onlineStarted!==false) { startClockLoop(); schedulePremoveIfReady(); }
+    renderAbilities(); render(); if(game.over){ persistFinishedGameReview(); showGameOverPopup(); queueMicrotask(saveFinishedGameToHistory); } else if(game.onlineStarted!==false) { startClockLoop(); schedulePremoveIfReady(); }
   }
   async function syncOnlineState(){
     if(!onlineSession||!game||game.mode!=='online') return;
@@ -1292,6 +1293,24 @@
 
 
   const ACTIVE_GAME_STORAGE_KEY='abilityChessActiveGameV2';
+  const FINISHED_GAME_STORAGE_KEY='abilityChessFinishedGameV1';
+  function finishedGameIdentity(state=game){
+    return state?.historyGameKey || (state?.mode==='online' ? onlineSession?.id : null) || null;
+  }
+  function persistFinishedGameReview(){
+    if(!game?.over || !['bot','online','local'].includes(game.mode)) return;
+    try{
+      const state=JSON.parse(JSON.stringify(game));
+      delete state.selected; delete state.legalMoves; delete state.turnLegalMoves;
+      delete state.selectedAsPremove; delete state.awaitingAbilityTarget; delete state.abilitySelection;
+      delete state.activeAbility; delete state.clockLastTick;
+      localStorage.setItem(FINISHED_GAME_STORAGE_KEY,JSON.stringify({version:1,savedAt:Date.now(),state,botDifficulty:selectedBotDifficulty||'medium',onlineSession:game.mode==='online'?onlineSession:null,dismissed:!!game.resultDismissed}));
+    }catch(e){console.warn('Could not persist finished game review',e);}
+  }
+  function dismissFinishedResult(){
+    if(game?.over){game.resultDismissed=true;game.endAnnounced=true;persistFinishedGameReview();}
+    resultModal.hidden=true; resultModal.style.display='none';
+  }
   let activeGamePersistTimer=null;
   function activeGamePayload(){
     if(!game || game.over || !['bot','online'].includes(game.mode)) return null;
@@ -1328,6 +1347,24 @@
     resultModal.hidden=true; resultModal.style.display='none';
     showScreen('game'); gameModeLabel.innerHTML=`Mode: <b>Bot — ${selectedBotDifficulty[0].toUpperCase()+selectedBotDifficulty.slice(1)}</b>`;
     renderAbilities(); render(); startClockLoop(); maybeBotTurn(); return true;
+  }
+  function restorePersistedFinishedGame(){
+    let payload=null;
+    try{payload=JSON.parse(localStorage.getItem(FINISHED_GAME_STORAGE_KEY)||'null');}catch{}
+    const state=payload?.state;
+    if(!payload||payload.version!==1||!state?.over||!Array.isArray(state.board)) return false;
+    selectedGameMode=state.mode||'bot'; selectedBotDifficulty=payload.botDifficulty||'medium';
+    if(payload.onlineSession){onlineSession=payload.onlineSession;localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));}
+    game=state; game.over=true; game.resultDismissed=payload.dismissed!==false; game.endAnnounced=!!game.resultDismissed;
+    game.selected=null;game.selectedAsPremove=false;game.legalMoves=[];game.turnLegalMoves=[];game.clockLastTick=null;
+    if(!Array.isArray(game.historySnapshots)||!game.historySnapshots.length)game.historySnapshots=[historySnapshot()];
+    historyViewIndex=null;analysisMode=false;gameScreen.classList.remove('analysis-mode');
+    resultModal.hidden=true;resultModal.style.display='none';
+    showScreen('game');
+    const modeLabel=game.mode==='online'?`Online — ${game.playerColor==='w'?'White':'Black'}`:game.mode==='bot'?`Bot — ${selectedBotDifficulty[0].toUpperCase()+selectedBotDifficulty.slice(1)}`:'Local game';
+    gameModeLabel.innerHTML=`Mode: <b>${modeLabel} · Review</b>`;
+    renderAbilities();render();
+    return true;
   }
   async function restorePersistedActiveGame(){
     let payload=null;
@@ -1385,6 +1422,7 @@
   }
 
   function newGame(){
+    localStorage.removeItem(FINISHED_GAME_STORAGE_KEY);
     game = {
       board: makeInitialBoard(),
       turn:'w',
@@ -2117,6 +2155,7 @@
     game.rematchChallenge=null;
     game.lastMessage=detail;
     game.endAnnounced=false;
+    game.resultDismissed=false;
     game.selected=null;
     game.selectedAsPremove=false;
     game.legalMoves=[];
@@ -2129,14 +2168,16 @@
     game.clockLastTick=null;
     renderClocks();
     render();
+    persistFinishedGameReview();
     showGameOverPopup();
     queueMicrotask(saveFinishedGameToHistory);
     if(game.mode==='online') queueMicrotask(syncOnlineState);
   }
 
   function showGameOverPopup(){
-    if (!game || !game.over || game.endAnnounced) return;
+    if (!game || !game.over || game.endAnnounced || game.resultDismissed) return;
     normalizeFinishedResult();
+    persistFinishedGameReview();
     game.endAnnounced=true;
     resultTitle.textContent=resultHeading(game.winner);
     const reasonText=game.resultReason ? ` by ${game.resultReason}` : '';
@@ -3627,7 +3668,7 @@
     }
     playPendingMoveAnimation();
     renderAnnotations();
-    statusEl.textContent = historyViewIndex!==null ? `Reviewing turn ${historyViewIndex} of ${Math.max(0,(game?.historySnapshots?.length||1)-1)}. Use ← and → to navigate, or move a piece to practice a variation.` : (game?.mode==='analysis'&&game?.analysisPracticeActive ? `Variation practice · ${game.lastMessage}` : (game ? game.lastMessage : 'Press New Game to start.'));
+    statusEl.textContent = historyViewIndex!==null ? `Reviewing turn ${historyViewIndex} of ${Math.max(0,(game?.historySnapshots?.length||1)-1)}. Use ← and → to navigate.` : (game?.over&&game?.mode!=='analysis' ? `${game.lastMessage} Use ← and → to review the completed game.` : (game?.mode==='analysis'&&game?.analysisPracticeActive ? `Variation practice · ${game.lastMessage}` : (game ? game.lastMessage : 'Press New Game to start.')));
     logEl.replaceChildren();
     const logState=renderState||game;
     // Analysis always displays the complete official saved-game score. Practice
@@ -4056,11 +4097,11 @@
   acceptRematchBtn.addEventListener('click',()=>{ if(game?.rematchChallenge && game.rematchChallenge.from!==game.playerColor) beginOnlineRematch(); });
   declineRematchBtn.addEventListener('click',()=>{ if(game?.rematchChallenge && game.rematchChallenge.from!==game.playerColor){ game.rematchChallenge=null; render(); queueMicrotask(syncOnlineState); } });
   cancelRematchBtn.addEventListener('click',()=>{ if(game?.rematchChallenge?.from===game.playerColor){ game.rematchChallenge=null; render(); queueMicrotask(syncOnlineState); } });
-  resultHomeBtn.addEventListener('click',()=>{ resultModal.hidden=true; resultModal.style.display='none'; showHome(); });
+  resultHomeBtn.addEventListener('click',()=>{ dismissFinishedResult(); showHome(); });
   // Dismiss the game-over/rematch menu by clicking its shaded backdrop.
   // Clicks inside the card keep the menu open.
   resultModal.addEventListener('click',(event)=>{
-    if(event.target===resultModal) resultModal.hidden=true; resultModal.style.display='none';
+    if(event.target===resultModal) dismissFinishedResult();
   });
   cancelAbilityBtn.addEventListener('click', cancelAbility);
   homeBotBtn?.addEventListener('click', () => startFromHome('bot'));
@@ -4236,7 +4277,8 @@
   selectedGameMode='bot';
   gameModeLabel.innerHTML='Mode: <b>Bot</b>';
   (async()=>{
-    const restored=await restorePersistedActiveGame();
+    let restored=await restorePersistedActiveGame();
+    if(!restored) restored=restorePersistedFinishedGame();
     if(!restored){newGame();applyBrowserRoute();}
     else {
       const currentRoute=routeFromLocation();
@@ -4254,12 +4296,26 @@
   async function loadProfileHistoryPublic(m){currentProfileMember=m;profilePageHistory.innerHTML='<div class="history-empty">Loading game history…</div>';try{const rows=await memberRpc('ability_chess_list_profile_history',{p_user_id:m.id});profilePageHistory.replaceChildren();if(!rows?.length){profilePageHistory.innerHTML='<div class="history-empty">No saved games.</div>';return;}for(const row of rows){const card=document.createElement('article');card.className='history-card';card.innerHTML=`<div><div class="history-title">${escapeHtml(historyResultLabel(row))}${row.opponent_name?` vs. ${escapeHtml(row.opponent_name)}`:''}</div><div class="history-meta">${escapeHtml(new Date(row.played_at).toLocaleString())} · ${escapeHtml(row.result_reason||'completed')}<br>${escapeHtml(historySettingsText(row.settings||{}))}</div></div>`;if(memberProfile?.is_owner){const del=document.createElement('button');del.className='danger-button';del.textContent='Delete';del.addEventListener('click',async()=>{if(confirm('Delete this game?')){await memberRpc('ability_chess_owner_delete_history_game',{p_game_id:row.game_id});card.remove();}});card.appendChild(del);}profilePageHistory.appendChild(card);}}catch(e){profilePageHistory.innerHTML=`<div class="history-empty">${escapeHtml(e.message)}</div>`;}}
   async function loadProfileAwards(m){profilePageAwards.innerHTML='<div class="history-empty">Loading awards…</div>';try{const rows=await memberRpc('ability_chess_list_profile_awards',{p_user_id:m.id});profilePageAwards.replaceChildren();if(!rows?.length){profilePageAwards.innerHTML='<div class="history-empty">No awards yet.</div>';return;}for(const a of rows){const card=document.createElement('article');card.className='award-card';card.innerHTML=`${a.image_url?`<img class="award-image" src="${escapeHtml(a.image_url)}" alt="">`:'<div class="award-image">🏆</div>'}<h3>${escapeHtml(a.name)}</h3><p>${escapeHtml(a.description||'')}</p>`;profilePageAwards.appendChild(card);}}catch(e){profilePageAwards.innerHTML=`<div class="history-empty">${escapeHtml(e.message)}</div>`;}}
   async function loadProfileFriends(m){profilePageFriends.innerHTML='<div class="history-empty">Sign in to view friendship status.</div>';if(!memberSession)return;try{const rows=await memberRpc('ability_chess_list_friend_state');profilePageFriends.replaceChildren();const mine=memberProfile&&m.id===memberProfile.id;if(!mine){const state=(rows||[]).find(x=>x.other_id===m.id);profilePageFriends.innerHTML=`<div class="profile-bio">${state?state.status==='accepted'?'You are friends.':state.direction==='incoming'?'This member sent you a friend request.':'Friend request pending.':'You are not friends yet.'}</div>`;return;}if(!rows?.length){profilePageFriends.innerHTML='<div class="history-empty">No friends or requests yet.</div>';return;}for(const f of rows){const row=document.createElement('div');row.className='friend-row';row.innerHTML=`<div>${roleTagHtml(f)}<b>${escapeHtml(f.display_name||f.username)}</b><div class="member-meta">@${escapeHtml(f.username)} · ${f.status}</div></div>`;const acts=document.createElement('div');if(f.status==='pending'&&f.direction==='incoming'){for(const [label,yes] of [['Accept',true],['Decline',false]]){const b=document.createElement('button');b.textContent=label;b.addEventListener('click',async()=>{await memberRpc('ability_chess_respond_friend_request',{p_request_id:f.request_id,p_accept:yes});loadProfileFriends(m);});acts.appendChild(b);}}else if(f.status==='accepted'){const view=document.createElement('button');view.textContent='Profile';view.addEventListener('click',()=>viewMemberProfile(f));const remove=document.createElement('button');remove.textContent='Remove';remove.addEventListener('click',async()=>{await memberRpc('ability_chess_remove_friend',{p_other_id:f.other_id});loadProfileFriends(m);});acts.append(view,remove);}row.appendChild(acts);profilePageFriends.appendChild(row);}}catch(e){profilePageFriends.innerHTML=`<div class="history-empty">${escapeHtml(e.message)}</div>`;}}
-  async function loadTournaments(){const list=document.getElementById('tournamentList');if(!list)return;list.innerHTML='<div class="history-empty">Loading tournaments…</div>';try{const rows=await memberRpc('ability_chess_list_tournaments');list.replaceChildren();if(!rows?.length){list.innerHTML='<div class="history-empty">No open tournaments.</div>';return;}for(const t of rows){const c=document.createElement('article');c.className='tournament-card';c.innerHTML=`${t.picture_url?`<img class="tournament-picture" src="${escapeHtml(t.picture_url)}" alt="">`:''}<h2>${escapeHtml(t.name)}</h2><p>${t.format==='swiss'?`${t.rounds} round Swiss`:`${t.arena_minutes} minute Arena`} · ${t.base_minutes}+${t.increment_seconds} · ${t.starting_points} points · ${t.max_upgrades} upgrades · ${t.rated?'Rated':'Unrated'}</p><p>${Number(t.players||0)} joined${t.starts_at?` · Starts ${escapeHtml(new Date(t.starts_at).toLocaleString())}`:''}</p>`;const b=document.createElement('button');b.textContent=t.joined?'Leave tournament':'Join tournament';b.addEventListener('click',async()=>{if(!memberSession){openMemberLobby();return;}await memberRpc('ability_chess_set_tournament_joined',{p_tournament_id:t.id,p_joined:!t.joined});loadTournaments();});c.appendChild(b);list.appendChild(c);}}catch(e){list.innerHTML=`<div class="history-empty">${escapeHtml(e.message)}</div>`;}}
+  let tournamentMatchTimer=null;
+  async function launchTournamentGame(t){
+    if(!memberSession){openMemberLobby();return;}
+    const settings={baseMinutes:Number(t.base_minutes),incrementSeconds:Number(t.increment_seconds),startingPoints:Number(t.starting_points),maxUpgrades:Number(t.max_upgrades),abilitiesEnabled:!!t.abilities_enabled,upgradesEnabled:!!t.upgrades_enabled,rated:!!t.rated,tournamentId:t.id,tournamentName:t.name};
+    const initial=makeNewGame(settings);
+    const rows=await memberRpc('ability_chess_tournament_claim_game',{p_tournament_id:t.id,p_game_state:serializeOnlineGame(initial),p_settings:settings});
+    const r=Array.isArray(rows)?rows[0]:rows;
+    if(!r?.matched){showToast('Waiting for another tournament player…');clearTimeout(tournamentMatchTimer);tournamentMatchTimer=setTimeout(()=>launchTournamentGame(t).catch(e=>showToast(e.message)),1200);return;}
+    clearTimeout(tournamentMatchTimer);
+    onlineSession={roomId:r.room_id,seatToken:r.seat_token,color:r.assigned_color,version:Number(r.room_version||0),mode:'tournament'};
+    localStorage.setItem(ONLINE_SESSION_KEY,JSON.stringify(onlineSession));
+    applyOnlineState(r.state||initial,r.room_settings||settings);
+    showScreen('game');startOnlinePolling();
+  }
+  async function loadTournaments(){const list=document.getElementById('tournamentList');if(!list)return;list.innerHTML='<div class="history-empty">Loading tournaments…</div>';try{const rows=await memberRpc('ability_chess_list_tournaments_v2');list.replaceChildren();if(!rows?.length){list.innerHTML='<div class="history-empty">No open tournaments.</div>';return;}for(const t of rows){const c=document.createElement('article');c.className='tournament-card';const now=Date.now(),start=t.starts_at?new Date(t.starts_at).getTime():0,end=t.ends_at?new Date(t.ends_at).getTime():0;const active=(!start||now>=start)&&(!end||now<end);c.innerHTML=`${t.picture_url?`<img class="tournament-picture" src="${escapeHtml(t.picture_url)}" alt="">`:''}<h2>${escapeHtml(t.name)}</h2><p>${t.format==='swiss'?`${t.rounds} round Swiss`:`${t.arena_minutes} minute Arena`} · ${t.base_minutes}+${t.increment_seconds} · ${t.starting_points} points · ${t.max_upgrades} upgrades · ${t.rated?'Rated':'Unrated'}</p><p>${Number(t.players||0)} joined${t.starts_at?` · Starts ${escapeHtml(new Date(t.starts_at).toLocaleString())}`:''}${t.ends_at?` · Ends ${escapeHtml(new Date(t.ends_at).toLocaleString())}`:''}</p>`;const actions=document.createElement('div');actions.className='history-actions';const b=document.createElement('button');b.textContent=t.joined?'Leave tournament':'Join tournament';b.addEventListener('click',async()=>{if(!memberSession){openMemberLobby();return;}await memberRpc('ability_chess_set_tournament_joined',{p_tournament_id:t.id,p_joined:!t.joined});loadTournaments();});actions.appendChild(b);if(t.joined&&active){const play=document.createElement('button');play.textContent='Find tournament game';play.addEventListener('click',()=>launchTournamentGame(t).catch(e=>showToast(e.message)));actions.appendChild(play);}if(t.owner_can_delete){const del=document.createElement('button');del.className='danger';del.textContent='Delete';del.addEventListener('click',async()=>{if(!confirm(`Delete ${t.name}?`))return;await memberRpc('ability_chess_owner_delete_tournament',{p_tournament_id:t.id});loadTournaments();});actions.appendChild(del);}c.appendChild(actions);list.appendChild(c);}}catch(e){list.innerHTML=`<div class="history-empty">${escapeHtml(e.message)}</div>`;}}
   async function loadAdminPanel(){const screen=document.getElementById('adminScreen');if(!screen)return;if(!memberProfile||(memberProfile.is_owner||memberProfile.is_staff)!==true){showScreen('home');return;}document.getElementById('tournamentAdminCard').hidden=!memberProfile.is_owner;try{const awards=await memberRpc('ability_chess_admin_list_awards');document.getElementById('awardSelect').innerHTML=(awards||[]).map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');}catch(e){document.getElementById('awardAdminStatus').textContent=e.message;}}
   document.getElementById('createAwardBtn')?.addEventListener('click',async()=>{try{await memberRpc('ability_chess_admin_create_award',{p_name:awardNameInput.value,p_description:awardDescriptionInput.value,p_image_url:awardImageInput.value});awardAdminStatus.textContent='Award created.';loadAdminPanel();}catch(e){awardAdminStatus.textContent=e.message;}});
   let awardSearchTimer;document.getElementById('awardMemberSearch')?.addEventListener('input',()=>{clearTimeout(awardSearchTimer);awardSearchTimer=setTimeout(async()=>{const box=document.getElementById('awardMemberResults');try{const rows=await memberRpc('ability_chess_list_members_v2',{p_search:awardMemberSearch.value});box.replaceChildren();for(const m of rows||[]){const b=document.createElement('button');b.textContent=`${m.display_name} (@${m.username})`;b.addEventListener('click',()=>{selectedAwardMember=m;box.innerHTML=`Selected ${escapeHtml(m.display_name)}`;});box.appendChild(b);}}catch(e){box.textContent=e.message;}},200);});
   document.getElementById('giveAwardBtn')?.addEventListener('click',async()=>{try{if(!selectedAwardMember)throw new Error('Select a member.');await memberRpc('ability_chess_admin_give_award',{p_user_id:selectedAwardMember.id,p_award_id:awardSelect.value});giveAwardStatus.textContent='Award given.';}catch(e){giveAwardStatus.textContent=e.message;}});
-  document.getElementById('createTournamentBtn')?.addEventListener('click',async()=>{try{await memberRpc('ability_chess_owner_create_tournament',{p_name:tournamentName.value,p_picture_url:tournamentPicture.value,p_format:tournamentFormat.value,p_rounds:Number(tournamentRounds.value),p_arena_minutes:Number(tournamentLength.value),p_base_minutes:Number(tournamentBase.value),p_increment_seconds:Number(tournamentIncrement.value),p_starting_points:Number(tournamentPoints.value),p_max_upgrades:Number(tournamentUpgrades.value),p_abilities_enabled:tournamentAbilities.checked,p_upgrades_enabled:tournamentUpgradeRules.checked,p_rated:tournamentRated.checked,p_starts_at:tournamentStarts.value?new Date(tournamentStarts.value).toISOString():null});tournamentAdminStatus.textContent='Tournament created.';}catch(e){tournamentAdminStatus.textContent=e.message;}});
+  document.getElementById('createTournamentBtn')?.addEventListener('click',async()=>{try{await memberRpc('ability_chess_owner_create_tournament_v2',{p_name:tournamentName.value,p_picture_url:tournamentPicture.value,p_format:tournamentFormat.value,p_rounds:Number(tournamentRounds.value),p_arena_minutes:Number(tournamentLength.value),p_base_minutes:Number(tournamentBase.value),p_increment_seconds:Number(tournamentIncrement.value),p_starting_points:Number(tournamentPoints.value),p_max_upgrades:Number(tournamentUpgrades.value),p_abilities_enabled:tournamentAbilities.checked,p_upgrades_enabled:tournamentUpgradeRules.checked,p_rated:tournamentRated.checked,p_starts_at:tournamentStarts.value?new Date(tournamentStarts.value).toISOString():null,p_ends_at:tournamentEnds.value?new Date(tournamentEnds.value).toISOString():null});tournamentAdminStatus.textContent='Tournament created.';loadTournaments();}catch(e){tournamentAdminStatus.textContent=e.message;}});
   function installSpecialNav(){document.querySelectorAll('.home-nav').forEach(nav=>{if(!nav.querySelector('.tournaments-nav-btn')){const t=document.createElement('button');t.className='home-nav-item tournaments-nav-btn';t.type='button';t.innerHTML='<span class="home-nav-icon">♜</span>Tournaments';t.addEventListener('click',()=>showScreen('tournaments'));nav.appendChild(t);}if(memberProfile&&(memberProfile.is_owner||memberProfile.is_staff)&&!nav.querySelector('.admin-nav-btn')){const a=document.createElement('button');a.className='home-nav-item admin-nav-btn';a.type='button';a.innerHTML='<span class="home-nav-icon">⚑</span>Admin';a.addEventListener('click',()=>showScreen('admin'));nav.appendChild(a);}});}
   document.querySelectorAll('.tournaments-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('tournaments')));document.querySelectorAll('.admin-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('admin')));
   const originalUpdateSidebarAccounts=updateSidebarAccounts;updateSidebarAccounts=function(){originalUpdateSidebarAccounts();document.querySelectorAll('.sidebar-avatar').forEach(a=>{if(memberProfile?.avatar_url)a.innerHTML=`<img src="${escapeHtml(memberProfile.avatar_url)}" alt="">`;});installSpecialNav();};
