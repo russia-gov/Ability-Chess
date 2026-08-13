@@ -226,7 +226,24 @@
 
   .role-tag{width:18px;min-width:18px;padding:0;height:18px;font-size:11px;border-radius:3px;margin-right:6px}.profile-page-avatar{overflow:hidden}.profile-page-avatar img,.sidebar-avatar img{width:100%;height:100%;object-fit:cover}.profile-tabs{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid #354150;padding-bottom:10px}.profile-tab.active{background:#3c4c2a;border-color:#7f9b56}.profile-tab-panel{grid-column:1/-1}.profile-bio{white-space:pre-wrap;color:#cbd3db;line-height:1.55;background:#151b21;border-radius:12px;padding:14px}.profile-edit-extras{display:grid;gap:10px;margin-top:12px}.profile-edit-extras textarea,.profile-edit-extras input,.admin-grid input,.admin-grid textarea,.admin-grid select,.tournament-form input,.tournament-form select{width:100%;box-sizing:border-box;background:#10151a;color:white;border:1px solid #465363;border-radius:9px;padding:10px}.awards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}.award-card{background:#151b21;border:1px solid #354150;border-radius:12px;padding:14px}.award-image{width:54px;height:54px;border-radius:10px;object-fit:cover;background:#2b333d;display:grid;place-items:center;font-size:30px}.friends-panel{display:grid;gap:10px}.friend-row{display:flex;justify-content:space-between;gap:10px;align-items:center;background:#151b21;border:1px solid #354150;border-radius:10px;padding:10px}.admin-screen,.tournaments-screen{display:none;min-height:100vh;background:var(--bg)}.admin-screen.active,.tournaments-screen.active{display:grid;grid-template-columns:250px 1fr}.admin-main,.tournaments-main{padding:38px;overflow:auto}.admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}.admin-card,.tournament-card{background:#171c22;border:1px solid #354150;border-radius:14px;padding:16px}.tournament-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}.tournament-picture{width:100%;aspect-ratio:16/7;object-fit:cover;border-radius:10px;background:#26303a;margin-bottom:10px}.tournament-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.tournament-form .full{grid-column:1/-1}.admin-nav-btn[hidden]{display:none!important}@media(max-width:760px){.admin-screen.active,.tournaments-screen.active{grid-template-columns:1fr}.admin-main,.tournaments-main{padding:22px 14px}.tournament-form{grid-template-columns:1fr}.tournament-form .full{grid-column:auto}}
 
-  .tournament-layout{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:22px;align-items:start}.tournament-content{min-width:0}.tournament-hub{position:sticky;top:22px;background:#171c22;border:1px solid #354150;border-radius:16px;min-height:560px;overflow:hidden}.tournament-hub[hidden]{display:none}.tournament-hub-head{padding:16px;border-bottom:1px solid #354150}.tournament-hub-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:10px;border-bottom:1px solid #354150}.tournament-hub-tab.active{background:#6d873f;color:#fff}.tournament-hub-body{padding:12px;max-height:70vh;overflow:auto}.standing-row,.tournament-game-row,.tournament-chat-row{display:flex;gap:10px;align-items:center;padding:10px;border-bottom:1px solid #2c3540}.standing-rank{width:24px;text-align:center;color:#9ba8b5}.standing-main,.game-main{flex:1;min-width:0}.standing-score{font-weight:700}.tournament-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;background:#2a333d;display:grid;place-items:center}.tournament-chat-messages{display:grid;gap:6px;margin-bottom:12px}.tournament-chat-row{align-items:flex-start}.tournament-chat-input{display:grid;grid-template-columns:1fr auto;gap:8px;position:sticky;bottom:0;background:#171c22;padding-top:10px}.tournament-chat-input input{min-width:0;background:#10151a;color:#fff;border:1px solid #465363;border-radius:9px;padding:10px}.spectator-card{display:none;background:#171c22;border:1px solid #354150;border-radius:14px;padding:16px;margin-bottom:18px}.spectator-card.active{display:block}.spectator-board{display:grid;grid-template-columns:repeat(8,1fr);width:min(100%,620px);aspect-ratio:1;margin:auto;border-radius:8px;overflow:hidden}.spectator-square{display:grid;place-items:center;font-size:clamp(22px,5vw,54px);line-height:1}.spectator-square.light{background:var(--light-square,#e8d6b3)}.spectator-square.dark{background:var(--dark-square,#8b5e3c)}.spectator-meta{text-align:center;margin:10px 0;color:#cbd3db}.tournament-card.selected{outline:2px solid #8da95b}@media(max-width:1050px){.tournament-layout{grid-template-columns:1fr}.tournament-hub{position:static;min-height:420px}.tournament-hub-body{max-height:none}}
+  .proper-home-main{display:block!important;padding:clamp(28px,5vw,72px)!important}
+  .proper-home-shell{width:min(1080px,100%);margin:0 auto}
+  .proper-home-hero{max-width:760px;padding:16px 0 34px}
+  .proper-home-hero h1{font-size:clamp(46px,7vw,78px);line-height:.98;letter-spacing:-2.6px;margin:22px 0 18px}
+  .proper-home-hero>p{font-size:19px;line-height:1.55;color:#b9c3cd;max-width:700px;margin:0 0 26px}
+  .proper-home-actions{display:flex;gap:12px;flex-wrap:wrap}
+  .proper-primary,.proper-secondary,.proper-card-link{padding:13px 18px;border-radius:11px;font-weight:800}
+  .proper-primary{background:#86a64f;border-color:#a9c875;color:#10150b}.proper-secondary,.proper-card-link{background:#242c34;border-color:#46525f;color:#eef2f5}
+  .proper-home-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:16px;align-items:stretch}
+  .home-action-card{background:#1b2128;border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:22px;min-width:0}
+  .home-action-card-main{grid-row:span 2}.home-action-card h2{margin:8px 0 7px}.home-action-card p{color:#aeb9c4;line-height:1.5;margin:0 0 18px}
+  .home-action-heading{display:flex;gap:13px;align-items:flex-start}.home-action-heading h2{margin:0}.home-action-heading p{margin:4px 0 17px}
+  .home-action-icon{display:inline-grid;place-items:center;width:42px;height:42px;border-radius:11px;background:#2a333c;font-size:23px}
+  .bot-difficulty-grid.compact{margin-top:6px}.home-bot-options{margin:14px 0}.home-bot-options summary{cursor:pointer;color:#dce3e9;font-weight:700;padding:9px 0}.home-bot-options[open] summary{margin-bottom:8px}
+  .proper-card-link{margin-top:auto}.home-action-card:not(.home-action-card-main){display:flex;flex-direction:column}.home-action-card:not(.home-action-card-main) .proper-card-link{align-self:flex-start}
+  @media(max-width:1050px){.proper-home-grid{grid-template-columns:1fr 1fr}.home-action-card-main{grid-column:1/-1;grid-row:auto}}
+  @media(max-width:700px){.proper-home-main{padding:22px 16px!important}.proper-home-hero h1{font-size:46px}.proper-home-hero>p{font-size:16px}.proper-home-grid{grid-template-columns:1fr}.home-action-card-main{grid-column:auto}.proper-home-actions>*{flex:1}.bot-difficulty-grid.compact{grid-template-columns:repeat(3,1fr)}}
+  .tournament-layout{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:22px;align-items:start}.tournament-content{min-width:0}.tournament-hub{position:sticky;top:22px;background:#171c22;border:1px solid #354150;border-radius:16px;min-height:560px;overflow:hidden}.tournament-hub[hidden]{display:none}.tournament-hub-head{padding:16px;border-bottom:1px solid #354150}.tournament-hub-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:10px;border-bottom:1px solid #354150}.tournament-hub-tab.active{background:#6d873f;color:#fff}.tournament-hub-body{padding:12px;max-height:70vh;overflow:auto}.standing-row,.tournament-game-row,.tournament-chat-row{display:flex;gap:10px;align-items:center;padding:10px;border-bottom:1px solid #2c3540}.standing-rank{width:24px;text-align:center;color:#9ba8b5}.standing-main,.game-main{flex:1;min-width:0}.standing-score{font-weight:700}.tournament-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;background:#2a333d;display:grid;place-items:center}.tournament-chat-messages{display:grid;gap:6px;margin-bottom:12px}.tournament-chat-row{align-items:flex-start}.tournament-chat-input{display:grid;grid-template-columns:1fr auto;gap:8px;position:sticky;bottom:0;background:#171c22;padding-top:10px}.tournament-chat-input input{min-width:0;background:#10151a;color:#fff;border:1px solid #465363;border-radius:9px;padding:10px}.spectator-card{display:none;background:#171c22;border:1px solid #354150;border-radius:14px;padding:16px;margin-bottom:18px}.spectator-card.active{display:block}.spectator-board{display:grid;grid-template-columns:repeat(8,1fr);width:min(100%,620px);aspect-ratio:1;margin:auto;border-radius:8px;overflow:hidden}.spectator-square{display:grid;place-items:center;font-size:clamp(22px,5vw,54px);line-height:1}.spectator-square.light{background:var(--light-square,#e8d6b3)}.spectator-square.dark{background:var(--dark-square,#8b5e3c)}.spectator-meta{text-align:center;margin:10px 0;color:#cbd3db}.tournament-card.selected{outline:2px solid #8da95b}.game-chat-panel{margin-top:14px;border-top:1px solid #354150;padding-top:12px}.game-chat-messages{display:grid;gap:6px;max-height:220px;overflow:auto;background:#11171d;border:1px solid #303a46;border-radius:10px;padding:8px;margin-bottom:8px}.game-chat-row{padding:7px 8px;border-bottom:1px solid #28313a}.game-chat-row:last-child{border-bottom:0}.game-chat-compose{display:grid;grid-template-columns:1fr auto;gap:8px}.game-chat-compose input{min-width:0;background:#10151a;color:#fff;border:1px solid #465363;border-radius:9px;padding:10px}.tournament-chat-messages{max-height:52vh;overflow:auto}.tournament-chat-status{font-size:12px;color:#9ba8b5;margin-top:6px}.find-game-note{margin-top:8px;color:#aab5c0;font-size:13px}@media(max-width:1050px){.tournament-layout{grid-template-columns:1fr}.tournament-hub{position:static;min-height:420px}.tournament-hub-body{max-height:none}}
 </style>
 </head>
 <body>
@@ -240,28 +257,48 @@
       <button class="home-nav-item history-nav-btn" type="button"><span class="home-nav-icon">◫</span>Game history</button>
     </nav>
   </aside>
-  <main class="minimal-home-main">
-    <section class="welcome-card">
-      <div class="welcome-brand"><span class="brand-mark">♞</span><span>Ability Chess</span></div>
-      <h1>Welcome to Ability Chess</h1>
-      <p>Classic chess becomes a battle of timing, resources, upgrades, and special abilities. Capture pieces, earn points, reshape the position, and find combinations that ordinary chess cannot offer.</p>
-      <section class="bot-launch-card" aria-label="Play a bot">
-        <div><h2>Play a bot</h2><p>Choose an opponent and build the game you want.</p></div>
-        <div class="bot-difficulty-grid" id="botDifficultyGrid">
-          <button type="button" class="bot-difficulty selected" data-level="easy"><b>Easy</b><span>Relaxed and forgiving</span></button>
-          <button type="button" class="bot-difficulty" data-level="medium"><b>Medium</b><span>Balanced tactical play</span></button>
-          <button type="button" class="bot-difficulty" data-level="hard"><b>Hard</b><span>Stronger calculation</span></button>
+  <main class="minimal-home-main proper-home-main">
+    <section class="proper-home-shell">
+      <header class="proper-home-hero">
+        <div class="welcome-brand"><span class="brand-mark">♞</span><span>Ability Chess</span></div>
+        <h1>Chess, with another layer of strategy.</h1>
+        <p>Earn points, unlock upgrades, time powerful abilities, and compete in live games and tournaments built around a familiar chessboard.</p>
+        <div class="proper-home-actions">
+          <button id="welcomeMorePlayBtn" class="proper-primary page-play-btn" type="button">Play online</button>
+          <button class="proper-secondary tournaments-nav-btn" type="button">Browse tournaments</button>
         </div>
-        <div class="bot-settings-grid">
-          <label>Minutes<input id="baseTimeSlider" type="number" min="1" max="60" value="10"><output id="baseTimeOutput">10 min</output></label>
-          <label>Increment<input id="incrementSlider" type="number" min="0" max="30" value="0"><output id="incrementOutput">0 sec</output></label>
-          <label>Starting points<input id="homeStartingPointsSlider" type="number" min="0" max="30" value="0"><output id="homeStartingPointsOutput">0 points</output></label>
-          <label>Max upgrades<input id="upgradeLimitSlider" type="number" min="0" max="6" value="3"><output id="upgradeLimitOutput">3 types</output></label>
-        </div>
-        <div class="game-rule-row"><label><input id="abilitiesEnabledToggle" type="checkbox" checked> Abilities enabled</label><label><input id="upgradesEnabledToggle" type="checkbox" checked> Upgrades enabled</label></div>
-        <button id="homeBotBtn" class="welcome-play-button" type="button">Play bot</button>
+      </header>
+
+      <section class="proper-home-grid">
+        <article class="home-action-card home-action-card-main">
+          <div class="home-action-heading"><span class="home-action-icon">♟</span><div><h2>Quick bot game</h2><p>Choose a difficulty and start immediately.</p></div></div>
+          <div class="bot-difficulty-grid compact" id="botDifficultyGrid">
+            <button type="button" class="bot-difficulty selected" data-level="easy"><b>Easy</b><span>Relaxed</span></button>
+            <button type="button" class="bot-difficulty" data-level="medium"><b>Medium</b><span>Balanced</span></button>
+            <button type="button" class="bot-difficulty" data-level="hard"><b>Hard</b><span>Strong</span></button>
+          </div>
+          <details class="home-bot-options">
+            <summary>Game settings</summary>
+            <div class="bot-settings-grid">
+              <label>Minutes<input id="baseTimeSlider" type="number" min="1" max="60" value="10"><output id="baseTimeOutput">10 min</output></label>
+              <label>Increment<input id="incrementSlider" type="number" min="0" max="30" value="0"><output id="incrementOutput">0 sec</output></label>
+              <label>Starting points<input id="homeStartingPointsSlider" type="number" min="0" max="30" value="0"><output id="homeStartingPointsOutput">0 points</output></label>
+              <label>Max upgrades<input id="upgradeLimitSlider" type="number" min="0" max="6" value="3"><output id="upgradeLimitOutput">3 types</output></label>
+            </div>
+            <div class="game-rule-row"><label><input id="abilitiesEnabledToggle" type="checkbox" checked> Abilities</label><label><input id="upgradesEnabledToggle" type="checkbox" checked> Upgrades</label></div>
+          </details>
+          <button id="homeBotBtn" class="welcome-play-button" type="button">Play bot</button>
+        </article>
+
+        <article class="home-action-card">
+          <span class="home-action-icon">⚔</span><h2>Live play</h2><p>Find a rated or unrated opponent, challenge a friend, or create a custom game.</p>
+          <button class="proper-card-link page-play-btn" type="button">Go to Play</button>
+        </article>
+        <article class="home-action-card">
+          <span class="home-action-icon">♜</span><h2>Tournaments</h2><p>Join Swiss and Arena events, follow standings, watch games, and use tournament chat.</p>
+          <button class="proper-card-link tournaments-nav-btn" type="button">Open tournaments</button>
+        </article>
       </section>
-      <button id="welcomeMorePlayBtn" class="welcome-secondary" type="button">Online, friends, and custom games</button>
     </section>
   </main>
 </div>
@@ -407,6 +444,12 @@
 
     <h2 style="margin-top:14px">Move log</h2>
     <div id="log" class="log"></div>
+    <section id="gameChatPanel" class="game-chat-panel" hidden>
+      <h2>Game chat</h2>
+      <div id="gameChatMessages" class="game-chat-messages"></div>
+      <div class="game-chat-compose"><input id="gameChatInput" maxlength="500" placeholder="Message your opponent"><button id="gameChatSend" type="button">Send</button></div>
+      <div id="gameChatStatus" class="history-meta"></div>
+    </section>
   </div>
 </div>
   </main>
@@ -3889,6 +3932,7 @@
   document.querySelectorAll('.bot-difficulty').forEach(btn=>btn.addEventListener('click',()=>{selectedBotDifficulty=btn.dataset.level;document.querySelectorAll('.bot-difficulty').forEach(x=>x.classList.toggle('selected',x===btn));}));
   [baseTimeSlider,incrementSlider,homeStartingPointsSlider,upgradeLimitSlider].forEach(input=>input?.addEventListener('input',()=>{baseTimeOutput.textContent=`${baseTimeSlider.value} min`;incrementOutput.textContent=`${incrementSlider.value} sec`;homeStartingPointsOutput.textContent=`${homeStartingPointsSlider.value} points`;upgradeLimitOutput.textContent=`${upgradeLimitSlider.value} types`;}));
   welcomeMorePlayBtn?.addEventListener('click',()=>showScreen('play'));
+  document.addEventListener('click',e=>{const b=e.target.closest?.('.tournaments-nav-btn');if(b){e.preventDefault();showScreen('tournaments');}});
   async function ownerSetStaff(member,isStaff){
     try{await memberRpc('ability_chess_owner_set_staff',{p_user_id:member.id,p_is_staff:!!isStaff});member.is_staff=!!isStaff;await loadMyProfile();viewMemberProfile(member,{navigate:false});}
     catch(e){alert(e.message);}
@@ -4283,19 +4327,27 @@
   selectedGameMode='local';
   gameModeLabel.innerHTML='Mode: <b>No active game</b>';
   (async()=>{
-    let restored=await restorePersistedActiveGame();
-    if(!restored) restored=restorePersistedFinishedGame();
+    const requestedRoute=currentRoute();
+    let restored=false;
+    // Only restore a saved match when the browser is actually on the Game page.
+    // This prevents an old bot session from being resurrected while refreshing Home,
+    // Play, Tournaments, profiles, Settings, History, or Admin.
+    if(requestedRoute==='game'){
+      restored=await restorePersistedActiveGame();
+      if(!restored) restored=restorePersistedFinishedGame();
+    }
     if(!restored){
       selectedGameMode='local';
       newGame();
       stopClockLoop();
       if(botMoveTimer){clearTimeout(botMoveTimer);botMoveTimer=null;}
       game.clockLastTick=null;
+      game.mode='local';
+      game.finished=false;
       game.lastMessage='Choose Play to start a game.';
       gameModeLabel.innerHTML='Mode: <b>No active game</b>';
       render();
     }
-    // Never force Home or another route into the game screen on refresh.
     applyBrowserRoute();
   })();
   window.addEventListener('resize',()=>{ if(shieldMoveWarningEl) renderShieldMoveWarning(); });
@@ -4314,58 +4366,166 @@
   let tournamentHubTimer=null;
   let spectatorTimer=null;
   let spectatorGame=null;
+  let tournamentChatLastId=0;
+  let tournamentChatLoadedFor=null;
+  let swissAutoMatchBusy=false;
+  let gameChatRoomId=null;
+  let gameChatLastId=0;
+  let gameChatPolling=false;
   const PIECE_GLYPHS={K:'♔',Q:'♕',R:'♖',B:'♗',N:'♘',P:'♙',k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'};
   function tournamentRoleBadge(row){return row?.is_owner?'<span class="role-tag owner-tag">O</span>':row?.is_staff?'<span class="role-tag staff-tag">S</span>':'';}
   function tournamentAvatar(row){return row?.avatar_url?`<img class="tournament-avatar" src="${escapeHtml(row.avatar_url)}" alt="">`:`<span class="tournament-avatar">${escapeHtml((row?.display_name||row?.username||'?').slice(0,1).toUpperCase())}</span>`;}
-  function selectTournament(t){activeTournament=t;tournamentHubTab='standings';renderTournamentHub();}
+  function selectTournament(t){activeTournament=t;tournamentHubTab='standings';tournamentChatLastId=0;tournamentChatLoadedFor=null;renderTournamentHub();}
   function stopTournamentHubTimers(){clearTimeout(tournamentHubTimer);tournamentHubTimer=null;}
+  function chatTime(value){try{return new Date(value).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});}catch{return '';}}
+  function appendTournamentChatMessage(messages,m){
+    messages.insertAdjacentHTML('beforeend',`<div class="tournament-chat-row">${tournamentAvatar(m)}<div><div>${tournamentRoleBadge(m)}<strong>${escapeHtml(m.display_name||m.username)}</strong> <span class="history-meta">${escapeHtml(chatTime(m.created_at))}</span></div><div>${escapeHtml(m.message)}</div></div></div>`);
+  }
+  async function refreshTournamentChat(){
+    if(!activeTournament?.joined||tournamentHubTab!=='chat')return;
+    const body=document.getElementById('tournamentHubBody');if(!body)return;
+    if(tournamentChatLoadedFor!==activeTournament.id||!body.querySelector('#tournamentChatInput')){
+      tournamentChatLoadedFor=activeTournament.id;tournamentChatLastId=0;
+      body.innerHTML='<div class="tournament-chat-messages"></div><div class="tournament-chat-input"><input id="tournamentChatInput" maxlength="500" placeholder="Message tournament members"><button id="tournamentChatSend" type="button">Send</button></div><div id="tournamentChatStatus" class="tournament-chat-status"></div>';
+      const input=body.querySelector('#tournamentChatInput'),send=body.querySelector('#tournamentChatSend');
+      const submit=async()=>{const msg=input.value.trim();if(!msg)return;send.disabled=true;try{await memberRpc('ability_chess_tournament_chat_send',{p_tournament_id:activeTournament.id,p_message:msg});input.value='';await refreshTournamentChat();}catch(e){body.querySelector('#tournamentChatStatus').textContent=e.message;}finally{send.disabled=false;input.focus();}};
+      send.addEventListener('click',submit);input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submit();}});
+    }
+    const messages=body.querySelector('.tournament-chat-messages'),status=body.querySelector('#tournamentChatStatus');
+    try{
+      const rows=await memberRpc('ability_chess_tournament_chat_list',{p_tournament_id:activeTournament.id,p_after_id:tournamentChatLastId});
+      const nearBottom=messages.scrollHeight-messages.scrollTop-messages.clientHeight<70;
+      for(const m of rows||[]){appendTournamentChatMessage(messages,m);tournamentChatLastId=Math.max(tournamentChatLastId,Number(m.id)||0);}
+      if(nearBottom&&rows?.length)messages.scrollTop=messages.scrollHeight;
+      if(status)status.textContent='';
+    }catch(e){if(status)status.textContent=e.message;}
+  }
+  async function maybeAutoStartSwiss(rows){
+    if(!activeTournament?.joined||activeTournament.format!=='swiss'||swissAutoMatchBusy)return;
+    if(!document.getElementById('tournamentsScreen')?.classList.contains('active'))return;
+    if(onlineSession?.id&&!game?.over)return;
+    const mine=(rows||[]).find(r=>r.user_id===memberProfile?.id);if(!mine)return;
+    const rounds=Number(activeTournament.rounds||0);if(Number(mine.games_played||0)>=rounds)return;
+    // The server is authoritative: if the previous Swiss round is not complete it rejects the claim.
+    swissAutoMatchBusy=true;
+    try{await launchTournamentGame(activeTournament,{silentWait:true,swissAuto:true});}catch(e){
+      const msg=String(e?.message||'');
+      if(!/round|progress|wait|active tournament game|not started/i.test(msg))console.warn('Swiss auto-pairing:',e);
+    }finally{swissAutoMatchBusy=false;}
+  }
   async function renderTournamentHub(){
     const hub=document.getElementById('tournamentHub'),body=document.getElementById('tournamentHubBody');if(!hub||!body)return;
-    if(!activeTournament?.joined){hub.hidden=true;stopTournamentHubTimers();return;}
+    if(!activeTournament?.joined){hub.hidden=true;stopTournamentHubTimers();tournamentChatLoadedFor=null;return;}
     hub.hidden=false;document.getElementById('tournamentHubTitle').textContent=activeTournament.name;
     const total=activeTournament.format==='swiss'?Number(activeTournament.rounds||0):null;
     document.getElementById('tournamentHubSummary').textContent=activeTournament.format==='swiss'?`${total} rounds · ${activeTournament.players} players`:`${activeTournament.arena_minutes} minute arena · ${activeTournament.players} players`;
     hub.querySelectorAll('.tournament-hub-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tournamentHubTab));
-    body.innerHTML='<div class="history-empty">Loading…</div>';
     try{
       if(tournamentHubTab==='standings'){
+        tournamentChatLoadedFor=null;body.innerHTML='<div class="history-empty">Loading standings…</div>';
         const rows=await memberRpc('ability_chess_tournament_standings',{p_tournament_id:activeTournament.id});
         const mine=(rows||[]).find(r=>r.user_id===memberProfile?.id);const denom=activeTournament.format==='swiss'?Number(activeTournament.rounds||0):Number(mine?.games_played||0);
         body.innerHTML=`<div class="profile-bio"><strong>Your score: ${Number(mine?.score||0).toFixed(Number(mine?.score||0)%1?1:0)}/${denom}</strong><br>${activeTournament.format==='swiss'?`${Number(mine?.games_played||0)} of ${denom} games played`:`${Number(mine?.games_played||0)} games total`}</div>`;
         (rows||[]).forEach((r,i)=>body.insertAdjacentHTML('beforeend',`<div class="standing-row"><span class="standing-rank">${i+1}</span>${tournamentAvatar(r)}<div class="standing-main">${tournamentRoleBadge(r)}<strong>${escapeHtml(r.display_name||r.username)}</strong><div class="history-meta">${Number(r.games_played||0)} games</div></div><span class="standing-score">${Number(r.score||0).toFixed(Number(r.score||0)%1?1:0)}</span></div>`));
+        if(activeTournament.format==='swiss')queueMicrotask(()=>maybeAutoStartSwiss(rows));
       }else if(tournamentHubTab==='games'){
+        tournamentChatLoadedFor=null;body.innerHTML='<div class="history-empty">Loading games…</div>';
         const rows=await memberRpc('ability_chess_tournament_games_list',{p_tournament_id:activeTournament.id});body.replaceChildren();
         if(!rows?.length)body.innerHTML='<div class="history-empty">No tournament games have started yet.</div>';
-        for(const g of rows||[]){const row=document.createElement('div');row.className='tournament-game-row';row.innerHTML=`<div class="game-main"><strong>${escapeHtml(g.white_display_name||g.white_username)} vs. ${escapeHtml(g.black_display_name||g.black_username)}</strong><div class="history-meta">${g.status==='active'?'Live':escapeHtml(g.result||'Finished')} · ${escapeHtml(new Date(g.started_at).toLocaleTimeString())}</div></div>`;const watch=document.createElement('button');watch.type='button';watch.textContent=g.status==='active'?'Watch live':'View';watch.addEventListener('click',()=>watchTournamentGame(g));row.appendChild(watch);body.appendChild(row);}
+        for(const g of rows||[]){const row=document.createElement('div');row.className='tournament-game-row';row.innerHTML=`<div class="game-main"><strong>${escapeHtml(g.white_display_name||g.white_username)} vs. ${escapeHtml(g.black_display_name||g.black_username)}</strong><div class="history-meta">${g.status==='active'?'Live':escapeHtml(g.result||'Finished')} · ${escapeHtml(chatTime(g.started_at))}</div></div>`;if(g.status==='active'){const watch=document.createElement('button');watch.type='button';watch.textContent='Watch';watch.addEventListener('click',()=>watchTournamentGame(g));row.appendChild(watch);}body.appendChild(row);}
       }else{
-        const rows=await memberRpc('ability_chess_tournament_chat_list',{p_tournament_id:activeTournament.id,p_after_id:0});body.innerHTML='<div class="tournament-chat-messages"></div><div class="tournament-chat-input"><input id="tournamentChatInput" maxlength="500" placeholder="Message tournament members"><button id="tournamentChatSend" type="button">Send</button></div>';const messages=body.querySelector('.tournament-chat-messages');
-        for(const m of rows||[])messages.insertAdjacentHTML('beforeend',`<div class="tournament-chat-row">${tournamentAvatar(m)}<div><div>${tournamentRoleBadge(m)}<strong>${escapeHtml(m.display_name||m.username)}</strong> <span class="history-meta">${escapeHtml(new Date(m.created_at).toLocaleTimeString())}</span></div><div>${escapeHtml(m.message)}</div></div></div>`);
-        const input=body.querySelector('#tournamentChatInput'),send=body.querySelector('#tournamentChatSend');const submit=async()=>{const msg=input.value.trim();if(!msg)return;send.disabled=true;try{await memberRpc('ability_chess_tournament_chat_send',{p_tournament_id:activeTournament.id,p_message:msg});input.value='';await renderTournamentHub();}finally{send.disabled=false;}};send.addEventListener('click',submit);input.addEventListener('keydown',e=>{if(e.key==='Enter')submit();});messages.scrollTop=messages.scrollHeight;
+        await refreshTournamentChat();
       }
-    }catch(e){body.innerHTML=`<div class="history-empty">${escapeHtml(e.message)}</div>`;}
-    clearTimeout(tournamentHubTimer);tournamentHubTimer=setTimeout(()=>{if(document.getElementById('tournamentsScreen')?.classList.contains('active')&&activeTournament?.joined)renderTournamentHub();},tournamentHubTab==='chat'?1500:2500);
+    }catch(e){if(tournamentHubTab!=='chat')body.innerHTML=`<div class="history-empty">${escapeHtml(e.message)}</div>`;}
+    clearTimeout(tournamentHubTimer);tournamentHubTimer=setTimeout(()=>{if(document.getElementById('tournamentsScreen')?.classList.contains('active')&&activeTournament?.joined){if(tournamentHubTab==='chat')refreshTournamentChat().finally(()=>renderTournamentHubSchedule());else renderTournamentHub();}},tournamentHubTab==='chat'?1000:1800);
   }
+  function renderTournamentHubSchedule(){clearTimeout(tournamentHubTimer);tournamentHubTimer=setTimeout(()=>{if(document.getElementById('tournamentsScreen')?.classList.contains('active')&&activeTournament?.joined){if(tournamentHubTab==='chat')refreshTournamentChat().finally(renderTournamentHubSchedule);else renderTournamentHub();}},tournamentHubTab==='chat'?1000:1800);}
   function renderSpectatorBoard(state){const board=document.getElementById('spectatorBoard');if(!board)return;board.replaceChildren();const data=state?.board||[];for(let r=0;r<8;r++)for(let c=0;c<8;c++){const sq=document.createElement('div');sq.className=`spectator-square ${(r+c)%2?'dark':'light'}`;sq.textContent=PIECE_GLYPHS[data?.[r]?.[c]]||'';board.appendChild(sq);}}
   async function watchTournamentGame(g){spectatorGame=g;document.getElementById('tournamentSpectator').classList.add('active');document.getElementById('spectatorTitle').textContent=`${g.white_display_name||g.white_username} vs. ${g.black_display_name||g.black_username}`;document.getElementById('spectatorMeta').textContent='Connecting to live board…';document.getElementById('tournamentSpectator').scrollIntoView({behavior:'smooth',block:'start'});await pollTournamentSpectator();}
   async function pollTournamentSpectator(){if(!spectatorGame)return;try{const rows=await memberRpc('ability_chess_tournament_spectate',{p_game_id:spectatorGame.game_id});const row=rows?.[0];if(row){renderSpectatorBoard(row.state);document.getElementById('spectatorMeta').textContent=`${row.room_status==='active'?'Live':'Finished'} · ${row.state?.turn==='w'?'White':'Black'} to move`;if(row.room_status==='active')spectatorTimer=setTimeout(pollTournamentSpectator,500);}}catch(e){document.getElementById('spectatorMeta').textContent=e.message;}}
-  async function launchTournamentGame(t){
+  async function launchTournamentGame(t,opts={}){
     if(!memberSession)throw new Error('Sign in to play tournament games.');
+    if(onlineSession?.id&&!game?.over)throw new Error('You already have an active game.');
     const settings={baseMinutes:Number(t.base_minutes),base:Number(t.base_minutes),incrementSeconds:Number(t.increment_seconds),increment:Number(t.increment_seconds),startingPoints:Number(t.starting_points),maxUpgrades:Number(t.max_upgrades),upgradeLimit:Number(t.max_upgrades),abilitiesEnabled:!!t.abilities_enabled,upgradesEnabled:!!t.upgrades_enabled,rated:!!t.rated,tournamentId:t.id,tournamentName:t.name};
     selectedGameMode='online';newGame();game.mode='online';game.onlineStarted=true;game.initialTime=settings.baseMinutes*60;game.increment=settings.incrementSeconds;game.startingPoints=settings.startingPoints;game.upgradeLimit=settings.maxUpgrades;game.abilitiesEnabled=settings.abilitiesEnabled;game.upgradesEnabled=settings.upgradesEnabled;game.rated=settings.rated;game.clocks={w:game.initialTime,b:game.initialTime};game.points={w:game.startingPoints,b:game.startingPoints};const initial=onlineState();
     const rows=await memberRpc('ability_chess_tournament_claim_game',{p_tournament_id:t.id,p_game_state:initial,p_settings:settings});const r=rows?.[0];
-    if(!r?.matched){showToast('Waiting for another tournament player…');clearTimeout(tournamentMatchTimer);tournamentMatchTimer=setTimeout(()=>launchTournamentGame(t).catch(e=>showToast(e.message)),1200);return;}
-    clearTimeout(tournamentMatchTimer);onlineSession={id:r.room_id,token:r.seat_token,color:r.assigned_color,role:r.assigned_color==='w'?'host':'guest',version:Number(r.room_version||0),waiting:false,mode:'tournament',tournamentId:t.id};localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));restoreOnlineState(r.state||initial);game.onlineStarted=true;game.playerColor=r.assigned_color;game.clockLastTick=performance.now();showScreen('game');startOnlinePolling();startClockLoop();renderAbilities();render();
+    if(!r?.matched){
+      if(!opts.silentWait)showToast(t.format==='arena'?'Waiting for another finished player to click Find new game…':'Waiting for the next Swiss opponent…');
+      if(t.format==='swiss'||opts.swissAuto){clearTimeout(tournamentMatchTimer);tournamentMatchTimer=setTimeout(()=>launchTournamentGame(t,{silentWait:true,swissAuto:true}).catch(()=>{}),1200);}
+      return false;
+    }
+    clearTimeout(tournamentMatchTimer);onlineSession={id:r.room_id,token:r.seat_token,color:r.assigned_color,role:r.assigned_color==='w'?'host':'guest',version:Number(r.room_version||0),waiting:false,mode:'tournament',tournamentId:t.id};localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));restoreOnlineState(r.state||initial);game.onlineStarted=true;game.playerColor=r.assigned_color;game.clockLastTick=performance.now();showScreen('game');startOnlinePolling();startClockLoop();renderAbilities();render();resetGameChatForRoom();return true;
   }
-  async function loadTournaments(){const list=document.getElementById('tournamentList');if(!list)return;list.innerHTML='<div class="history-empty">Loading tournaments…</div>';try{const rows=await memberRpc('ability_chess_list_tournaments_v2',{});list.replaceChildren();if(!Array.isArray(rows)||!rows.length){list.innerHTML='<div class="history-empty">No open tournaments.</div>';activeTournament=null;renderTournamentHub();return;}const currentId=activeTournament?.id;for(const t of rows){const c=document.createElement('article');c.className='tournament-card'+(currentId===t.id?' selected':'');const now=Date.now(),start=t.starts_at?new Date(t.starts_at).getTime():0,end=t.ends_at?new Date(t.ends_at).getTime():0;const active=(!start||now>=start)&&(!end||now<end);c.innerHTML=`${t.picture_url?`<img class="tournament-picture" src="${escapeHtml(t.picture_url)}" alt="">`:''}<h2>${escapeHtml(t.name)}</h2><p>${t.format==='swiss'?`${t.rounds} round Swiss`:`${t.arena_minutes} minute Arena`} · ${t.base_minutes}+${t.increment_seconds} · ${t.starting_points} points · ${t.max_upgrades} upgrades · ${t.rated?'Rated':'Unrated'}</p><p>${Number(t.players||0)} joined${t.starts_at?` · Starts ${escapeHtml(new Date(t.starts_at).toLocaleString())}`:''}${t.ends_at?` · Ends ${escapeHtml(new Date(t.ends_at).toLocaleString())}`:''}</p>`;const actions=document.createElement('div');actions.className='history-actions';const b=document.createElement('button');b.textContent=t.joined?'Leave tournament':'Join tournament';b.addEventListener('click',async()=>{if(!memberSession){openMemberLobby();return;}await memberRpc('ability_chess_set_tournament_joined',{p_tournament_id:t.id,p_joined:!t.joined});if(t.joined&&activeTournament?.id===t.id)activeTournament=null;else activeTournament={...t,joined:true,players:Number(t.players||0)+1};await loadTournaments();});actions.appendChild(b);if(t.joined){const open=document.createElement('button');open.textContent='Open tournament';open.addEventListener('click',()=>{activeTournament=t;renderTournamentHub();list.querySelectorAll('.tournament-card').forEach(x=>x.classList.remove('selected'));c.classList.add('selected');});actions.appendChild(open);}if(t.joined&&active){const play=document.createElement('button');play.textContent='Find tournament game';play.addEventListener('click',()=>launchTournamentGame(t).catch(e=>showToast(e.message)));actions.appendChild(play);}if(t.owner_can_delete){const del=document.createElement('button');del.className='danger';del.textContent='Delete';del.addEventListener('click',async()=>{if(!confirm(`Delete ${t.name}?`))return;await memberRpc('ability_chess_owner_delete_tournament',{p_tournament_id:t.id});if(activeTournament?.id===t.id)activeTournament=null;loadTournaments();});actions.appendChild(del);}c.appendChild(actions);list.appendChild(c);if(t.joined&&(!activeTournament||activeTournament.id===t.id))activeTournament=t;}renderTournamentHub();}catch(e){list.innerHTML=`<div class="history-empty">${escapeHtml(e.message)}</div>`;}}
-  document.querySelectorAll('.tournament-hub-tab').forEach(b=>b.addEventListener('click',()=>{tournamentHubTab=b.dataset.tab;renderTournamentHub();}));
+  async function loadTournaments(){const list=document.getElementById('tournamentList');if(!list)return;list.innerHTML='<div class="history-empty">Loading tournaments…</div>';try{const rows=await memberRpc('ability_chess_list_tournaments_v2',{});list.replaceChildren();if(!Array.isArray(rows)||!rows.length){list.innerHTML='<div class="history-empty">No open tournaments.</div>';activeTournament=null;renderTournamentHub();return;}const currentId=activeTournament?.id;for(const t of rows){const c=document.createElement('article');c.className='tournament-card'+(currentId===t.id?' selected':'');const now=Date.now(),start=t.starts_at?new Date(t.starts_at).getTime():0,end=t.ends_at?new Date(t.ends_at).getTime():0;const active=(!start||now>=start)&&(!end||now<end);c.innerHTML=`${t.picture_url?`<img class="tournament-picture" src="${escapeHtml(t.picture_url)}" alt="">`:''}<h2>${escapeHtml(t.name)}</h2><p>${t.format==='swiss'?`${t.rounds} round Swiss`:`${t.arena_minutes} minute Arena`} · ${t.base_minutes}+${t.increment_seconds} · ${t.starting_points} points · ${t.max_upgrades} upgrades · ${t.rated?'Rated':'Unrated'}</p><p>${Number(t.players||0)} joined${t.starts_at?` · Starts ${escapeHtml(new Date(t.starts_at).toLocaleString())}`:''}${t.ends_at?` · Ends ${escapeHtml(new Date(t.ends_at).toLocaleString())}`:''}</p><div class="find-game-note">${t.format==='swiss'?'The next round pairs automatically after every game in the current round finishes.':'After your game finishes, click Find new game to pair with another available Arena player.'}</div>`;const actions=document.createElement('div');actions.className='history-actions';const b=document.createElement('button');b.textContent=t.joined?'Leave tournament':'Join tournament';b.addEventListener('click',async()=>{if(!memberSession){openMemberLobby();return;}await memberRpc('ability_chess_set_tournament_joined',{p_tournament_id:t.id,p_joined:!t.joined});if(t.joined&&activeTournament?.id===t.id)activeTournament=null;else activeTournament={...t,joined:true,players:Number(t.players||0)+1};await loadTournaments();});actions.appendChild(b);if(t.joined){const open=document.createElement('button');open.textContent='Open tournament';open.addEventListener('click',()=>{activeTournament=t;renderTournamentHub();list.querySelectorAll('.tournament-card').forEach(x=>x.classList.remove('selected'));c.classList.add('selected');});actions.appendChild(open);}if(t.joined&&active){const play=document.createElement('button');play.textContent=t.format==='arena'?'Find new game':'Find / resume Swiss game';play.addEventListener('click',()=>launchTournamentGame(t).catch(e=>showToast(e.message)));actions.appendChild(play);}if(t.owner_can_delete){const del=document.createElement('button');del.className='danger';del.textContent='Delete';del.addEventListener('click',async()=>{if(!confirm(`Delete ${t.name}?`))return;await memberRpc('ability_chess_owner_delete_tournament',{p_tournament_id:t.id});if(activeTournament?.id===t.id)activeTournament=null;loadTournaments();});actions.appendChild(del);}c.appendChild(actions);list.appendChild(c);if(t.joined&&(!activeTournament||activeTournament.id===t.id))activeTournament=t;}renderTournamentHub();}catch(e){list.innerHTML=`<div class="history-empty">${escapeHtml(e.message)}</div>`;}}
+  document.querySelectorAll('.tournament-hub-tab').forEach(b=>b.addEventListener('click',()=>{tournamentHubTab=b.dataset.tab;if(tournamentHubTab!=='chat')tournamentChatLoadedFor=null;renderTournamentHub();}));
   document.getElementById('closeSpectatorBtn')?.addEventListener('click',()=>{clearTimeout(spectatorTimer);spectatorTimer=null;spectatorGame=null;document.getElementById('tournamentSpectator').classList.remove('active');});
+  function resetGameChatForRoom(){
+    const panel=document.getElementById('gameChatPanel'),messages=document.getElementById('gameChatMessages'),status=document.getElementById('gameChatStatus');
+    const room=game?.mode==='online'&&onlineSession?.id?onlineSession.id:null;
+    if(room!==gameChatRoomId){gameChatRoomId=room;gameChatLastId=0;if(messages)messages.replaceChildren();if(status)status.textContent='';}
+    if(panel)panel.hidden=!room||!memberSession;
+  }
+  async function pollGameChat(){
+    if(gameChatPolling)return;resetGameChatForRoom();
+    const panel=document.getElementById('gameChatPanel');if(!panel||panel.hidden||!gameChatRoomId)return;
+    gameChatPolling=true;
+    try{
+      const rows=await memberRpc('ability_chess_game_chat_list',{p_room_id:gameChatRoomId,p_after_id:gameChatLastId});
+      const box=document.getElementById('gameChatMessages');const nearBottom=box.scrollHeight-box.scrollTop-box.clientHeight<60;
+      for(const m of rows||[]){box.insertAdjacentHTML('beforeend',`<div class="game-chat-row"><strong>${escapeHtml(m.display_name||m.username)}</strong> <span class="history-meta">${escapeHtml(chatTime(m.created_at))}</span><div>${escapeHtml(m.message)}</div></div>`);gameChatLastId=Math.max(gameChatLastId,Number(m.id)||0);}
+      if(nearBottom&&rows?.length)box.scrollTop=box.scrollHeight;
+      document.getElementById('gameChatStatus').textContent='';
+    }catch(e){document.getElementById('gameChatStatus').textContent=e.message;}
+    finally{gameChatPolling=false;}
+  }
+  async function sendGameChat(){
+    const input=document.getElementById('gameChatInput'),send=document.getElementById('gameChatSend');if(!input||!gameChatRoomId)return;const msg=input.value.trim();if(!msg)return;
+    send.disabled=true;try{await memberRpc('ability_chess_game_chat_send',{p_room_id:gameChatRoomId,p_message:msg});input.value='';await pollGameChat();}catch(e){document.getElementById('gameChatStatus').textContent=e.message;}finally{send.disabled=false;input.focus();}
+  }
+  document.getElementById('gameChatSend')?.addEventListener('click',sendGameChat);
+  document.getElementById('gameChatInput')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendGameChat();}});
+  setInterval(()=>{if(document.getElementById('gameScreen')?.classList.contains('active'))pollGameChat();else resetGameChatForRoom();},1000);
+
   async function loadAdminPanel(){const screen=document.getElementById('adminScreen');if(!screen)return;if(!memberProfile||(memberProfile.is_owner||memberProfile.is_staff)!==true){showScreen('home');return;}document.getElementById('tournamentAdminCard').hidden=!memberProfile.is_owner;try{const awards=await memberRpc('ability_chess_admin_list_awards');document.getElementById('awardSelect').innerHTML=(awards||[]).map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');}catch(e){document.getElementById('awardAdminStatus').textContent=e.message;}}
   document.getElementById('createAwardBtn')?.addEventListener('click',async()=>{try{await memberRpc('ability_chess_admin_create_award',{p_name:awardNameInput.value,p_description:awardDescriptionInput.value,p_image_url:awardImageInput.value});awardAdminStatus.textContent='Award created.';loadAdminPanel();}catch(e){awardAdminStatus.textContent=e.message;}});
   let awardSearchTimer;document.getElementById('awardMemberSearch')?.addEventListener('input',()=>{clearTimeout(awardSearchTimer);awardSearchTimer=setTimeout(async()=>{const box=document.getElementById('awardMemberResults');try{const rows=await memberRpc('ability_chess_list_members_v2',{p_search:awardMemberSearch.value});box.replaceChildren();for(const m of rows||[]){const b=document.createElement('button');b.textContent=`${m.display_name} (@${m.username})`;b.addEventListener('click',()=>{selectedAwardMember=m;box.innerHTML=`Selected ${escapeHtml(m.display_name)}`;});box.appendChild(b);}}catch(e){box.textContent=e.message;}},200);});
   document.getElementById('giveAwardBtn')?.addEventListener('click',async()=>{try{if(!selectedAwardMember)throw new Error('Select a member.');await memberRpc('ability_chess_admin_give_award',{p_user_id:selectedAwardMember.id,p_award_id:awardSelect.value});giveAwardStatus.textContent='Award given.';}catch(e){giveAwardStatus.textContent=e.message;}});
   document.getElementById('createTournamentBtn')?.addEventListener('click',async()=>{try{await memberRpc('ability_chess_owner_create_tournament_v2',{p_name:tournamentName.value,p_picture_url:tournamentPicture.value,p_format:tournamentFormat.value,p_rounds:Number(tournamentRounds.value),p_arena_minutes:Number(tournamentLength.value),p_base_minutes:Number(tournamentBase.value),p_increment_seconds:Number(tournamentIncrement.value),p_starting_points:Number(tournamentPoints.value),p_max_upgrades:Number(tournamentUpgrades.value),p_abilities_enabled:tournamentAbilities.checked,p_upgrades_enabled:tournamentUpgradeRules.checked,p_rated:tournamentRated.checked,p_starts_at:tournamentStarts.value?new Date(tournamentStarts.value).toISOString():null,p_ends_at:tournamentEnds.value?new Date(tournamentEnds.value).toISOString():null});tournamentAdminStatus.textContent='Tournament created.';showScreen('tournaments');}catch(e){tournamentAdminStatus.textContent=e.message;}});
-  function installSpecialNav(){document.querySelectorAll('.home-nav').forEach(nav=>{if(!nav.querySelector('.tournaments-nav-btn')){const t=document.createElement('button');t.className='home-nav-item tournaments-nav-btn';t.type='button';t.innerHTML='<span class="home-nav-icon">♜</span>Tournaments';t.addEventListener('click',()=>showScreen('tournaments'));nav.appendChild(t);}if(memberProfile&&(memberProfile.is_owner||memberProfile.is_staff)&&!nav.querySelector('.admin-nav-btn')){const a=document.createElement('button');a.className='home-nav-item admin-nav-btn';a.type='button';a.innerHTML='<span class="home-nav-icon">⚑</span>Admin';a.addEventListener('click',()=>showScreen('admin'));nav.appendChild(a);}});}
-  document.querySelectorAll('.tournaments-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('tournaments')));document.querySelectorAll('.admin-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('admin')));
+  function installSpecialNav(){
+    const items=[
+      {selector:'.page-play-btn',className:'page-play-btn',icon:'▶',label:'Play',screen:'play'},
+      {selector:'.abilities-nav-btn',className:'abilities-nav-btn',icon:'★',label:'Abilities Guide',screen:'abilities'},
+      {selector:'.settings-nav-btn',className:'settings-nav-btn',icon:'⚙',label:'Settings',screen:'settings'},
+      {selector:'.history-nav-btn',className:'history-nav-btn',icon:'◫',label:'Game history',screen:'history'},
+      {selector:'.tournaments-nav-btn',className:'tournaments-nav-btn',icon:'♜',label:'Tournaments',screen:'tournaments'}
+    ];
+    const canAdmin=!!(memberProfile&&(memberProfile.is_owner||memberProfile.is_staff));
+    document.querySelectorAll('.home-nav').forEach(nav=>{
+      for(const item of items){
+        if(nav.querySelector(item.selector))continue;
+        const b=document.createElement('button');
+        b.className=`home-nav-item ${item.className}`;
+        b.type='button';
+        b.innerHTML=`<span class="home-nav-icon">${item.icon}</span>${item.label}`;
+        b.addEventListener('click',()=>showScreen(item.screen));
+        nav.appendChild(b);
+      }
+      const existingAdmin=nav.querySelector('.admin-nav-btn');
+      if(canAdmin&&!existingAdmin){
+        const a=document.createElement('button');
+        a.className='home-nav-item admin-nav-btn';
+        a.type='button';
+        a.innerHTML='<span class="home-nav-icon">⚑</span>Admin';
+        a.addEventListener('click',()=>showScreen('admin'));
+        nav.appendChild(a);
+      }else if(!canAdmin&&existingAdmin){
+        existingAdmin.remove();
+      }
+    });
+  }
+  document.querySelectorAll('.tournaments-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('tournaments')));
+  document.querySelectorAll('.admin-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('admin')));
+  installSpecialNav();
   const originalUpdateSidebarAccounts=updateSidebarAccounts;updateSidebarAccounts=function(){originalUpdateSidebarAccounts();document.querySelectorAll('.sidebar-avatar').forEach(a=>{if(memberProfile?.avatar_url)a.innerHTML=`<img src="${escapeHtml(memberProfile.avatar_url)}" alt="">`;});installSpecialNav();};
 })();
 </script>
