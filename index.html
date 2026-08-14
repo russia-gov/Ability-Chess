@@ -76,7 +76,39 @@
 
 <div id="profileScreen" class="content-screen profile-page-screen screen">
   <aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item abilities-nav-btn" type="button"><span class="home-nav-icon">★</span>Abilities Guide</button><button class="home-nav-item settings-nav-btn" type="button"><span class="home-nav-icon">⚙</span>Settings</button><button class="home-nav-item history-nav-btn" type="button"><span class="home-nav-icon">◫</span>Game history</button></nav></aside>
-  <main class="content-main"><section class="dedicated-profile-card"><div id="profilePageAvatar" class="profile-page-avatar">♙</div><div><h1 id="profilePageName" class="page-title">Profile</h1><div id="profilePageHandle" class="profile-page-handle"></div></div><div id="profilePageActions" class="profile-page-actions"></div><div class="profile-tabs"><button class="profile-tab active" data-profile-tab="bio" type="button">Bio & stats</button><button class="profile-tab" data-profile-tab="history" type="button">Game history</button><button class="profile-tab" data-profile-tab="awards" type="button">Awards</button><button class="profile-tab" data-profile-tab="friends" type="button">Friends</button></div><div id="profileBioPanel" class="profile-tab-panel"><div id="profilePageBio" class="profile-bio"></div><div id="profilePageStats" class="profile-page-stats"></div></div><div id="profilePageHistory" class="profile-history profile-tab-panel" hidden></div><div id="profilePageAwards" class="awards-grid profile-tab-panel" hidden></div><div id="profilePageFriends" class="friends-panel profile-tab-panel" hidden></div></section></main>
+  <main class="content-main profile-content-main">
+    <section class="dedicated-profile-card profile-dashboard">
+      <header class="profile-hero">
+        <div id="profilePageAvatar" class="profile-page-avatar">♙</div>
+        <div class="profile-identity">
+          <h1 id="profilePageName" class="page-title">Profile</h1>
+          <div id="profilePageHandle" class="profile-page-handle"></div>
+          <div class="profile-identity-meta"><span>Ability Chess member</span><span class="profile-meta-dot">•</span><span id="profileGamesMeta">Ratings, games, awards & friends</span></div>
+        </div>
+        <div id="profilePageActions" class="profile-page-actions"></div>
+      </header>
+      <nav class="profile-tabs" aria-label="Profile sections">
+        <button class="profile-tab active" data-profile-tab="bio" type="button">Overview</button>
+        <button class="profile-tab" data-profile-tab="stats" type="button">Stats</button>
+        <button class="profile-tab" data-profile-tab="history" type="button">Games</button>
+        <button class="profile-tab" data-profile-tab="friends" type="button">Friends</button>
+        <button class="profile-tab" data-profile-tab="awards" type="button">Awards</button>
+      </nav>
+      <div id="profileBioPanel" class="profile-tab-panel profile-overview-panel">
+        <section class="profile-overview-main">
+          <h2>About</h2>
+          <div id="profilePageBio" class="profile-bio"></div>
+        </section>
+        <aside class="profile-overview-side">
+          <div class="profile-side-card"><h3>At a glance</h3><div id="profileAtGlance" class="profile-at-glance"></div></div>
+        </aside>
+      </div>
+      <div id="profileStatsPanel" class="profile-tab-panel" hidden><div id="profilePageStats" class="profile-page-stats"></div></div>
+      <div id="profilePageHistory" class="profile-history profile-tab-panel" hidden></div>
+      <div id="profilePageFriends" class="friends-panel profile-tab-panel" hidden></div>
+      <div id="profilePageAwards" class="awards-grid profile-tab-panel" hidden></div>
+    </section>
+  </main>
 </div>
 
 <div id="tournamentsScreen" class="tournaments-screen screen"><aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item tournaments-nav-btn active" type="button"><span class="home-nav-icon">♜</span>Tournaments</button></nav></aside><main class="tournaments-main"><div class="tournament-layout"><section class="tournament-content"><h1 class="page-title">Tournaments</h1><p class="page-lead">Join an event, find games, follow standings, watch live boards, and chat with tournament members.</p><section id="tournamentSpectator" class="spectator-card"><div class="history-actions"><button id="closeSpectatorBtn" type="button">Back to tournaments</button></div><h2 id="spectatorTitle">Live game</h2><div id="spectatorMeta" class="spectator-meta"></div><div id="spectatorBoard" class="spectator-board"></div></section><div id="tournamentList" class="tournament-list"></div></section><aside id="tournamentHub" class="tournament-hub" hidden><div class="tournament-hub-head"><strong id="tournamentHubTitle">Tournament</strong><div id="tournamentHubSummary" class="history-meta"></div></div><div class="tournament-hub-tabs"><button class="tournament-hub-tab active" data-tab="standings" type="button">Standings</button><button class="tournament-hub-tab" data-tab="games" type="button">Games</button><button class="tournament-hub-tab" data-tab="chat" type="button">Chat</button></div><div id="tournamentHubBody" class="tournament-hub-body"></div></aside></div></main></div>
