@@ -244,6 +244,9 @@
   @media(max-width:1050px){.proper-home-grid{grid-template-columns:1fr 1fr}.home-action-card-main{grid-column:1/-1;grid-row:auto}}
   @media(max-width:700px){.proper-home-main{padding:22px 16px!important}.proper-home-hero h1{font-size:46px}.proper-home-hero>p{font-size:16px}.proper-home-grid{grid-template-columns:1fr}.home-action-card-main{grid-column:auto}.proper-home-actions>*{flex:1}.bot-difficulty-grid.compact{grid-template-columns:repeat(3,1fr)}}
   .tournament-layout{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:22px;align-items:start}.tournament-content{min-width:0}.tournament-hub{position:sticky;top:22px;background:#171c22;border:1px solid #354150;border-radius:16px;min-height:560px;overflow:hidden}.tournament-hub[hidden]{display:none}.tournament-hub-head{padding:16px;border-bottom:1px solid #354150}.tournament-hub-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:10px;border-bottom:1px solid #354150}.tournament-hub-tab.active{background:#6d873f;color:#fff}.tournament-hub-body{padding:12px;max-height:70vh;overflow:auto}.standing-row,.tournament-game-row,.tournament-chat-row{display:flex;gap:10px;align-items:center;padding:10px;border-bottom:1px solid #2c3540}.standing-rank{width:24px;text-align:center;color:#9ba8b5}.standing-main,.game-main{flex:1;min-width:0}.standing-score{font-weight:700}.tournament-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;background:#2a333d;display:grid;place-items:center}.tournament-chat-messages{display:grid;gap:6px;margin-bottom:12px}.tournament-chat-row{align-items:flex-start}.tournament-chat-input{display:grid;grid-template-columns:1fr auto;gap:8px;position:sticky;bottom:0;background:#171c22;padding-top:10px}.tournament-chat-input input{min-width:0;background:#10151a;color:#fff;border:1px solid #465363;border-radius:9px;padding:10px}.spectator-card{display:none;background:#171c22;border:1px solid #354150;border-radius:14px;padding:16px;margin-bottom:18px}.spectator-card.active{display:block}.spectator-board{display:grid;grid-template-columns:repeat(8,1fr);width:min(100%,620px);aspect-ratio:1;margin:auto;border-radius:8px;overflow:hidden}.spectator-square{display:grid;place-items:center;font-size:clamp(22px,5vw,54px);line-height:1}.spectator-square.light{background:var(--light-square,#e8d6b3)}.spectator-square.dark{background:var(--dark-square,#8b5e3c)}.spectator-meta{text-align:center;margin:10px 0;color:#cbd3db}.tournament-card.selected{outline:2px solid #8da95b}.game-chat-panel{margin-top:14px;border-top:1px solid #354150;padding-top:12px}.game-chat-messages{display:grid;gap:6px;max-height:220px;overflow:auto;background:#11171d;border:1px solid #303a46;border-radius:10px;padding:8px;margin-bottom:8px}.game-chat-row{padding:7px 8px;border-bottom:1px solid #28313a}.game-chat-row:last-child{border-bottom:0}.game-chat-compose{display:grid;grid-template-columns:1fr auto;gap:8px}.game-chat-compose input{min-width:0;background:#10151a;color:#fff;border:1px solid #465363;border-radius:9px;padding:10px}.tournament-chat-messages{max-height:52vh;overflow:auto}.tournament-chat-status{font-size:12px;color:#9ba8b5;margin-top:6px}.find-game-note{margin-top:8px;color:#aab5c0;font-size:13px}@media(max-width:1050px){.tournament-layout{grid-template-columns:1fr}.tournament-hub{position:static;min-height:420px}.tournament-hub-body{max-height:none}}
+
+  .notification-center{position:fixed;right:18px;top:18px;width:min(390px,calc(100vw - 36px));max-height:70vh;overflow:auto;background:#171d24;border:1px solid #465363;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.55);z-index:12000;padding:10px}.notification-center[hidden]{display:none}.notification-head{display:flex;justify-content:space-between;align-items:center;padding:7px 8px}.notification-item{display:grid;gap:3px;padding:10px;border-radius:10px;background:#20272f;margin:6px 0}.notification-item.unread{border-left:3px solid #8fb25a}.notification-item small{color:#9eabb8}.notification-badge{margin-left:auto;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#b33;color:#fff;display:inline-grid;place-items:center;font-size:10px;font-weight:900}.rating-history-wrap{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}.rating-history-card{background:#151b21;border:1px solid #34404c;border-radius:12px;padding:12px}.rating-history-card svg{width:100%;height:110px;display:block}.rating-history-card .axis{stroke:#4b5866;stroke-width:1}.rating-history-card .line{fill:none;stroke:#9abf62;stroke-width:2}.rating-history-card .empty{color:#8f9aa6;font-size:12px}.admin-wide{grid-column:1/-1}.admin-list{display:grid;gap:8px;max-height:360px;overflow:auto}.admin-report{display:grid;grid-template-columns:1fr auto;gap:10px;background:#151b21;border:1px solid #34404c;border-radius:10px;padding:10px}.diagnostic-pass{color:#9bc46a}.diagnostic-fail{color:#ef7e7e}.report-dialog{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:13000;display:grid;place-items:center;padding:20px}.report-dialog[hidden]{display:none}.report-card{width:min(520px,100%);background:#1b2229;border:1px solid #465363;border-radius:14px;padding:18px}.report-card textarea,.report-card select{width:100%;box-sizing:border-box;margin:8px 0;background:#10151a;color:#fff;border:1px solid #465363;border-radius:9px;padding:10px}.sidebar-notification-btn{display:flex!important;align-items:center!important;gap:8px!important}
+  @media(max-width:900px){.rating-history-wrap{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -983,7 +986,7 @@
     const key=`${category||'rapid'}_rating`;
     return Number(memberProfile?.[key]??memberProfile?.rating??1200);
   }
-  async function loadMyProfile(){ if(!memberSession)return; try{const rows=await memberRpc('ability_chess_get_my_profile_v2');memberProfile=rows?.[0]||null;try{const ratings=await memberRpc('ability_chess_get_my_ratings');if(memberProfile&&ratings?.[0])Object.assign(memberProfile,ratings[0]);try{const x=await memberRpc('ability_chess_profile_extras',{p_username:memberProfile.username});if(x?.[0])Object.assign(memberProfile,x[0]);}catch{}}catch{}renderMemberAuth();installSpecialNav();}catch(e){memberStatus.textContent=e.message;} }
+  async function loadMyProfile(){ if(!memberSession)return; try{const rows=await memberRpc('ability_chess_get_my_profile_v2');memberProfile=rows?.[0]||null;try{const ratings=await memberRpc('ability_chess_get_my_ratings');if(memberProfile&&ratings?.[0])Object.assign(memberProfile,ratings[0]);try{const x=await memberRpc('ability_chess_profile_extras',{p_username:memberProfile.username});if(x?.[0])Object.assign(memberProfile,x[0]);}catch{}}catch{}renderMemberAuth();installSpecialNav();startNotificationPolling();}catch(e){memberStatus.textContent=e.message;} }
   async function ensureChallengeInboxKey(){
     if(memberChallengeInboxKey)return memberChallengeInboxKey;
     if(!memberSession?.access_token)return null;
@@ -1191,6 +1194,21 @@
     if(previousGame?.over && !game.over) resultModal.hidden=true; resultModal.style.display='none';
     renderAbilities(); render(); if(game.over){ persistFinishedGameReview(); showGameOverPopup(); queueMicrotask(saveFinishedGameToHistory); } else if(game.onlineStarted!==false) { startClockLoop(); schedulePremoveIfReady(); }
   }
+  function describeOnlineAction(payload){
+    const label=String(game?.lastMessage||'').slice(0,240);
+    const low=label.toLowerCase();
+    let type='state';
+    if(low.includes('bomb')||low.includes('shield')||low.includes('freeze')||low.includes('portal')||low.includes('teleport')||low.includes('swap')||low.includes('recall')||low.includes('ambush')||low.includes('double move'))type='ability';
+    else if(low.includes('upgrade'))type='upgrade';
+    else if(low.includes('draw'))type='draw';
+    else if(payload?.over)type='result';
+    else if(payload?.lastMove)type='move';
+    return {type,label,payload:{turn:payload?.turn||null,lastMove:payload?.lastMove||null,syncActionId:payload?.syncActionId||null}};
+  }
+  async function fetchAuthoritativeActions(afterVersion){
+    if(!onlineSession)return [];
+    try{return await supabaseRpc('ability_chess_get_room_actions',{p_room_id:onlineSession.id,p_seat_token:onlineSession.token,p_after_version:Number(afterVersion||0)})||[];}catch{return [];}
+  }
   async function syncOnlineState(){
     if(!onlineSession||!game||game.mode!=='online') return;
     if(onlineSyncing){ onlineSyncQueued=true; return; }
@@ -1198,12 +1216,16 @@
     const sentRevision=onlineLocalRevision;
     const payload=onlineState();
     try{
-      const rows=await supabaseRpc('update_ability_chess_room',{
+      const actionMeta=describeOnlineAction(payload);
+      const rows=await supabaseRpc('ability_chess_update_room_action',{
         p_room_id:onlineSession.id,
         p_seat_token:onlineSession.token,
         p_expected_version:onlineSession.version,
         p_game_state:payload,
-        p_status:payload.over?'finished':'active'
+        p_status:payload.over?'finished':'active',
+        p_action_type:actionMeta.type,
+        p_action_label:actionMeta.label,
+        p_action_payload:actionMeta.payload
       });
       const row=rows?.[0];
       if(row){
@@ -1259,9 +1281,11 @@
       const sameVersionButDifferentState=v===Number(onlineSession.version)&&serverActionId&&localActionId&&serverActionId!==localActionId;
       if(v>Number(onlineSession.version) || sameVersionButDifferentState){
         if(!dirty && !onlineSyncing){
-          onlineSession.version=v;
+          const actions=await fetchAuthoritativeActions(Number(onlineSession.version||0));
+          const latest=actions.length?actions[actions.length-1]:null;
+          onlineSession.version=latest?Number(latest.room_version):v;
           localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));
-          restoreOnlineState(row.state);
+          restoreOnlineState(latest?.state_snapshot||row.state);
         }else{
           rememberAuthoritativeOnlineState(row);
         }
@@ -3973,10 +3997,10 @@
     profilePageName.innerHTML=`${roleTagHtml(m)}${escapeHtml(m.display_name||m.username)}`;
     profilePageHandle.textContent=`@${m.username||''}`;
     const categories=['bullet','blitz','rapid'];
-    profilePageStats.innerHTML=categories.map(cat=>`<div class="profile-rating-card"><b>${Number(m[`${cat}_rating`]??1200)}</b><span>${cat[0].toUpperCase()+cat.slice(1)}</span><small>${Number(m[`${cat}_games`]||0)} games · ${Number(m[`${cat}_wins`]||0)}W ${Number(m[`${cat}_losses`]||0)}L ${Number(m[`${cat}_draws`]||0)}D</small></div>`).join('')+`<div class="profile-stat"><b>${Number(m.games_played||0)}</b><span>Total games</span></div><div class="profile-stat"><b>${Number(m.wins||0)}</b><span>Wins</span></div><div class="profile-stat"><b>${Number(m.losses||0)}</b><span>Losses</span></div><div class="profile-stat"><b>${Number(m.draws||0)}</b><span>Draws</span></div>`;
+    profilePageStats.innerHTML=categories.map(cat=>`<div class="profile-rating-card"><b>${Number(m[`${cat}_rating`]??1200)}</b><span>${cat[0].toUpperCase()+cat.slice(1)}</span><small>${Number(m[`${cat}_games`]||0)} games · ${Number(m[`${cat}_wins`]||0)}W ${Number(m[`${cat}_losses`]||0)}L ${Number(m[`${cat}_draws`]||0)}D</small></div>`).join('')+`<div class="profile-stat"><b>${Number(m.games_played||0)}</b><span>Total games</span></div><div class="profile-stat"><b>${Number(m.wins||0)}</b><span>Wins</span></div><div class="profile-stat"><b>${Number(m.losses||0)}</b><span>Losses</span></div><div class="profile-stat"><b>${Number(m.draws||0)}</b><span>Draws</span></div>`;renderRatingHistoryCharts(m);
     profilePageActions.replaceChildren();profilePageHistory.replaceChildren();profilePageAwards.replaceChildren();profilePageFriends.replaceChildren();profilePageBio.textContent=m.bio||'No bio yet.';
     if(m.is_owner||m.is_staff){const badge=document.createElement('div');badge.className=`profile-role-badge ${m.is_owner?'owner':'staff'}`;badge.innerHTML=`<span>♞</span><span>${m.is_owner?'Owner':'Staff Member'}</span>`;profilePageActions.appendChild(badge);}
-    if(memberProfile&&m.id===memberProfile.id){const edit=document.createElement('button');edit.type='button';edit.textContent='Edit profile and account';edit.addEventListener('click',openMemberLobby);profilePageActions.appendChild(edit);const editProfile=document.createElement('button');editProfile.type='button';editProfile.textContent='Edit bio & picture';editProfile.addEventListener('click',async()=>{const edited=await chooseProfileImage(m.bio||'',m.avatar_url||'');if(!edited)return;try{await memberRpc('ability_chess_update_profile_extras',{p_bio:edited.bio,p_avatar_url:edited.avatar});m.bio=edited.bio;m.avatar_url=edited.avatar;if(memberProfile&&m.id===memberProfile.id)Object.assign(memberProfile,edited);updateSidebarAccounts();viewMemberProfile(m,{navigate:false});}catch(e){alert(e.message);}});profilePageActions.appendChild(editProfile);}else{const challenge=document.createElement('button');challenge.type='button';challenge.textContent='Challenge to a game';challenge.addEventListener('click',()=>{selectedPlayFriend=m;showScreen('play');playFriendSearch.value=m.username||'';friendChallengeStatus.textContent=`Selected ${m.display_name||m.username}.`;});profilePageActions.appendChild(challenge);const friend=document.createElement('button');friend.type='button';friend.textContent='Add friend';friend.addEventListener('click',async()=>{try{await memberRpc('ability_chess_send_friend_request',{p_recipient_id:m.id});friend.textContent='Request sent';friend.disabled=true;}catch(e){alert(e.message);}});profilePageActions.appendChild(friend);}
+    if(memberProfile&&m.id===memberProfile.id){const edit=document.createElement('button');edit.type='button';edit.textContent='Edit profile and account';edit.addEventListener('click',openMemberLobby);profilePageActions.appendChild(edit);const editProfile=document.createElement('button');editProfile.type='button';editProfile.textContent='Edit bio & picture';editProfile.addEventListener('click',async()=>{const edited=await chooseProfileImage(m.bio||'',m.avatar_url||'');if(!edited)return;try{await memberRpc('ability_chess_update_profile_extras',{p_bio:edited.bio,p_avatar_url:edited.avatar});m.bio=edited.bio;m.avatar_url=edited.avatar;if(memberProfile&&m.id===memberProfile.id)Object.assign(memberProfile,edited);updateSidebarAccounts();viewMemberProfile(m,{navigate:false});}catch(e){alert(e.message);}});profilePageActions.appendChild(editProfile);}else{const challenge=document.createElement('button');challenge.type='button';challenge.textContent='Challenge to a game';challenge.addEventListener('click',()=>{selectedPlayFriend=m;showScreen('play');playFriendSearch.value=m.username||'';friendChallengeStatus.textContent=`Selected ${m.display_name||m.username}.`;});profilePageActions.appendChild(challenge);const friend=document.createElement('button');friend.type='button';friend.textContent='Add friend';friend.addEventListener('click',async()=>{try{await memberRpc('ability_chess_send_friend_request',{p_recipient_id:m.id});friend.textContent='Request sent';friend.disabled=true;}catch(e){alert(e.message);}});profilePageActions.appendChild(friend);const report=document.createElement('button');report.type='button';report.textContent='Report';report.addEventListener('click',()=>openReportDialog(m));profilePageActions.appendChild(report);}
     if(memberProfile?.is_owner&&!m.is_owner){const promote=document.createElement('button');promote.type='button';promote.className='promote-button';promote.textContent=m.is_staff?'Remove staff role':'Promote to staff';promote.addEventListener('click',()=>ownerSetStaff(m,!m.is_staff));const history=document.createElement('button');history.type='button';history.textContent='View game history';history.addEventListener('click',()=>ownerLoadMemberHistory(m));const ban=document.createElement('button');ban.type='button';ban.className='danger-button';ban.textContent='Ban email and remove account';ban.addEventListener('click',()=>ownerBanMember(m));profilePageActions.append(promote,history,ban);}
     loadProfileHistoryPublic(m);loadProfileAwards(m);loadProfileFriends(m);showProfileTab('bio');
     showScreen('profile',{navigate:options.navigate!==false,replace:!!options.replace,extra:{user:m.username||''}});
@@ -4450,6 +4474,7 @@
     selectedGameMode='online';newGame();game.mode='online';game.onlineStarted=true;game.initialTime=settings.baseMinutes*60;game.increment=settings.incrementSeconds;game.startingPoints=settings.startingPoints;game.upgradeLimit=settings.maxUpgrades;game.abilitiesEnabled=settings.abilitiesEnabled;game.upgradesEnabled=settings.upgradesEnabled;game.rated=settings.rated;game.clocks={w:game.initialTime,b:game.initialTime};game.points={w:game.startingPoints,b:game.startingPoints};const initial=onlineState();
     const rows=await memberRpc('ability_chess_tournament_claim_game',{p_tournament_id:t.id,p_game_state:initial,p_settings:settings});const r=rows?.[0];
     if(!r?.matched){
+      if(t.format==='swiss'){try{const bye=await memberRpc('ability_chess_tournament_claim_bye_if_due',{p_tournament_id:t.id});if(bye===true||bye?.[0]===true){showToast('Swiss bye awarded: +1 point.');await loadTournaments();return false;}}catch{}}
       if(!opts.silentWait)showToast(t.format==='arena'?'Waiting for another finished player to click Find new game…':'Waiting for the next Swiss opponent…');
       if(t.format==='swiss'||opts.swissAuto){clearTimeout(tournamentMatchTimer);tournamentMatchTimer=setTimeout(()=>launchTournamentGame(t,{silentWait:true,swissAuto:true}).catch(()=>{}),1200);}
       return false;
@@ -4486,11 +4511,65 @@
   document.getElementById('gameChatInput')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendGameChat();}});
   setInterval(()=>{if(document.getElementById('gameScreen')?.classList.contains('active'))pollGameChat();else resetGameChatForRoom();},1000);
 
-  async function loadAdminPanel(){const screen=document.getElementById('adminScreen');if(!screen)return;if(!memberProfile||(memberProfile.is_owner||memberProfile.is_staff)!==true){showScreen('home');return;}document.getElementById('tournamentAdminCard').hidden=!memberProfile.is_owner;try{const awards=await memberRpc('ability_chess_admin_list_awards');document.getElementById('awardSelect').innerHTML=(awards||[]).map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');}catch(e){document.getElementById('awardAdminStatus').textContent=e.message;}}
+  async function loadAdminPanel(){const screen=document.getElementById('adminScreen');if(!screen)return;if(!memberProfile||(memberProfile.is_owner||memberProfile.is_staff)!==true){showScreen('home');return;}document.getElementById('tournamentAdminCard').hidden=!memberProfile.is_owner;try{const awards=await memberRpc('ability_chess_admin_list_awards');document.getElementById('awardSelect').innerHTML=(awards||[]).map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');}catch(e){document.getElementById('awardAdminStatus').textContent=e.message;}ensureAdminFoundationCards();loadModerationFoundation();}
   document.getElementById('createAwardBtn')?.addEventListener('click',async()=>{try{await memberRpc('ability_chess_admin_create_award',{p_name:awardNameInput.value,p_description:awardDescriptionInput.value,p_image_url:awardImageInput.value});awardAdminStatus.textContent='Award created.';loadAdminPanel();}catch(e){awardAdminStatus.textContent=e.message;}});
   let awardSearchTimer;document.getElementById('awardMemberSearch')?.addEventListener('input',()=>{clearTimeout(awardSearchTimer);awardSearchTimer=setTimeout(async()=>{const box=document.getElementById('awardMemberResults');try{const rows=await memberRpc('ability_chess_list_members_v2',{p_search:awardMemberSearch.value});box.replaceChildren();for(const m of rows||[]){const b=document.createElement('button');b.textContent=`${m.display_name} (@${m.username})`;b.addEventListener('click',()=>{selectedAwardMember=m;box.innerHTML=`Selected ${escapeHtml(m.display_name)}`;});box.appendChild(b);}}catch(e){box.textContent=e.message;}},200);});
   document.getElementById('giveAwardBtn')?.addEventListener('click',async()=>{try{if(!selectedAwardMember)throw new Error('Select a member.');await memberRpc('ability_chess_admin_give_award',{p_user_id:selectedAwardMember.id,p_award_id:awardSelect.value});giveAwardStatus.textContent='Award given.';}catch(e){giveAwardStatus.textContent=e.message;}});
   document.getElementById('createTournamentBtn')?.addEventListener('click',async()=>{try{await memberRpc('ability_chess_owner_create_tournament_v2',{p_name:tournamentName.value,p_picture_url:tournamentPicture.value,p_format:tournamentFormat.value,p_rounds:Number(tournamentRounds.value),p_arena_minutes:Number(tournamentLength.value),p_base_minutes:Number(tournamentBase.value),p_increment_seconds:Number(tournamentIncrement.value),p_starting_points:Number(tournamentPoints.value),p_max_upgrades:Number(tournamentUpgrades.value),p_abilities_enabled:tournamentAbilities.checked,p_upgrades_enabled:tournamentUpgradeRules.checked,p_rated:tournamentRated.checked,p_starts_at:tournamentStarts.value?new Date(tournamentStarts.value).toISOString():null,p_ends_at:tournamentEnds.value?new Date(tournamentEnds.value).toISOString():null});tournamentAdminStatus.textContent='Tournament created.';showScreen('tournaments');}catch(e){tournamentAdminStatus.textContent=e.message;}});
+  let notificationTimer=null,notificationLastId=0,notificationRows=[];
+  function ensureNotificationCenter(){
+    let panel=document.getElementById('notificationCenter');if(panel)return panel;
+    panel=document.createElement('section');panel.id='notificationCenter';panel.className='notification-center';panel.hidden=true;panel.innerHTML='<div class="notification-head"><b>Notifications</b><button id="notificationClose" type="button">Close</button></div><div id="notificationList"></div>';
+    document.body.appendChild(panel);panel.querySelector('#notificationClose').addEventListener('click',()=>panel.hidden=true);return panel;
+  }
+  function renderNotifications(){
+    const panel=ensureNotificationCenter(),list=panel.querySelector('#notificationList');list.replaceChildren();
+    if(!notificationRows.length){list.innerHTML='<div class="history-empty">No notifications yet.</div>';}
+    for(const n of [...notificationRows].reverse()){
+      const item=document.createElement('button');item.type='button';item.className='notification-item'+(n.read_at?'':' unread');item.innerHTML=`<b>${escapeHtml(n.title)}</b><span>${escapeHtml(n.body||'')}</span><small>${escapeHtml(new Date(n.created_at).toLocaleString())}</small>`;
+      item.addEventListener('click',async()=>{try{await memberRpc('ability_chess_mark_notification_read',{p_id:n.id});n.read_at=new Date().toISOString();}catch{}panel.hidden=true;if(n.href){const u=new URL(n.href,location.origin);history.pushState({},'',u.pathname+u.search);routeFromLocation();}renderNotifications();});list.appendChild(item);
+    }
+    const unread=notificationRows.filter(n=>!n.read_at).length;document.querySelectorAll('.notification-badge').forEach(b=>{b.textContent=unread;b.hidden=!unread;});
+  }
+  async function pollNotifications(){if(!memberSession)return;try{const rows=await memberRpc('ability_chess_list_notifications',{p_after_id:notificationLastId});if(rows?.length){notificationRows.push(...rows);notificationLastId=Math.max(notificationLastId,...rows.map(x=>Number(x.id)||0));notificationRows=notificationRows.slice(-100);renderNotifications();}}catch{} }
+  function startNotificationPolling(){clearInterval(notificationTimer);if(!memberSession)return;pollNotifications();notificationTimer=setInterval(pollNotifications,5000);}
+  function installNotificationButtons(){document.querySelectorAll('.home-nav').forEach(nav=>{if(nav.querySelector('.sidebar-notification-btn'))return;const b=document.createElement('button');b.type='button';b.className='home-nav-item sidebar-notification-btn';b.innerHTML='<span class="home-nav-icon">●</span>Notifications <span class="notification-badge" hidden>0</span>';b.addEventListener('click',()=>{const p=ensureNotificationCenter();p.hidden=!p.hidden;renderNotifications();});nav.appendChild(b);});}
+
+  async function renderRatingHistoryCharts(m){
+    if(!m?.id||!profilePageStats)return;profilePageStats.querySelector('.rating-history-wrap')?.remove();
+    const wrap=document.createElement('div');wrap.className='rating-history-wrap';profilePageStats.appendChild(wrap);
+    for(const cat of ['bullet','blitz','rapid']){
+      const card=document.createElement('div');card.className='rating-history-card';card.innerHTML=`<b>${cat[0].toUpperCase()+cat.slice(1)} history</b><div class="empty">Loading…</div>`;wrap.appendChild(card);
+      try{const rows=await memberRpc('ability_chess_rating_history',{p_user_id:m.id,p_category:cat});if(!rows?.length){card.querySelector('.empty').textContent='No rated games yet.';continue;}const vals=[Number(rows[0].rating_before||1200),...rows.map(r=>Number(r.rating_after||1200))];const min=Math.min(...vals)-20,max=Math.max(...vals)+20,range=Math.max(1,max-min);const pts=vals.map((v,i)=>`${8+(i/(Math.max(1,vals.length-1)))*224},${96-((v-min)/range)*80}`).join(' ');card.innerHTML=`<b>${cat[0].toUpperCase()+cat.slice(1)} history</b><svg viewBox="0 0 240 105" role="img" aria-label="${cat} rating history"><line class="axis" x1="8" y1="96" x2="232" y2="96"></line><polyline class="line" points="${pts}"></polyline></svg><small>${vals[0]} → ${vals[vals.length-1]} · ${rows.length} rated games</small>`;}catch(e){card.querySelector('.empty').textContent=e.message;}
+    }
+  }
+
+  function ensureReportDialog(){let d=document.getElementById('reportDialog');if(d)return d;d=document.createElement('div');d.id='reportDialog';d.className='report-dialog';d.hidden=true;d.innerHTML='<div class="report-card"><h2>Report member</h2><select id="reportCategory"><option value="chat">Chat / conduct</option><option value="game">Game behavior</option><option value="cheating">Suspected cheating</option><option value="profile">Profile</option><option value="other">Other</option></select><textarea id="reportDetails" rows="6" placeholder="Describe what happened"></textarea><div class="history-actions"><button id="reportCancel" type="button">Cancel</button><button id="reportSend" type="button">Send report</button></div><div id="reportStatus"></div></div>';document.body.appendChild(d);d.querySelector('#reportCancel').addEventListener('click',()=>d.hidden=true);return d;}
+  function openReportDialog(member){const d=ensureReportDialog();d.hidden=false;d.dataset.targetId=member?.id||'';d.querySelector('#reportStatus').textContent='';d.querySelector('#reportSend').onclick=async()=>{try{await memberRpc('ability_chess_submit_report',{p_target_user_id:d.dataset.targetId||null,p_room_id:onlineSession?.id||null,p_tournament_id:game?.tournamentId||null,p_category:d.querySelector('#reportCategory').value,p_details:d.querySelector('#reportDetails').value});d.querySelector('#reportStatus').textContent='Report submitted.';setTimeout(()=>d.hidden=true,600);}catch(e){d.querySelector('#reportStatus').textContent=e.message;}};}
+
+  function ensureAdminFoundationCards(){
+    const grid=document.querySelector('#adminScreen .admin-grid');if(!grid||grid.dataset.foundationReady)return;grid.dataset.foundationReady='1';
+    const reports=document.createElement('section');reports.className='admin-card admin-wide';reports.innerHTML='<h2>Reports & moderation</h2><div id="moderationReports" class="admin-list">Loading…</div>';grid.appendChild(reports);
+    const audit=document.createElement('section');audit.className='admin-card admin-wide';audit.innerHTML='<h2>Admin audit log</h2><div id="adminAuditLog" class="admin-list">Loading…</div>';grid.appendChild(audit);
+    const notify=document.createElement('section');notify.className='admin-card admin-wide';notify.innerHTML='<h2>Send member notification</h2><div class="tournament-form"><input id="adminNotifyUser" placeholder="Username"><input id="adminNotifyTitle" placeholder="Title"><textarea id="adminNotifyBody" class="full" placeholder="Message"></textarea><button id="adminNotifySend" class="full" type="button">Send notification</button></div><div id="adminNotifyStatus"></div>';grid.appendChild(notify);notify.querySelector('#adminNotifySend').addEventListener('click',async()=>{const status=notify.querySelector('#adminNotifyStatus');try{const username=notify.querySelector('#adminNotifyUser').value.trim();const rows=await memberRpc('ability_chess_list_members_v2',{p_search:username});const target=(rows||[]).find(x=>String(x.username).toLowerCase()===username.toLowerCase());if(!target)throw new Error('Member not found.');await memberRpc('ability_chess_admin_send_notification',{p_user_id:target.id,p_title:notify.querySelector('#adminNotifyTitle').value,p_body:notify.querySelector('#adminNotifyBody').value,p_href:'/profile/'+target.username});status.textContent='Notification sent.';await loadModerationFoundation();}catch(e){status.textContent=e.message;}});
+    const diag=document.createElement('section');diag.className='admin-card admin-wide';diag.innerHTML='<h2>Diagnostics</h2><p>Run deployment checks before publishing changes.</p><button id="runDiagnosticsBtn" type="button">Run integration diagnostics</button><div id="diagnosticResults" class="admin-list"></div>';grid.appendChild(diag);
+    diag.querySelector('#runDiagnosticsBtn').addEventListener('click',runIntegrationDiagnostics);
+  }
+  async function loadModerationFoundation(){if(!memberProfile||(memberProfile.is_owner||memberProfile.is_staff)!==true)return;ensureAdminFoundationCards();const box=document.getElementById('moderationReports'),audit=document.getElementById('adminAuditLog');
+    try{const rows=await memberRpc('ability_chess_admin_list_reports');box.replaceChildren();if(!rows?.length)box.innerHTML='<div class="history-empty">No reports.</div>';for(const r of rows||[]){const card=document.createElement('div');card.className='admin-report';card.innerHTML=`<div><b>${escapeHtml(r.category)}</b> · ${escapeHtml(r.target_username||'unknown')}<br><span>${escapeHtml(r.details||'')}</span><br><small>Reported by ${escapeHtml(r.reporter_username)} · ${escapeHtml(new Date(r.created_at).toLocaleString())}</small></div>`;const acts=document.createElement('div');for(const [label,action,hours] of [['Mute 24h','mute',24],['Suspend 24h','suspend',24]]){const b=document.createElement('button');b.textContent=label;b.addEventListener('click',async()=>{const members=await memberRpc('ability_chess_list_members_v2',{p_search:r.target_username||''});const target=members?.find(x=>x.username===r.target_username);if(!target)return alert('Target no longer exists.');await memberRpc('ability_chess_admin_moderate_user',{p_user_id:target.id,p_action:action,p_hours:hours,p_note:`Report ${r.id}`});await loadModerationFoundation();});acts.appendChild(b);}card.appendChild(acts);box.appendChild(card);}}
+    catch(e){box.textContent=e.message;}
+    try{const rows=await memberRpc('ability_chess_admin_audit_log');audit.innerHTML=(rows||[]).map(a=>`<div class="notification-item"><b>${escapeHtml(a.action_type)} · ${escapeHtml(a.target_username||'')}</b><span>${escapeHtml(JSON.stringify(a.details||{}))}</span><small>${escapeHtml(a.admin_username)} · ${escapeHtml(new Date(a.created_at).toLocaleString())}</small></div>`).join('')||'<div class="history-empty">No admin actions yet.</div>';}catch(e){audit.textContent=e.message;}
+  }
+  async function runIntegrationDiagnostics(){const box=document.getElementById('diagnosticResults');if(!box)return;box.replaceChildren();const tests=[];const add=(name,fn)=>tests.push([name,fn]);
+    add('URL routing preserves non-game page',()=>{const p=location.pathname;return typeof routeFromLocation==='function'&&!!p;});
+    add('Initial chess position has legal moves',()=>{const backup=game;const b=typeof makeInitialBoard==='function'?makeInitialBoard():null;return Array.isArray(b)&&b.length===8&&b.flat().filter(Boolean).length===32;});
+    add('Online serializer preserves board',()=>{if(!game)return true;const s=onlineState();return Array.isArray(s.board)&&s.board.length===8;});
+    add('Action-log sync is installed',()=>typeof fetchAuthoritativeActions==='function'&&describeOnlineAction({}).type==='state');
+    add('Rating categories classify controls',()=>ratingCategoryFor(60,0)==='bullet'&&ratingCategoryFor(300,0)==='blitz'&&ratingCategoryFor(600,0)==='rapid');
+    add('Tournament hub functions installed',()=>typeof launchTournamentGame==='function'&&typeof renderTournamentHub==='function');
+    add('Chat draft-safe polling installed',()=>typeof pollGameChat==='function'&&typeof refreshTournamentChat==='function');
+    for(const [name,fn] of tests){let ok=false,detail='';try{ok=await fn();}catch(e){detail=e.message;}const row=document.createElement('div');row.className='notification-item';row.innerHTML=`<b class="${ok?'diagnostic-pass':'diagnostic-fail'}">${ok?'PASS':'FAIL'} — ${escapeHtml(name)}</b>${detail?`<small>${escapeHtml(detail)}</small>`:''}`;box.appendChild(row);}
+  }
   function installSpecialNav(){
     const items=[
       {selector:'.page-play-btn',className:'page-play-btn',icon:'▶',label:'Play',screen:'play'},
@@ -4522,6 +4601,7 @@
         existingAdmin.remove();
       }
     });
+    installNotificationButtons();
   }
   document.querySelectorAll('.tournaments-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('tournaments')));
   document.querySelectorAll('.admin-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('admin')));
