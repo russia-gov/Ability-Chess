@@ -412,6 +412,44 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
 
 
   .home-nav .global-search-nav{display:none!important}
+
+  /* Dedicated AbilityFish analysis workspace */
+  .analysis-screen{display:none;min-height:100vh;background:var(--bg);align-items:start}
+  .analysis-screen.active{display:grid;grid-template-columns:250px minmax(0,1fr)}
+  .analysis-main{padding:32px;min-width:0;overflow:auto}
+  .analysis-toolbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+  .analysis-toolbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .analysis-workspace{display:grid;grid-template-columns:minmax(460px,760px) minmax(280px,420px);gap:22px;align-items:start}
+  .analysis-board-panel,.analysis-engine-panel{background:#171c22;border:1px solid #354150;border-radius:16px;padding:16px}
+  .analysis-board-row{display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:stretch}
+  .analysis-eval-bar{position:relative;border-radius:9px;overflow:hidden;background:#111820;border:1px solid #48535f;min-height:420px}
+  .analysis-eval-white{position:absolute;left:0;right:0;bottom:0;height:50%;background:#e7e9e8;transition:height .22s ease}
+  .analysis-eval-center{position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(127,127,127,.7);z-index:2}
+  .analysis-eval-label{position:absolute;z-index:3;left:50%;transform:translateX(-50%);font-size:10px;font-weight:900;padding:2px 3px;border-radius:4px;background:rgba(16,21,26,.78);color:#fff;white-space:nowrap;top:6px}
+  .analysis-board{width:100%;aspect-ratio:1/1;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border-radius:12px;overflow:hidden;user-select:none;touch-action:none}
+  .analysis-board .sq{position:relative;display:grid;place-items:center;cursor:pointer}
+  .analysis-board .sq.selected{box-shadow:inset 0 0 0 4px rgba(247,208,84,.8)}
+  .analysis-board .sq.analysis-legal::after{content:'';width:22%;height:22%;border-radius:50%;background:rgba(24,30,35,.42);position:absolute}
+  .analysis-board .sq.analysis-capture::after{content:'';position:absolute;inset:7%;border:5px solid rgba(24,30,35,.42);border-radius:50%}
+  .analysis-board .sq.last-move{box-shadow:inset 0 0 0 999px rgba(240,211,92,.18)}
+  .analysis-control-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  .analysis-control{background:#10151a;border:1px solid #354150;border-radius:11px;padding:11px;display:grid;gap:7px}
+  .analysis-control label{font-size:11px;color:#9fabb7;font-weight:800}
+  .analysis-control input,.analysis-control select{width:100%;box-sizing:border-box;background:#0d1217;color:#fff;border:1px solid #465363;border-radius:8px;padding:9px}
+  .analysis-bank-stepper{display:grid;grid-template-columns:34px 1fr 34px;gap:6px}
+  .analysis-bank-stepper button{padding:7px 0}
+  .analysis-status{margin-top:12px;color:#b8c3ce;font-size:12px;min-height:18px}
+  .analysis-engine-head{display:flex;justify-content:space-between;gap:12px;align-items:center;border-bottom:1px solid #354150;padding-bottom:12px;margin-bottom:12px}
+  .analysis-engine-toggle{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800}
+  .analysis-engine-meta{font-size:11px;color:#98a5b2;margin:8px 0 12px}
+  .analysis-lines{display:grid;gap:8px}
+  .analysis-line{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:8px;align-items:start;background:#10151a;border:1px solid #303b47;border-radius:10px;padding:10px;font-size:13px}
+  .analysis-line-rank{font-weight:900;color:#8fa45f}.analysis-line-pv{line-height:1.45;overflow-wrap:anywhere}.analysis-line-score{font-weight:900;font-variant-numeric:tabular-nums}
+  .analysis-engine-off{padding:22px 12px;text-align:center;color:#8f9ba7;border:1px dashed #354150;border-radius:11px}
+  .analysis-engine-thinking{opacity:.7}
+  @media(max-width:1050px){.analysis-workspace{grid-template-columns:1fr}.analysis-board-panel{max-width:760px}.analysis-engine-panel{max-width:760px}}
+  @media(max-width:900px){.analysis-screen.active{grid-template-columns:1fr}.analysis-screen .site-ribbon{min-height:auto;height:auto!important;position:static!important;flex-direction:row;align-items:center;padding:10px 12px;border-right:0;border-bottom:1px solid rgba(255,255,255,.06);gap:14px}.analysis-screen .site-ribbon .home-nav{display:flex;overflow-x:auto}.analysis-main{padding:20px}.analysis-workspace{grid-template-columns:1fr}.analysis-board-row{grid-template-columns:27px minmax(0,1fr)}.analysis-control-grid{grid-template-columns:1fr 1fr}}
+
 </style>
 </head>
 <body>
@@ -590,6 +628,49 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   <aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item abilities-nav-btn" type="button"><span class="home-nav-icon">★</span>Abilities Guide</button><button class="home-nav-item settings-nav-btn" type="button"><span class="home-nav-icon">⚙</span>Settings</button><button class="home-nav-item history-nav-btn active" type="button"><span class="home-nav-icon">◫</span>Game history</button></nav></aside>
   <main class="history-main"><div class="history-toolbar"><div><h1 class="page-title">Game History</h1><p class="page-lead">Completed games saved to your Ability Chess account.</p></div><button id="refreshHistoryBtn" type="button">Refresh</button></div><div id="historyList" class="history-list"><div class="history-empty">Sign in to view saved games.</div></div></main>
 </div>
+
+<div id="analysisScreen" class="analysis-screen screen">
+  <aside class="site-ribbon" aria-label="Site navigation">
+    <button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button>
+    <nav class="home-nav" aria-label="Main navigation"></nav>
+    <div class="home-sidebar-note"></div>
+  </aside>
+  <main class="analysis-main">
+    <div class="analysis-toolbar">
+      <div><h1 class="page-title">Analysis</h1><p class="page-lead">Explore Ability Chess positions freely. Material-bank edits are part of the position the engine evaluates.</p></div>
+      <div class="analysis-toolbar-actions">
+        <button id="analysisUndoBtn" type="button">← Undo</button>
+        <button id="analysisRedoBtn" type="button">Redo →</button>
+        <button id="analysisLoadGameBtn" type="button">Load current game</button>
+        <button id="analysisResetBtn" type="button">Reset position</button>
+      </div>
+    </div>
+    <div class="analysis-workspace">
+      <section class="analysis-board-panel">
+        <div class="analysis-board-row">
+          <div id="analysisEvalBar" class="analysis-eval-bar" aria-label="AbilityFish evaluation bar">
+            <div id="analysisEvalWhite" class="analysis-eval-white"></div><div class="analysis-eval-center"></div><div id="analysisEvalLabel" class="analysis-eval-label">—</div>
+          </div>
+          <div id="analysisBoard" class="analysis-board" role="grid" aria-label="Analysis board"></div>
+        </div>
+        <div class="analysis-control-grid">
+          <div class="analysis-control"><label for="analysisWhitePoints">White material bank</label><div class="analysis-bank-stepper"><button id="analysisWhiteMinus" type="button">−</button><input id="analysisWhitePoints" type="number" min="0" max="999" step="1" value="0"><button id="analysisWhitePlus" type="button">+</button></div></div>
+          <div class="analysis-control"><label for="analysisBlackPoints">Black material bank</label><div class="analysis-bank-stepper"><button id="analysisBlackMinus" type="button">−</button><input id="analysisBlackPoints" type="number" min="0" max="999" step="1" value="0"><button id="analysisBlackPlus" type="button">+</button></div></div>
+          <div class="analysis-control"><label for="analysisTurnSelect">Side to move</label><select id="analysisTurnSelect"><option value="w">White</option><option value="b">Black</option></select></div>
+          <div class="analysis-control"><label>Variant rules</label><label style="display:flex;align-items:center;gap:7px;font-size:12px;color:#dbe2e8"><input id="analysisAbilitiesEnabled" type="checkbox" checked style="width:auto"> Abilities</label><label style="display:flex;align-items:center;gap:7px;font-size:12px;color:#dbe2e8"><input id="analysisUpgradesEnabled" type="checkbox" checked style="width:auto"> Upgrades</label></div>
+        </div>
+        <div id="analysisStatus" class="analysis-status">White to move.</div>
+      </section>
+      <aside class="analysis-engine-panel">
+        <div class="analysis-engine-head"><div><strong>AbilityFish</strong><div style="font-size:11px;color:#98a5b2">Variant-aware evaluation</div></div><label class="analysis-engine-toggle"><input id="analysisEngineToggle" type="checkbox"> Engine</label></div>
+        <div class="analysis-control" style="margin-bottom:12px"><label for="analysisDepthSelect">Engine depth</label><select id="analysisDepthSelect"><option value="1">1 — quick</option><option value="2" selected>2 — balanced</option><option value="3">3 — deeper</option></select></div>
+        <div id="analysisEngineMeta" class="analysis-engine-meta">Engine is off.</div>
+        <div id="analysisLines" class="analysis-lines"><div class="analysis-engine-off">Turn on Engine to see an AbilityFish evaluation and candidate lines.</div></div>
+      </aside>
+    </div>
+  </main>
+</div>
+
 <div id="gameScreen" class="game-screen screen">
   <aside class="site-ribbon" aria-label="Site navigation">
     <button id="gameBrandBtn" class="brand" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button>
@@ -4127,7 +4208,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   }
   function buildBoardPresets(){ boardPresets.replaceChildren(); for(const [name,light,dark] of BOARD_PRESETS){const b=document.createElement('button');b.type='button';b.className='board-preset';b.title=name;b.dataset.light=light;b.dataset.dark=dark;b.innerHTML=`<i style="background:${light}"></i><i style="background:${dark}"></i>`;b.addEventListener('click',()=>{settings.light=light;settings.dark=dark;saveSettings();});boardPresets.appendChild(b);} }
   let applyingBrowserRoute=false;
-  const VALID_ROUTES=new Set(['home','play','game','abilities','settings','history','profile','tournaments','admin']);
+  const VALID_ROUTES=new Set(['home','play','game','abilities','analysis','settings','history','profile','tournaments','admin']);
   function currentRoute(){
     const params=new URLSearchParams(window.location.search);
     const page=params.get('page')||'home';
@@ -4144,8 +4225,8 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   }
   function showScreen(target,options={}){
     if(!VALID_ROUTES.has(target))target='home';
-    homeScreen.classList.add('hidden'); playHubScreen?.classList.remove('active'); gameScreen.classList.remove('active'); abilitiesScreen.classList.remove('active'); settingsScreen.classList.remove('active'); historyScreen.classList.remove('active'); profileScreen?.classList.remove('active');document.getElementById('tournamentsScreen')?.classList.remove('active');document.getElementById('adminScreen')?.classList.remove('active');
-    if(target==='home') homeScreen.classList.remove('hidden'); else if(target==='play'){playHubScreen?.classList.add('active');renderPlayHub();} else if(target==='game') gameScreen.classList.add('active'); else if(target==='abilities') abilitiesScreen.classList.add('active'); else if(target==='settings') settingsScreen.classList.add('active'); else if(target==='history'){historyScreen.classList.add('active');loadGameHistory();} else if(target==='profile'){profileScreen?.classList.add('active');} else if(target==='tournaments'){document.getElementById('tournamentsScreen')?.classList.add('active');loadTournaments();} else if(target==='admin'){document.getElementById('adminScreen')?.classList.add('active');loadAdminPanel();}
+    homeScreen.classList.add('hidden'); playHubScreen?.classList.remove('active'); gameScreen.classList.remove('active'); abilitiesScreen.classList.remove('active'); document.getElementById('analysisScreen')?.classList.remove('active'); settingsScreen.classList.remove('active'); historyScreen.classList.remove('active'); profileScreen?.classList.remove('active');document.getElementById('tournamentsScreen')?.classList.remove('active');document.getElementById('adminScreen')?.classList.remove('active');
+    if(target==='home') homeScreen.classList.remove('hidden'); else if(target==='play'){playHubScreen?.classList.add('active');renderPlayHub();} else if(target==='game') gameScreen.classList.add('active'); else if(target==='abilities') abilitiesScreen.classList.add('active'); else if(target==='analysis'){document.getElementById('analysisScreen')?.classList.add('active');openAnalysisWorkspace();} else if(target==='settings') settingsScreen.classList.add('active'); else if(target==='history'){historyScreen.classList.add('active');loadGameHistory();} else if(target==='profile'){profileScreen?.classList.add('active');} else if(target==='tournaments'){document.getElementById('tournamentsScreen')?.classList.add('active');loadTournaments();} else if(target==='admin'){document.getElementById('adminScreen')?.classList.add('active');loadAdminPanel();}
     if(options.navigate!==false)updateRoute(target,!!options.replace,options.extra);
     if(options.scroll!==false)window.scrollTo({top:0,behavior:'instant'});
   }
@@ -4938,20 +5019,21 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   function rebuildCanonicalSidebars(){
     const canAdmin=!!(memberProfile&&(memberProfile.is_owner||memberProfile.is_staff));
     const items=[
-      {className:'page-play-btn',icon:'▶',label:'Play',action:()=>showScreen('play')},
-      {className:'abilities-nav-btn',icon:'★',label:'Abilities Guide',action:()=>showScreen('abilities')},
-      {className:'settings-nav-btn',icon:'⚙',label:'Settings',action:()=>showScreen('settings')},
-      {className:'history-nav-btn',icon:'◫',label:'Game history',action:()=>showScreen('history')},
-      {className:'tournaments-nav-btn',icon:'♜',label:'Tournaments',action:()=>showScreen('tournaments')},
+      {className:'page-play-btn',icon:'▶',label:'Play',route:'play',action:()=>showScreen('play')},
+      {className:'abilities-nav-btn',icon:'★',label:'Abilities Guide',route:'abilities',action:()=>showScreen('abilities')},
+      {className:'analysis-nav-btn',icon:'◩',label:'Analysis',route:'analysis',action:()=>showScreen('analysis')},
+      {className:'settings-nav-btn',icon:'⚙',label:'Settings',route:'settings',action:()=>showScreen('settings')},
+      {className:'history-nav-btn',icon:'◫',label:'Game history',route:'history',action:()=>showScreen('history')},
+      {className:'tournaments-nav-btn',icon:'♜',label:'Tournaments',route:'tournaments',action:()=>showScreen('tournaments')},
       {className:'sidebar-notification-btn',icon:'●',label:'Notifications',action:openNotificationsFromSidebar,notification:true}
     ];
-    if(canAdmin)items.push({className:'admin-nav-btn',icon:'⚑',label:'Admin',action:()=>showScreen('admin')});
+    if(canAdmin)items.push({className:'admin-nav-btn',icon:'⚑',label:'Admin',route:'admin',action:()=>showScreen('admin')});
     document.querySelectorAll('.home-nav').forEach(nav=>{
       nav.replaceChildren();
       for(const item of items){
         const b=document.createElement('button');
         b.type='button';
-        b.className=`home-nav-item ${item.className}`;
+        b.className=`home-nav-item ${item.className}${item.route===currentRoute()?' active':''}`;
         b.innerHTML=`<span class="home-nav-icon">${item.icon}</span>${item.label}${item.notification?' <span class="notification-badge" hidden></span>':''}`;
         b.addEventListener('click',item.action);
         nav.appendChild(b);
@@ -4964,6 +5046,207 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   document.querySelectorAll('.admin-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('admin')));
   installSpecialNav();
   const originalUpdateSidebarAccounts=updateSidebarAccounts;updateSidebarAccounts=function(){originalUpdateSidebarAccounts();document.querySelectorAll('.sidebar-avatar').forEach(a=>{if(memberProfile?.avatar_url)a.innerHTML=`<img src="${escapeHtml(memberProfile.avatar_url)}" alt="">`;});installSpecialNav();};
+
+
+  /* ===== Dedicated analysis workspace ===== */
+  let analysisState=null;
+  let analysisSelected=null;
+  let analysisLegal=[];
+  let analysisHistory=[];
+  let analysisHistoryIndex=-1;
+  let analysisEngineGeneration=0;
+  let analysisWorkerRequestSeq=0;
+  let analysisEngineDebounce=null;
+  let analysisEngineBusy=false;
+
+  function freshAnalysisState(){
+    return {
+      board:makeInitialBoard(),turn:'w',points:{w:0,b:0},upgrades:{w:{},b:{}},upgradeLimit:3,
+      abilitiesEnabled:true,upgradesEnabled:true,startingPoints:0,
+      shielded:{w:null,b:null},frozen:{w:null,b:null},ambushed:{w:null,b:null},fortified:{w:null,b:null},portals:{w:null,b:null},
+      lastMoveByColor:{w:null,b:null},lastMove:null,castlingRights:{w:{k:true,q:true},b:{k:true,q:true}},enPassant:null,
+      activeAbility:null,awaitingAbilityTarget:false,abilitySelection:null,abilityUsed:false,movesRemaining:1,doubleMoveActive:false,
+      halfmoveClock:0,positionCounts:{},log:[],over:false,winner:null,resultReason:'',resultDetail:'',mode:'analysis'
+    };
+  }
+
+  function normalizeAnalysisState(source){
+    const s=source?cloneState(source):freshAnalysisState();
+    s.mode='analysis';s.selected=null;s.legalMoves=[];s.over=false;s.winner=null;s.resultReason='';s.resultDetail='';
+    s.points={w:Math.max(0,Number(s.points?.w||0)),b:Math.max(0,Number(s.points?.b||0))};
+    s.abilitiesEnabled=s.abilitiesEnabled!==false;s.upgradesEnabled=s.upgradesEnabled!==false;
+    if(!s.castlingRights)s.castlingRights={w:{k:true,q:true},b:{k:true,q:true}};
+    return s;
+  }
+
+  function analysisPushHistory(){
+    const snapshot=normalizeAnalysisState(analysisState);
+    analysisHistory=analysisHistory.slice(0,analysisHistoryIndex+1);
+    analysisHistory.push(snapshot);analysisHistoryIndex=analysisHistory.length-1;
+  }
+
+  function analysisReset(){
+    analysisState=freshAnalysisState();analysisSelected=null;analysisLegal=[];analysisHistory=[];analysisHistoryIndex=-1;analysisPushHistory();renderAnalysis();scheduleAnalysisEngine();
+  }
+
+  function openAnalysisWorkspace(){
+    if(!analysisState)analysisReset();else renderAnalysis();
+  }
+
+  function analysisSquareName(pos){return pos?`${'abcdefgh'[pos.c]}${8-pos.r}`:'';}
+  function analysisMoveLabel(move){
+    if(!move)return '—';
+    const piece=analysisState?.board?.[move.from?.r]?.[move.from?.c];
+    const letter=piece&&typeOf(piece)!=='p'?typeOf(piece).toUpperCase():'';
+    return `${letter}${analysisSquareName(move.from)}–${analysisSquareName(move.to)}${move.promotion?'='+String(move.promotion).toUpperCase():''}`;
+  }
+  function analysisActionLabel(action,state=analysisState){
+    if(!action)return 'No legal action';
+    const moveText=m=>{if(!m)return '';const piece=state?.board?.[m.from?.r]?.[m.from?.c];const letter=piece&&typeOf(piece)!=='p'?typeOf(piece).toUpperCase():'';return `${letter}${analysisSquareName(m.from)}–${analysisSquareName(m.to)}${m.promotion?'='+String(m.promotion).toUpperCase():''}`;};
+    const follow=action.move?` · ${moveText(action.move)}`:'';
+    switch(action.type){
+      case 'normal': return moveText(action.move);
+      case 'upgrade': return `Upgrade: ${upgradeDefinition(action.upgradeId)?.name||action.upgradeId}`;
+      case 'shield': return `Shield ${analysisSquareName(action)}${follow}`;
+      case 'freeze': return `Freeze ${analysisSquareName(action)}${follow}`;
+      case 'bomb': return `Bomb ${analysisSquareName(action)}${follow}`;
+      case 'swap': return `Swap ${analysisSquareName(action.a)} ↔ ${analysisSquareName(action.b)}${follow}`;
+      case 'recall': return `Recall ${analysisSquareName(action.from)}→${analysisSquareName(action.to)}${follow}`;
+      case 'ambush': return `Ambush ${analysisSquareName(action)}${follow}`;
+      case 'teleport': return `Teleport ${analysisSquareName(action.from)}→${analysisSquareName(action.to)}`;
+      case 'reinforce': return `Reinforce ${analysisSquareName(action)} to ${String(action.promoteTo||action.piece||'n').toUpperCase()}${follow}`;
+      case 'portal': return `Portal ${analysisSquareName(action.a)} ↔ ${analysisSquareName(action.b)}${follow}`;
+      case 'fortify': return `Fortify${action.squares?.length?' '+action.squares.map(analysisSquareName).join('/') : ''}${follow}`;
+      case 'double': return `Double: ${moveText(action.first)} · ${moveText(action.second)}`;
+      default:return `${action.type||'Action'}${follow}`;
+    }
+  }
+
+  function analysisFinishTurnState(next,mover){
+    const incoming=other(mover);
+    if(next.frozen?.[mover])next.frozen[mover]=null;
+    if(next.shielded?.[incoming])next.shielded[incoming]=null;
+    if(next.ambushed?.[incoming])next.ambushed[incoming]=null;
+    if(next.fortified?.[incoming])next.fortified[incoming]=null;
+    if(next.portals?.[mover]){next.portals[mover].turnsRemaining=Number(next.portals[mover].turnsRemaining??1)-1;if(next.portals[mover].turnsRemaining<=0)next.portals[mover]=null;}
+    next.activeAbility=null;next.awaitingAbilityTarget=false;next.abilitySelection=null;next.abilityUsed=false;next.movesRemaining=1;next.doubleMoveActive=false;next.turn=incoming;
+    return next;
+  }
+
+  function analysisSimulateMove(state,move){
+    if(!state||!move)return null;
+    const mover=state.turn;
+    const original=state.board?.[move.from.r]?.[move.from.c];if(!original||colorOf(original)!==mover)return null;
+    const capturedAt=move.enPassant?(move.capturedAt||{r:move.from.r,c:move.to.c}):move.to;
+    const captured=state.board?.[capturedAt.r]?.[capturedAt.c]||null;
+    const mv=JSON.parse(JSON.stringify(move));
+    const next=applyMoveToState(state,mv);if(!next)return null;
+    if(captured)next.points[mover]=Math.max(0,Number(next.points?.[mover]||0)+(VALUES[typeOf(captured)]||0));
+    const actualTo=mv.portalExit?{r:mv.portalExit.r,c:mv.portalExit.c}:{...mv.to};
+    next.lastMoveByColor=next.lastMoveByColor||{w:null,b:null};
+    next.lastMoveByColor[mover]={piece:original,from:{...mv.from},to:{...actualTo},resultPiece:next.board?.[actualTo.r]?.[actualTo.c]||original};
+    next.lastMove={from:{...mv.from},to:{...actualTo}};
+    return analysisFinishTurnState(next,mover);
+  }
+
+  function playAnalysisMove(move){
+    const next=analysisSimulateMove(analysisState,move);if(!next)return false;
+    analysisState=normalizeAnalysisState(next);analysisSelected=null;analysisLegal=[];analysisPushHistory();renderAnalysis();scheduleAnalysisEngine();return true;
+  }
+
+  function renderAnalysis(){
+    if(!analysisState)return;
+    const board=document.getElementById('analysisBoard');if(!board)return;
+    board.replaceChildren();
+    for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+      const sq=document.createElement('div');sq.className='sq '+(((r+c)%2===0)?'light':'dark');sq.dataset.r=r;sq.dataset.c=c;
+      const p=analysisState.board?.[r]?.[c];if(p)sq.innerHTML=pieceMarkup(p);
+      if(analysisState.lastMove&&((analysisState.lastMove.from?.r===r&&analysisState.lastMove.from?.c===c)||(analysisState.lastMove.to?.r===r&&analysisState.lastMove.to?.c===c)))sq.classList.add('last-move');
+      if(analysisSelected?.r===r&&analysisSelected?.c===c)sq.classList.add('selected');
+      const legal=analysisLegal.find(m=>m.to.r===r&&m.to.c===c);if(legal)sq.classList.add(legal.capture?'analysis-capture':'analysis-legal');
+      if(p&&typeOf(p)==='k'&&inCheck(analysisState,colorOf(p)))sq.classList.add('king-in-check');
+      appendSquareStatusMarkers(sq,r,c,analysisState);
+      sq.addEventListener('click',()=>analysisBoardClick(r,c));board.appendChild(sq);
+    }
+    const wp=document.getElementById('analysisWhitePoints'),bp=document.getElementById('analysisBlackPoints'),turn=document.getElementById('analysisTurnSelect');
+    if(document.activeElement!==wp)wp.value=String(analysisState.points.w);if(document.activeElement!==bp)bp.value=String(analysisState.points.b);turn.value=analysisState.turn;
+    document.getElementById('analysisAbilitiesEnabled').checked=analysisState.abilitiesEnabled!==false;document.getElementById('analysisUpgradesEnabled').checked=analysisState.upgradesEnabled!==false;
+    const status=document.getElementById('analysisStatus');if(status)status.textContent=`${analysisState.turn==='w'?'White':'Black'} to move${inCheck(analysisState,analysisState.turn)?' — in check':''}. White bank ${analysisState.points.w}; Black bank ${analysisState.points.b}.`;
+    document.getElementById('analysisUndoBtn').disabled=analysisHistoryIndex<=0;document.getElementById('analysisRedoBtn').disabled=analysisHistoryIndex>=analysisHistory.length-1;
+  }
+
+  function analysisBoardClick(r,c){
+    if(!analysisState)return;const p=analysisState.board?.[r]?.[c];
+    const destination=analysisLegal.find(m=>m.to.r===r&&m.to.c===c);if(analysisSelected&&destination){playAnalysisMove(destination);return;}
+    if(p&&colorOf(p)===analysisState.turn){analysisSelected={r,c};analysisLegal=legalMovesFor(analysisState,r,c);renderAnalysis();return;}
+    analysisSelected=null;analysisLegal=[];renderAnalysis();
+  }
+
+  function setAnalysisBank(color,value){
+    if(!analysisState)return;analysisState.points[color]=Math.max(0,Math.min(999,Number(value)||0));
+    if(analysisHistoryIndex>=0)analysisHistory[analysisHistoryIndex]=normalizeAnalysisState(analysisState);renderAnalysis();scheduleAnalysisEngine();
+  }
+
+  function requestAbilityFishAnalysis(state,options={}){
+    return new Promise((resolve,reject)=>{
+      let worker;try{worker=createAbilityFishWorker();}catch(e){reject(e);return;}
+      const id=`analysis-${++analysisWorkerRequestSeq}-${Date.now()}`;let settled=false;
+      const timeout=setTimeout(()=>{if(settled)return;settled=true;worker.removeEventListener('message',onMessage);reject(new Error('AbilityFish analysis timed out'));},12000);
+      const onMessage=e=>{if(e.data?.id!==id||settled)return;settled=true;clearTimeout(timeout);worker.removeEventListener('message',onMessage);if(e.data.error)reject(new Error(e.data.error));else resolve(e.data.result);};
+      worker.addEventListener('message',onMessage);worker.postMessage({id,state:normalizeAnalysisState(state),options});
+    });
+  }
+
+  function analysisEvalText(score){
+    if(score==null||!Number.isFinite(Number(score)))return '—';
+    const white=-Number(score);if(Math.abs(white)>90000)return white>0?'M':'−M';const pawns=white/100;return `${pawns>=0?'+':''}${pawns.toFixed(2)}`;
+  }
+  function setAnalysisEval(score){
+    const white=-Number(score||0);const pct=50+Math.tanh(white/500)*46;document.getElementById('analysisEvalWhite').style.height=`${Math.max(2,Math.min(98,pct))}%`;document.getElementById('analysisEvalLabel').textContent=analysisEvalText(score);
+  }
+
+  async function runAnalysisEngine(){
+    const toggle=document.getElementById('analysisEngineToggle');if(!toggle?.checked||!analysisState)return;
+    const runId=analysisEngineGeneration;analysisEngineBusy=true;const linesEl=document.getElementById('analysisLines'),meta=document.getElementById('analysisEngineMeta');
+    linesEl.classList.add('analysis-engine-thinking');linesEl.innerHTML='<div class="analysis-engine-off">AbilityFish is calculating…</div>';meta.textContent='Calculating variant-aware lines…';
+    const depth=Math.max(1,Math.min(3,Number(document.getElementById('analysisDepthSelect')?.value||2)));const snapshot=normalizeAnalysisState(analysisState);
+    try{
+      const root=await requestAbilityFishAnalysis(snapshot,{depth,useAbilities:snapshot.abilitiesEnabled!==false,useComplexAbilities:true});if(runId!==analysisEngineGeneration||!toggle.checked)return;
+      setAnalysisEval(root?.score);const lines=[];if(root?.bestAction)lines.push({action:root.bestAction,score:root.score,pv:analysisActionLabel(root.bestAction,snapshot),primary:true});
+      const legal=allLegalMoves(snapshot,snapshot.turn).map(move=>({move,next:analysisSimulateMove(snapshot,move)})).filter(x=>x.next).sort((a,b)=>snapshot.turn==='w'?botEvaluate(a.next)-botEvaluate(b.next):botEvaluate(b.next)-botEvaluate(a.next)).slice(0,6).map(x=>x.move);
+      for(const move of legal){
+        if(runId!==analysisEngineGeneration||!toggle.checked)return;
+        if(root?.bestAction?.type==='normal'&&root.bestAction.move&&sameSquare(root.bestAction.move.from,move.from)&&sameSquare(root.bestAction.move.to,move.to))continue;
+        const next=analysisSimulateMove(snapshot,move);if(!next)continue;
+        let child=null;try{child=await requestAbilityFishAnalysis(next,{depth:Math.max(1,depth-1),useAbilities:next.abilitiesEnabled!==false,useComplexAbilities:true});}catch{}
+        const pv=`${analysisActionLabel({type:'normal',move},snapshot)}${child?.bestAction?' · '+analysisActionLabel(child.bestAction,next):''}`;
+        lines.push({action:{type:'normal',move},score:child?.score??0,pv});if(lines.length>=5)break;
+      }
+      if(runId!==analysisEngineGeneration||!toggle.checked)return;
+      const side=snapshot.turn;const primary=lines.filter(x=>x.primary);const alternatives=lines.filter(x=>!x.primary).sort((a,b)=>side==='w'?a.score-b.score:b.score-a.score);const display=[...primary,...alternatives].slice(0,3);
+      linesEl.replaceChildren();display.forEach((line,i)=>{const row=document.createElement('div');row.className='analysis-line';row.innerHTML=`<span class="analysis-line-rank">${i+1}</span><span class="analysis-line-pv">${escapeHtml(line.pv)}</span><span class="analysis-line-score">${escapeHtml(analysisEvalText(line.score))}</span>`;linesEl.appendChild(row);});
+      if(!display.length)linesEl.innerHTML='<div class="analysis-engine-off">No legal actions.</div>';
+      meta.textContent=`Depth ${root?.depth??depth} · ${Number(root?.nodes||0).toLocaleString()} search nodes · evaluation shown from White’s perspective.`;
+    }catch(error){if(runId!==analysisEngineGeneration)return;linesEl.innerHTML=`<div class="analysis-engine-off">${escapeHtml(error.message||String(error))}</div>`;meta.textContent='Engine unavailable for this position.';}
+    finally{if(runId===analysisEngineGeneration){analysisEngineBusy=false;linesEl.classList.remove('analysis-engine-thinking');}}
+  }
+
+  function scheduleAnalysisEngine(){
+    clearTimeout(analysisEngineDebounce);analysisEngineGeneration++;
+    const toggle=document.getElementById('analysisEngineToggle');if(!toggle?.checked){const lines=document.getElementById('analysisLines'),meta=document.getElementById('analysisEngineMeta');if(lines)lines.innerHTML='<div class="analysis-engine-off">Turn on Engine to see an AbilityFish evaluation and candidate lines.</div>';if(meta)meta.textContent='Engine is off.';setAnalysisEval(0);document.getElementById('analysisEvalLabel').textContent='—';return;}
+    analysisEngineDebounce=setTimeout(runAnalysisEngine,180);
+  }
+
+  document.getElementById('analysisResetBtn')?.addEventListener('click',analysisReset);
+  document.getElementById('analysisLoadGameBtn')?.addEventListener('click',()=>{if(game?.mode==='online'&&!game.over){const status=document.getElementById('analysisStatus');if(status)status.textContent='Finish the online game before importing it into analysis.';return;}analysisState=game?normalizeAnalysisState(game):freshAnalysisState();analysisSelected=null;analysisLegal=[];analysisHistory=[];analysisHistoryIndex=-1;analysisPushHistory();renderAnalysis();scheduleAnalysisEngine();});
+  document.getElementById('analysisUndoBtn')?.addEventListener('click',()=>{if(analysisHistoryIndex<=0)return;analysisHistoryIndex--;analysisState=normalizeAnalysisState(analysisHistory[analysisHistoryIndex]);analysisSelected=null;analysisLegal=[];renderAnalysis();scheduleAnalysisEngine();});
+  document.getElementById('analysisRedoBtn')?.addEventListener('click',()=>{if(analysisHistoryIndex>=analysisHistory.length-1)return;analysisHistoryIndex++;analysisState=normalizeAnalysisState(analysisHistory[analysisHistoryIndex]);analysisSelected=null;analysisLegal=[];renderAnalysis();scheduleAnalysisEngine();});
+  document.getElementById('analysisWhitePoints')?.addEventListener('input',e=>setAnalysisBank('w',e.target.value));document.getElementById('analysisBlackPoints')?.addEventListener('input',e=>setAnalysisBank('b',e.target.value));
+  document.getElementById('analysisWhiteMinus')?.addEventListener('click',()=>setAnalysisBank('w',(analysisState?.points.w||0)-1));document.getElementById('analysisWhitePlus')?.addEventListener('click',()=>setAnalysisBank('w',(analysisState?.points.w||0)+1));document.getElementById('analysisBlackMinus')?.addEventListener('click',()=>setAnalysisBank('b',(analysisState?.points.b||0)-1));document.getElementById('analysisBlackPlus')?.addEventListener('click',()=>setAnalysisBank('b',(analysisState?.points.b||0)+1));
+  document.getElementById('analysisTurnSelect')?.addEventListener('change',e=>{if(!analysisState)return;analysisState.turn=e.target.value==='b'?'b':'w';analysisSelected=null;analysisLegal=[];analysisHistory[analysisHistoryIndex]=normalizeAnalysisState(analysisState);renderAnalysis();scheduleAnalysisEngine();});
+  document.getElementById('analysisAbilitiesEnabled')?.addEventListener('change',e=>{if(!analysisState)return;analysisState.abilitiesEnabled=!!e.target.checked;analysisHistory[analysisHistoryIndex]=normalizeAnalysisState(analysisState);scheduleAnalysisEngine();});
+  document.getElementById('analysisUpgradesEnabled')?.addEventListener('change',e=>{if(!analysisState)return;analysisState.upgradesEnabled=!!e.target.checked;analysisHistory[analysisHistoryIndex]=normalizeAnalysisState(analysisState);scheduleAnalysisEngine();});
+  document.getElementById('analysisEngineToggle')?.addEventListener('change',scheduleAnalysisEngine);document.getElementById('analysisDepthSelect')?.addEventListener('change',scheduleAnalysisEngine);
 
 
   /* ===== 2026 polish enhancements ===== */
