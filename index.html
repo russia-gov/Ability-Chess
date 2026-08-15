@@ -425,7 +425,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   .analysis-eval-bar{position:relative;border-radius:9px;overflow:hidden;background:#111820;border:1px solid #48535f;min-height:420px}
   .analysis-eval-white{position:absolute;left:0;right:0;bottom:0;height:50%;background:#e7e9e8;transition:height .22s ease}
   .analysis-eval-center{position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(127,127,127,.7);z-index:2}
-  .analysis-eval-label{position:absolute;z-index:3;left:50%;transform:translateX(-50%);font-size:10px;font-weight:900;padding:2px 3px;border-radius:4px;background:rgba(16,21,26,.78);color:#fff;white-space:nowrap;top:6px}
+  .analysis-eval-label{position:absolute;z-index:3;left:50%;transform:translateX(-50%);font-size:10px;font-weight:900;padding:2px 4px;border-radius:4px;background:rgba(16,21,26,.86);color:#fff;white-space:nowrap;top:50%;margin-top:-9px;transition:top .18s ease,bottom .18s ease}
   .analysis-board{width:100%;aspect-ratio:1/1;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border-radius:12px;overflow:hidden;user-select:none;touch-action:none}
   .analysis-board .sq{position:relative;display:grid;place-items:center;cursor:pointer}
   .analysis-board .sq.selected{box-shadow:inset 0 0 0 4px rgba(247,208,84,.8)}
@@ -1187,13 +1187,19 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   function authHeaders(){ return {apikey:SUPABASE_KEY,Authorization:`Bearer ${memberSession?.access_token||SUPABASE_KEY}`,'Content-Type':'application/json'}; }
   async function authRequest(path,body){ const res=await fetch(`${SUPABASE_URL}/auth/v1/${path}`,{method:'POST',headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify(body)}); const data=await res.json().catch(()=>null); if(!res.ok) throw new Error(data?.msg||data?.message||data?.error_description||'Authentication failed.'); return data; }
   function appRedirectUrl(){ return `${window.location.origin}${window.location.pathname}${window.location.search}`; }
+  function clearAuthRedirectArtifacts(){
+    const url=new URL(window.location.href);
+    for(const key of ['error','error_code','error_description','code','type'])url.searchParams.delete(key);
+    url.hash='';
+    history.replaceState(history.state,'',url.pathname+(url.searchParams.toString()?`?${url.searchParams}`:''));
+  }
   function importAuthRedirectSession(){
     const hash=new URLSearchParams(window.location.hash.replace(/^#/,'').trim());
     const query=new URLSearchParams(window.location.search);
     const errorDescription=hash.get('error_description')||query.get('error_description');
     if(errorDescription){
       sessionStorage.setItem('abilityChessAuthMessage',decodeURIComponent(errorDescription.replace(/\+/g,' ')));
-      history.replaceState(null,'',window.location.pathname);
+      clearAuthRedirectArtifacts();
       return false;
     }
     const accessToken=hash.get('access_token');
@@ -1214,7 +1220,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     }else{
       sessionStorage.setItem('abilityChessAuthMessage','Email confirmed. You are now signed in.');
     }
-    history.replaceState(null,'',window.location.pathname);
+    clearAuthRedirectArtifacts();
     return true;
   }
   async function memberRpc(name,body={},retried=false){
@@ -3531,18 +3537,21 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   let abilityFishWorker=null;
   let abilityFishWorkerUrl=null;
 
-  function createAbilityFishWorker(){
-    if(abilityFishWorker) return abilityFishWorker;
+  function ensureAbilityFishWorkerUrl(){
+    if(abilityFishWorkerUrl)return abilityFishWorkerUrl;
     const raw=atob(ABILITYFISH_SOURCE_B64);
     const bytes=new Uint8Array(raw.length);
     for(let i=0;i<raw.length;i++) bytes[i]=raw.charCodeAt(i);
     const source=new TextDecoder().decode(bytes);
     abilityFishWorkerUrl=URL.createObjectURL(new Blob([source],{type:'text/javascript'}));
-    abilityFishWorker=new Worker(abilityFishWorkerUrl);
+    return abilityFishWorkerUrl;
+  }
+  function createAbilityFishWorker(){
+    if(abilityFishWorker) return abilityFishWorker;
+    abilityFishWorker=new Worker(ensureAbilityFishWorkerUrl());
     abilityFishWorker.addEventListener('error',()=>{
       try{abilityFishWorker?.terminate();}catch{}
       abilityFishWorker=null;
-      if(abilityFishWorkerUrl){URL.revokeObjectURL(abilityFishWorkerUrl);abilityFishWorkerUrl=null;}
     });
     return abilityFishWorker;
   }
@@ -4217,13 +4226,21 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   let analysisWorkerRequestSeq=0;
   let analysisEngineDebounce=null;
   let analysisEngineBusy=false;
+  const analysisWorkers=new Set();
 
   let applyingBrowserRoute=false;
   const VALID_ROUTES=new Set(['home','play','game','abilities','analysis','settings','history','profile','tournaments','admin']);
   function currentRoute(){
     const params=new URLSearchParams(window.location.search);
-    const page=params.get('page')||'home';
-    return VALID_ROUTES.has(page)?page:'home';
+    const explicit=params.get('page');
+    if(explicit)return VALID_ROUTES.has(explicit)?explicit:'home';
+    const statePage=history.state?.page;
+    if(statePage&&VALID_ROUTES.has(statePage))return statePage;
+    try{
+      const saved=JSON.parse(sessionStorage.getItem('abilityChessRoute')||'null');
+      if(saved?.page&&VALID_ROUTES.has(saved.page))return saved.page;
+    }catch{}
+    return 'home';
   }
   function updateRoute(target,replace=false,extra={}){
     if(applyingBrowserRoute)return;
@@ -4233,6 +4250,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     Object.entries(extra||{}).forEach(([key,value])=>value==null||value===''?url.searchParams.delete(key):url.searchParams.set(key,String(value)));
     const next=url.pathname+(url.searchParams.toString()?`?${url.searchParams}`:'')+url.hash;
     history[replace?'replaceState':'pushState']({page:target},'',next);
+    try{sessionStorage.setItem('abilityChessRoute',JSON.stringify({page:target,user:url.searchParams.get('user')||null}));}catch{}
   }
   function showScreen(target,options={}){
     if(!VALID_ROUTES.has(target))target='home';
@@ -4246,6 +4264,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     const target=currentRoute();
     showScreen(target,{navigate:false});
     if(target==='profile')restoreProfileRoute();
+    try{sessionStorage.setItem('abilityChessRoute',JSON.stringify({page:target,user:new URLSearchParams(location.search).get('user')||null}));}catch{}
     applyingBrowserRoute=false;
   }
 
@@ -4773,7 +4792,12 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     // Defer route activation until the complete script has initialized.
     // In particular, a direct/reloaded ?page=analysis URL must not call
     // openAnalysisWorkspace() while its let-bound state is still in the TDZ.
-    queueMicrotask(()=>applyBrowserRoute());
+    queueMicrotask(()=>{
+      applyBrowserRoute();
+      const target=currentRoute();
+      const params=new URLSearchParams(location.search);
+      if(target!=='home'&&!params.get('page'))updateRoute(target,true,target==='profile'?{user:JSON.parse(sessionStorage.getItem('abilityChessRoute')||'{}')?.user||null}:{});
+    });
   })();
   window.addEventListener('resize',()=>{ if(shieldMoveWarningEl) renderShieldMoveWarning(); });
   window.addEventListener('scroll',()=>{ if(shieldMoveWarningEl) renderShieldMoveWarning(); },true);
@@ -5221,22 +5245,43 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     if(analysisHistoryIndex>=0)analysisHistory[analysisHistoryIndex]=normalizeAnalysisState(analysisState);renderAnalysis();scheduleAnalysisEngine();
   }
 
+  function cancelAnalysisEngineWorkers(){
+    for(const worker of analysisWorkers){try{worker.terminate();}catch{}}
+    analysisWorkers.clear();
+    analysisEngineBusy=false;
+  }
+
   function requestAbilityFishAnalysis(state,options={}){
     return new Promise((resolve,reject)=>{
-      let worker;try{worker=createAbilityFishWorker();}catch(e){reject(e);return;}
+      let worker;
+      try{worker=new Worker(ensureAbilityFishWorkerUrl());analysisWorkers.add(worker);}catch(e){reject(e);return;}
       const id=`analysis-${++analysisWorkerRequestSeq}-${Date.now()}`;let settled=false;
-      const timeout=setTimeout(()=>{if(settled)return;settled=true;worker.removeEventListener('message',onMessage);reject(new Error('AbilityFish analysis timed out'));},12000);
-      const onMessage=e=>{if(e.data?.id!==id||settled)return;settled=true;clearTimeout(timeout);worker.removeEventListener('message',onMessage);if(e.data.error)reject(new Error(e.data.error));else resolve(e.data.result);};
-      worker.addEventListener('message',onMessage);worker.postMessage({id,state:normalizeAnalysisState(state),options});
+      const cleanup=()=>{clearTimeout(timeout);analysisWorkers.delete(worker);try{worker.terminate();}catch{}};
+      const timeout=setTimeout(()=>{if(settled)return;settled=true;cleanup();reject(new Error('AbilityFish analysis timed out'));},12000);
+      const onMessage=e=>{if(e.data?.id!==id||settled)return;settled=true;cleanup();if(e.data.error)reject(new Error(e.data.error));else resolve(e.data.result);};
+      worker.addEventListener('message',onMessage);
+      worker.addEventListener('error',e=>{if(settled)return;settled=true;cleanup();reject(new Error(e.message||'AbilityFish worker failed'));},{once:true});
+      worker.postMessage({id,state:normalizeAnalysisState(state),options});
     });
   }
 
+
+  function analysisWhiteEval(score){return -Number(score||0);}
   function analysisEvalText(score){
     if(score==null||!Number.isFinite(Number(score)))return '—';
-    const white=-Number(score);if(Math.abs(white)>90000)return white>0?'M':'−M';const pawns=white/100;return `${pawns>=0?'+':''}${pawns.toFixed(2)}`;
+    const white=analysisWhiteEval(score);if(Math.abs(white)>90000)return white>0?'M':'−M';const pawns=white/100;return `${pawns>=0?'+':''}${pawns.toFixed(2)}`;
   }
   function setAnalysisEval(score){
-    const white=-Number(score||0);const pct=50+Math.tanh(white/500)*46;const fill=document.getElementById('analysisEvalWhite'),label=document.getElementById('analysisEvalLabel');if(fill)fill.style.height=`${Math.max(2,Math.min(98,pct))}%`;if(label)label.textContent=analysisEvalText(score);
+    const white=analysisWhiteEval(score);const pct=50+Math.tanh(white/500)*46;
+    const fill=document.getElementById('analysisEvalWhite'),label=document.getElementById('analysisEvalLabel');
+    if(fill)fill.style.height=`${Math.max(2,Math.min(98,pct))}%`;
+    if(label){
+      label.textContent=analysisEvalText(score);
+      label.style.marginTop='';
+      if(white>1){label.style.top='auto';label.style.bottom='6px';}
+      else if(white<-1){label.style.bottom='auto';label.style.top='6px';}
+      else{label.style.bottom='auto';label.style.top='50%';label.style.marginTop='-9px';}
+    }
   }
 
   async function runAnalysisEngine(){
@@ -5266,9 +5311,17 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   }
 
   function scheduleAnalysisEngine(){
-    clearTimeout(analysisEngineDebounce);analysisEngineGeneration++;
-    const toggle=document.getElementById('analysisEngineToggle');if(!toggle?.checked){const lines=document.getElementById('analysisLines'),meta=document.getElementById('analysisEngineMeta');if(lines)lines.innerHTML='<div class="analysis-engine-off">Turn on Engine to see an AbilityFish evaluation and candidate lines.</div>';if(meta)meta.textContent='Engine is off.';setAnalysisEval(0);const evalLabel=document.getElementById('analysisEvalLabel');if(evalLabel)evalLabel.textContent='—';return;}
-    analysisEngineDebounce=setTimeout(runAnalysisEngine,180);
+    clearTimeout(analysisEngineDebounce);analysisEngineGeneration++;cancelAnalysisEngineWorkers();
+    const toggle=document.getElementById('analysisEngineToggle');
+    if(!toggle?.checked){
+      const lines=document.getElementById('analysisLines'),meta=document.getElementById('analysisEngineMeta');
+      if(lines)lines.innerHTML='<div class="analysis-engine-off">Turn on Engine to see an AbilityFish evaluation and candidate lines.</div>';
+      if(meta)meta.textContent='Engine is off.';
+      const fill=document.getElementById('analysisEvalWhite'),evalLabel=document.getElementById('analysisEvalLabel');if(fill)fill.style.height='50%';if(evalLabel){evalLabel.textContent='—';evalLabel.style.top='50%';evalLabel.style.bottom='auto';evalLabel.style.marginTop='-9px';}
+      return;
+    }
+    const meta=document.getElementById('analysisEngineMeta');if(meta)meta.textContent='Position changed — recalculating…';
+    analysisEngineDebounce=setTimeout(runAnalysisEngine,120);
   }
 
   document.getElementById('analysisResetBtn')?.addEventListener('click',analysisReset);
