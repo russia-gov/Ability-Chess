@@ -432,7 +432,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   .analysis-board .sq.analysis-legal::after{content:'';width:22%;height:22%;border-radius:50%;background:rgba(24,30,35,.42);position:absolute}
   .analysis-board .sq.analysis-capture::after{content:'';position:absolute;inset:7%;border:5px solid rgba(24,30,35,.42);border-radius:50%}
   .analysis-board .sq.last-move{box-shadow:inset 0 0 0 999px rgba(240,211,92,.18)}
-  .analysis-board .sq[draggable="true"]{cursor:grab}.analysis-board .sq.analysis-dragging{opacity:.62;cursor:grabbing}.analysis-board .sq.analysis-drop-target{outline:4px solid rgba(247,208,84,.9);outline-offset:-4px}
+  .analysis-board .piece-svg[draggable="true"]{cursor:grab}.analysis-board .piece-svg.analysis-dragging{opacity:.62;cursor:grabbing}.analysis-board .sq.analysis-drop-target{outline:4px solid rgba(247,208,84,.9);outline-offset:-4px}
   .analysis-control-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
   .analysis-control{background:#10151a;border:1px solid #354150;border-radius:11px;padding:11px;display:grid;gap:7px}
   .analysis-control label{font-size:11px;color:#9fabb7;font-weight:800}
@@ -5256,7 +5256,13 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     analysisLegal=legalMovesFor(analysisState,r,c);
     event.currentTarget.classList.add('analysis-dragging');
     updateAnalysisDragHighlights();
-    try{event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain',`${r},${c}`);}catch{}
+    try{
+      event.dataTransfer.effectAllowed='move';
+      event.dataTransfer.setData('text/plain',`${r},${c}`);
+      // The draggable element is the piece image itself, so the browser drag ghost
+      // contains only the piece rather than the entire board square.
+      if(event.dataTransfer.setDragImage) event.dataTransfer.setDragImage(event.currentTarget,event.currentTarget.clientWidth/2,event.currentTarget.clientHeight/2);
+    }catch{}
   }
 
   function endAnalysisDrag(event){
@@ -5287,7 +5293,14 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
       for(let r=0;r<8;r++)for(let c=0;c<8;c++){
         const sq=document.createElement('div');sq.className='sq '+(((r+c)%2===0)?'light':'dark');sq.dataset.r=r;sq.dataset.c=c;
         const p=analysisState.board?.[r]?.[c];if(p)sq.innerHTML=pieceMarkup(p);
-        if(p&&colorOf(p)===analysisState.turn){sq.draggable=true;sq.addEventListener('dragstart',e=>beginAnalysisDrag(e,r,c));sq.addEventListener('dragend',endAnalysisDrag);}
+        if(p&&colorOf(p)===analysisState.turn){
+          const pieceEl=sq.querySelector('.piece-svg');
+          if(pieceEl){
+            pieceEl.draggable=true;
+            pieceEl.addEventListener('dragstart',e=>beginAnalysisDrag(e,r,c));
+            pieceEl.addEventListener('dragend',endAnalysisDrag);
+          }
+        }
         sq.addEventListener('dragover',e=>analysisDragOver(e,r,c));sq.addEventListener('dragleave',analysisDragLeave);sq.addEventListener('drop',e=>analysisDrop(e,r,c));
         if(analysisState.lastMove&&((analysisState.lastMove.from?.r===r&&analysisState.lastMove.from?.c===c)||(analysisState.lastMove.to?.r===r&&analysisState.lastMove.to?.c===c)))sq.classList.add('last-move');
         if(analysisSelected?.r===r&&analysisSelected?.c===c)sq.classList.add('selected');
