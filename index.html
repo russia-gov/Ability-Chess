@@ -432,6 +432,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   .analysis-board .sq.analysis-legal::after{content:'';width:22%;height:22%;border-radius:50%;background:rgba(24,30,35,.42);position:absolute}
   .analysis-board .sq.analysis-capture::after{content:'';position:absolute;inset:7%;border:5px solid rgba(24,30,35,.42);border-radius:50%}
   .analysis-board .sq.last-move{box-shadow:inset 0 0 0 999px rgba(240,211,92,.18)}
+  .analysis-board .sq[draggable="true"]{cursor:grab}.analysis-board .sq.analysis-dragging{opacity:.62;cursor:grabbing}.analysis-board .sq.analysis-drop-target{outline:4px solid rgba(247,208,84,.9);outline-offset:-4px}
   .analysis-control-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
   .analysis-control{background:#10151a;border:1px solid #354150;border-radius:11px;padding:11px;display:grid;gap:7px}
   .analysis-control label{font-size:11px;color:#9fabb7;font-weight:800}
@@ -4230,6 +4231,24 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
 
   let applyingBrowserRoute=false;
   const VALID_ROUTES=new Set(['home','play','game','abilities','analysis','settings','history','profile','tournaments','admin']);
+  // Capture the requested route before any game/auth initialization can mutate history.
+  const BOOT_ROUTE_SNAPSHOT=(()=>{
+    const params=new URLSearchParams(window.location.search);
+    const explicit=params.get('page');
+    if(explicit&&VALID_ROUTES.has(explicit))return {page:explicit,user:params.get('user')||null};
+    try{
+      const saved=JSON.parse(sessionStorage.getItem('abilityChessRoute')||'null');
+      if(saved?.page&&VALID_ROUTES.has(saved.page))return saved;
+    }catch{}
+    try{
+      const nav=performance.getEntriesByType?.('navigation')?.[0];
+      if(nav?.type==='reload'){
+        const saved=JSON.parse(localStorage.getItem('abilityChessLastRoute')||'null');
+        if(saved?.page&&VALID_ROUTES.has(saved.page))return saved;
+      }
+    }catch{}
+    return {page:'home',user:null};
+  })();
   function currentRoute(){
     const params=new URLSearchParams(window.location.search);
     const explicit=params.get('page');
@@ -4239,6 +4258,15 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     try{
       const saved=JSON.parse(sessionStorage.getItem('abilityChessRoute')||'null');
       if(saved?.page&&VALID_ROUTES.has(saved.page))return saved.page;
+    }catch{}
+    // Reload fallback: retain the last visible section even if a host/browser has
+    // dropped the query string or history.state during the reload.
+    try{
+      const nav=performance.getEntriesByType?.('navigation')?.[0];
+      if(nav?.type==='reload'){
+        const saved=JSON.parse(localStorage.getItem('abilityChessLastRoute')||'null');
+        if(saved?.page&&VALID_ROUTES.has(saved.page))return saved.page;
+      }
     }catch{}
     return 'home';
   }
@@ -4250,7 +4278,9 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     Object.entries(extra||{}).forEach(([key,value])=>value==null||value===''?url.searchParams.delete(key):url.searchParams.set(key,String(value)));
     const next=url.pathname+(url.searchParams.toString()?`?${url.searchParams}`:'')+url.hash;
     history[replace?'replaceState':'pushState']({page:target},'',next);
-    try{sessionStorage.setItem('abilityChessRoute',JSON.stringify({page:target,user:url.searchParams.get('user')||null}));}catch{}
+    const routeRecord={page:target,user:url.searchParams.get('user')||null};
+    try{sessionStorage.setItem('abilityChessRoute',JSON.stringify(routeRecord));}catch{}
+    try{localStorage.setItem('abilityChessLastRoute',JSON.stringify(routeRecord));}catch{}
   }
   function showScreen(target,options={}){
     if(!VALID_ROUTES.has(target))target='home';
@@ -4264,7 +4294,9 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     const target=currentRoute();
     showScreen(target,{navigate:false});
     if(target==='profile')restoreProfileRoute();
-    try{sessionStorage.setItem('abilityChessRoute',JSON.stringify({page:target,user:new URLSearchParams(location.search).get('user')||null}));}catch{}
+    const routeRecord={page:target,user:new URLSearchParams(location.search).get('user')||null};
+    try{sessionStorage.setItem('abilityChessRoute',JSON.stringify(routeRecord));}catch{}
+    try{localStorage.setItem('abilityChessLastRoute',JSON.stringify(routeRecord));}catch{}
     applyingBrowserRoute=false;
   }
 
@@ -4768,7 +4800,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   selectedGameMode='local';
   gameModeLabel.innerHTML='Mode: <b>No active game</b>';
   (async()=>{
-    const requestedRoute=currentRoute();
+    const requestedRoute=BOOT_ROUTE_SNAPSHOT.page;
     let restored=false;
     // Only restore a saved match when the browser is actually on the Game page.
     // This prevents an old bot session from being resurrected while refreshing Home,
@@ -4793,10 +4825,13 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     // In particular, a direct/reloaded ?page=analysis URL must not call
     // openAnalysisWorkspace() while its let-bound state is still in the TDZ.
     queueMicrotask(()=>{
-      applyBrowserRoute();
-      const target=currentRoute();
-      const params=new URLSearchParams(location.search);
-      if(target!=='home'&&!params.get('page'))updateRoute(target,true,target==='profile'?{user:JSON.parse(sessionStorage.getItem('abilityChessRoute')||'{}')?.user||null}:{});
+      const target=BOOT_ROUTE_SNAPSHOT.page||'home';
+      applyingBrowserRoute=true;
+      showScreen(target,{navigate:false});
+      if(target==='profile')restoreProfileRoute();
+      applyingBrowserRoute=false;
+      // Canonicalize the URL after rendering so a refresh always carries the page.
+      updateRoute(target,true,target==='profile'?{user:BOOT_ROUTE_SNAPSHOT.user||null}:{});
     });
   })();
   window.addEventListener('resize',()=>{ if(shieldMoveWarningEl) renderShieldMoveWarning(); });
@@ -5199,6 +5234,51 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     analysisState=normalizeAnalysisState(next);analysisSelected=null;analysisLegal=[];analysisPushHistory();renderAnalysis();scheduleAnalysisEngine();return true;
   }
 
+  function analysisMoveForDestination(r,c){
+    return analysisLegal.find(m=>m.to.r===r&&m.to.c===c)||null;
+  }
+
+  function updateAnalysisDragHighlights(){
+    const board=document.getElementById('analysisBoard');if(!board)return;
+    for(const sq of board.children){
+      sq.classList.remove('analysis-legal','analysis-capture','analysis-drop-target');
+      const r=Number(sq.dataset.r),c=Number(sq.dataset.c);
+      const move=analysisMoveForDestination(r,c);
+      if(move)sq.classList.add(move.capture?'analysis-capture':'analysis-legal');
+    }
+  }
+
+  function beginAnalysisDrag(event,r,c){
+    if(!analysisState)return;
+    const piece=analysisState.board?.[r]?.[c];
+    if(!piece||colorOf(piece)!==analysisState.turn){event.preventDefault();return;}
+    analysisSelected={r,c};
+    analysisLegal=legalMovesFor(analysisState,r,c);
+    event.currentTarget.classList.add('analysis-dragging');
+    updateAnalysisDragHighlights();
+    try{event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain',`${r},${c}`);}catch{}
+  }
+
+  function endAnalysisDrag(event){
+    event.currentTarget?.classList.remove('analysis-dragging');
+    document.querySelectorAll('#analysisBoard .analysis-drop-target').forEach(el=>el.classList.remove('analysis-drop-target'));
+  }
+
+  function analysisDragOver(event,r,c){
+    const move=analysisMoveForDestination(r,c);if(!move)return;
+    event.preventDefault();
+    try{event.dataTransfer.dropEffect='move';}catch{}
+    event.currentTarget.classList.add('analysis-drop-target');
+  }
+
+  function analysisDragLeave(event){event.currentTarget.classList.remove('analysis-drop-target');}
+
+  function analysisDrop(event,r,c){
+    const move=analysisMoveForDestination(r,c);if(!move)return;
+    event.preventDefault();event.currentTarget.classList.remove('analysis-drop-target');
+    playAnalysisMove(move);
+  }
+
   function renderAnalysis(){
     if(!analysisState)return;
     const board=document.getElementById('analysisBoard');if(!board)return;
@@ -5207,6 +5287,8 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
       for(let r=0;r<8;r++)for(let c=0;c<8;c++){
         const sq=document.createElement('div');sq.className='sq '+(((r+c)%2===0)?'light':'dark');sq.dataset.r=r;sq.dataset.c=c;
         const p=analysisState.board?.[r]?.[c];if(p)sq.innerHTML=pieceMarkup(p);
+        if(p&&colorOf(p)===analysisState.turn){sq.draggable=true;sq.addEventListener('dragstart',e=>beginAnalysisDrag(e,r,c));sq.addEventListener('dragend',endAnalysisDrag);}
+        sq.addEventListener('dragover',e=>analysisDragOver(e,r,c));sq.addEventListener('dragleave',analysisDragLeave);sq.addEventListener('drop',e=>analysisDrop(e,r,c));
         if(analysisState.lastMove&&((analysisState.lastMove.from?.r===r&&analysisState.lastMove.from?.c===c)||(analysisState.lastMove.to?.r===r&&analysisState.lastMove.to?.c===c)))sq.classList.add('last-move');
         if(analysisSelected?.r===r&&analysisSelected?.c===c)sq.classList.add('selected');
         const legal=analysisLegal.find(m=>m.to.r===r&&m.to.c===c);if(legal)sq.classList.add(legal.capture?'analysis-capture':'analysis-legal');
@@ -5240,9 +5322,31 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     analysisSelected=null;analysisLegal=[];renderAnalysis();
   }
 
-  function setAnalysisBank(color,value){
-    if(!analysisState)return;analysisState.points[color]=Math.max(0,Math.min(999,Number(value)||0));
-    if(analysisHistoryIndex>=0)analysisHistory[analysisHistoryIndex]=normalizeAnalysisState(analysisState);renderAnalysis();scheduleAnalysisEngine();
+  function setAnalysisBank(color,value,{syncInput=true}={}){
+    if(!analysisState)return;
+    const parsed=Number(value);
+    if(!Number.isFinite(parsed))return;
+    const next=Math.max(0,Math.min(999,Math.trunc(parsed)));
+    analysisState.points[color]=next;
+    if(analysisHistoryIndex>=0)analysisHistory[analysisHistoryIndex]=normalizeAnalysisState(analysisState);
+    if(syncInput){
+      const input=document.getElementById(color==='w'?'analysisWhitePoints':'analysisBlackPoints');
+      if(input&&document.activeElement!==input)input.value=String(next);
+    }
+    const status=document.getElementById('analysisStatus');
+    if(status){
+      let checked=false;try{checked=inCheck(analysisState,analysisState.turn);}catch{}
+      status.textContent=`${analysisState.turn==='w'?'White':'Black'} to move${checked?' — in check':''}. White bank ${analysisState.points?.w??0}; Black bank ${analysisState.points?.b??0}.`;
+    }
+    scheduleAnalysisEngine();
+  }
+
+  function commitAnalysisBankInput(color,input){
+    if(!analysisState||!input)return;
+    const raw=input.value.trim();
+    if(raw===''){input.value=String(analysisState.points?.[color]??0);return;}
+    setAnalysisBank(color,raw,{syncInput:false});
+    input.value=String(analysisState.points[color]);
   }
 
   function cancelAnalysisEngineWorkers(){
@@ -5257,7 +5361,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
       try{worker=new Worker(ensureAbilityFishWorkerUrl());analysisWorkers.add(worker);}catch(e){reject(e);return;}
       const id=`analysis-${++analysisWorkerRequestSeq}-${Date.now()}`;let settled=false;
       const cleanup=()=>{clearTimeout(timeout);analysisWorkers.delete(worker);try{worker.terminate();}catch{}};
-      const timeout=setTimeout(()=>{if(settled)return;settled=true;cleanup();reject(new Error('AbilityFish analysis timed out'));},12000);
+      const timeout=setTimeout(()=>{if(settled)return;settled=true;cleanup();reject(new Error('AbilityFish analysis timed out'));},7000);
       const onMessage=e=>{if(e.data?.id!==id||settled)return;settled=true;cleanup();if(e.data.error)reject(new Error(e.data.error));else resolve(e.data.result);};
       worker.addEventListener('message',onMessage);
       worker.addEventListener('error',e=>{if(settled)return;settled=true;cleanup();reject(new Error(e.message||'AbilityFish worker failed'));},{once:true});
@@ -5284,33 +5388,75 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     }
   }
 
-  async function runAnalysisEngine(){
-    const toggle=document.getElementById('analysisEngineToggle');if(!toggle?.checked||!analysisState)return;
-    const runId=analysisEngineGeneration;analysisEngineBusy=true;const linesEl=document.getElementById('analysisLines'),meta=document.getElementById('analysisEngineMeta');
-    linesEl.classList.add('analysis-engine-thinking');linesEl.innerHTML='<div class="analysis-engine-off">AbilityFish is calculating…</div>';meta.textContent='Calculating variant-aware lines…';
-    const depth=Math.max(1,Math.min(3,Number(document.getElementById('analysisDepthSelect')?.value||2)));const snapshot=normalizeAnalysisState(analysisState);
-    try{
-      const root=await requestAbilityFishAnalysis(snapshot,{depth,useAbilities:snapshot.abilitiesEnabled!==false,useComplexAbilities:true});if(runId!==analysisEngineGeneration||!toggle.checked)return;
-      setAnalysisEval(root?.score);const lines=[];if(root?.bestAction)lines.push({action:root.bestAction,score:root.score,pv:analysisActionLabel(root.bestAction,snapshot),primary:true});
-      const legal=allLegalMoves(snapshot,snapshot.turn).map(move=>({move,next:analysisSimulateMove(snapshot,move)})).filter(x=>x.next).sort((a,b)=>snapshot.turn==='w'?botEvaluate(a.next)-botEvaluate(b.next):botEvaluate(b.next)-botEvaluate(a.next)).slice(0,6).map(x=>x.move);
-      for(const move of legal){
-        if(runId!==analysisEngineGeneration||!toggle.checked)return;
-        if(root?.bestAction?.type==='normal'&&root.bestAction.move&&sameSquare(root.bestAction.move.from,move.from)&&sameSquare(root.bestAction.move.to,move.to))continue;
-        const next=analysisSimulateMove(snapshot,move);if(!next)continue;
-        let child=null;try{child=await requestAbilityFishAnalysis(next,{depth:Math.max(1,depth-1),useAbilities:next.abilitiesEnabled!==false,useComplexAbilities:true});}catch{}
-        const pv=`${analysisActionLabel({type:'normal',move},snapshot)}${child?.bestAction?' · '+analysisActionLabel(child.bestAction,next):''}`;
-        lines.push({action:{type:'normal',move},score:child?.score??0,pv});if(lines.length>=5)break;
-      }
-      if(runId!==analysisEngineGeneration||!toggle.checked)return;
-      const side=snapshot.turn;const primary=lines.filter(x=>x.primary);const alternatives=lines.filter(x=>!x.primary).sort((a,b)=>side==='w'?a.score-b.score:b.score-a.score);const display=[...primary,...alternatives].slice(0,3);
-      linesEl.replaceChildren();display.forEach((line,i)=>{const row=document.createElement('div');row.className='analysis-line';row.innerHTML=`<span class="analysis-line-rank">${i+1}</span><span class="analysis-line-pv">${escapeHtml(line.pv)}</span><span class="analysis-line-score">${escapeHtml(analysisEvalText(line.score))}</span>`;linesEl.appendChild(row);});
-      if(!display.length)linesEl.innerHTML='<div class="analysis-engine-off">No legal actions.</div>';
-      meta.textContent=`Depth ${root?.depth??depth} · ${Number(root?.nodes||0).toLocaleString()} search nodes · evaluation shown from White’s perspective.`;
-    }catch(error){if(runId!==analysisEngineGeneration)return;linesEl.innerHTML=`<div class="analysis-engine-off">${escapeHtml(error.message||String(error))}</div>`;meta.textContent='Engine unavailable for this position.';}
-    finally{if(runId===analysisEngineGeneration){analysisEngineBusy=false;linesEl.classList.remove('analysis-engine-thinking');}}
+  function analysisLocalCandidateLines(snapshot,root){
+    const side=snapshot.turn;
+    const lines=[];
+    if(root?.bestAction)lines.push({action:root.bestAction,score:root.score,pv:analysisActionLabel(root.bestAction,snapshot),primary:true});
+    const moves=allLegalMoves(snapshot,side);
+    const scored=[];
+    for(const move of moves){
+      if(root?.bestAction?.type==='normal'&&root.bestAction.move&&sameSquare(root.bestAction.move.from,move.from)&&sameSquare(root.bestAction.move.to,move.to))continue;
+      const next=analysisSimulateMove(snapshot,move);if(!next)continue;
+      scored.push({action:{type:'normal',move},score:botEvaluate(next),pv:analysisActionLabel({type:'normal',move},snapshot)});
+    }
+    scored.sort((a,b)=>side==='w'?a.score-b.score:b.score-a.score);
+    return [...lines,...scored.slice(0,5)].slice(0,3);
   }
 
-  function scheduleAnalysisEngine(){
+  function renderAnalysisEngineResult(snapshot,result,{refined=false,note=''}={}){
+    const linesEl=document.getElementById('analysisLines'),meta=document.getElementById('analysisEngineMeta');if(!linesEl||!meta)return;
+    setAnalysisEval(result?.score);
+    const display=analysisLocalCandidateLines(snapshot,result);
+    linesEl.replaceChildren();
+    display.forEach((line,i)=>{const row=document.createElement('div');row.className='analysis-line';row.innerHTML=`<span class="analysis-line-rank">${i+1}</span><span class="analysis-line-pv">${escapeHtml(line.pv)}</span><span class="analysis-line-score">${escapeHtml(analysisEvalText(line.score))}</span>`;linesEl.appendChild(row);});
+    if(!display.length)linesEl.innerHTML='<div class="analysis-engine-off">No legal actions.</div>';
+    const nodes=Number(result?.nodes||0).toLocaleString();
+    meta.textContent=`${refined?'Refined':'Quick'} AbilityFish · depth ${result?.depth??1} · ${nodes} nodes${note?` · ${note}`:''}`;
+  }
+
+  async function runAnalysisEngine(){
+    const toggle=document.getElementById('analysisEngineToggle');if(!toggle?.checked||!analysisState)return;
+    const runId=analysisEngineGeneration;analysisEngineBusy=true;
+    const linesEl=document.getElementById('analysisLines'),meta=document.getElementById('analysisEngineMeta');
+    linesEl.classList.add('analysis-engine-thinking');linesEl.innerHTML='<div class="analysis-engine-off">AbilityFish is calculating…</div>';meta.textContent='Calculating quick evaluation…';
+    const requestedDepth=Math.max(1,Math.min(3,Number(document.getElementById('analysisDepthSelect')?.value||2)));
+    const snapshot=normalizeAnalysisState(analysisState);
+    let quick=null;
+    try{
+      // Always produce a cheap result first. This keeps the UI responsive after every edit.
+      quick=await requestAbilityFishAnalysis(snapshot,{depth:1,useAbilities:false,useComplexAbilities:false});
+      if(runId!==analysisEngineGeneration||!toggle.checked)return;
+      renderAnalysisEngineResult(snapshot,quick,{refined:false,note:requestedDepth>1?'refining…':'ready'});
+      linesEl.classList.remove('analysis-engine-thinking');
+
+      if(requestedDepth<=1)return;
+      // One refinement worker only. Never launch serial child searches for alternate lines.
+      meta.textContent=`Quick evaluation ready · refining to depth ${requestedDepth}…`;
+      let refined=null;
+      try{
+        refined=await requestAbilityFishAnalysis(snapshot,{
+          depth:requestedDepth,
+          useAbilities:snapshot.abilitiesEnabled!==false,
+          useComplexAbilities:requestedDepth>=3
+        });
+      }catch(error){
+        if(runId!==analysisEngineGeneration||!toggle.checked)return;
+        renderAnalysisEngineResult(snapshot,quick,{refined:false,note:'deeper search exceeded its time budget; quick result retained'});
+        return;
+      }
+      if(runId!==analysisEngineGeneration||!toggle.checked)return;
+      renderAnalysisEngineResult(snapshot,refined,{refined:true,note:'variant-aware'});
+    }catch(error){
+      if(runId!==analysisEngineGeneration)return;
+      // Static fallback means Analysis never collapses to a timeout screen.
+      const fallback={bestAction:null,score:botEvaluate(snapshot),depth:0,nodes:0};
+      renderAnalysisEngineResult(snapshot,fallback,{refined:false,note:'instant fallback'});
+    }finally{
+      if(runId===analysisEngineGeneration){analysisEngineBusy=false;linesEl.classList.remove('analysis-engine-thinking');}
+    }
+  }
+
+  function scheduleAnalysisEngine(delay=120){
     clearTimeout(analysisEngineDebounce);analysisEngineGeneration++;cancelAnalysisEngineWorkers();
     const toggle=document.getElementById('analysisEngineToggle');
     if(!toggle?.checked){
@@ -5321,19 +5467,39 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
       return;
     }
     const meta=document.getElementById('analysisEngineMeta');if(meta)meta.textContent='Position changed — recalculating…';
-    analysisEngineDebounce=setTimeout(runAnalysisEngine,120);
+    analysisEngineDebounce=setTimeout(runAnalysisEngine,Math.max(0,Number(delay)||0));
   }
 
   document.getElementById('analysisResetBtn')?.addEventListener('click',analysisReset);
   document.getElementById('analysisLoadGameBtn')?.addEventListener('click',()=>{if(game?.mode==='online'&&!game.over){const status=document.getElementById('analysisStatus');if(status)status.textContent='Finish the online game before importing it into analysis.';return;}analysisState=game?normalizeAnalysisState(game):freshAnalysisState();analysisSelected=null;analysisLegal=[];analysisHistory=[];analysisHistoryIndex=-1;analysisPushHistory();renderAnalysis();scheduleAnalysisEngine();});
   document.getElementById('analysisUndoBtn')?.addEventListener('click',()=>{if(analysisHistoryIndex<=0)return;analysisHistoryIndex--;analysisState=normalizeAnalysisState(analysisHistory[analysisHistoryIndex]);analysisSelected=null;analysisLegal=[];renderAnalysis();scheduleAnalysisEngine();});
   document.getElementById('analysisRedoBtn')?.addEventListener('click',()=>{if(analysisHistoryIndex>=analysisHistory.length-1)return;analysisHistoryIndex++;analysisState=normalizeAnalysisState(analysisHistory[analysisHistoryIndex]);analysisSelected=null;analysisLegal=[];renderAnalysis();scheduleAnalysisEngine();});
-  document.getElementById('analysisWhitePoints')?.addEventListener('input',e=>setAnalysisBank('w',e.target.value));document.getElementById('analysisBlackPoints')?.addEventListener('input',e=>setAnalysisBank('b',e.target.value));
+  const analysisWhitePointsInput=document.getElementById('analysisWhitePoints');
+  const analysisBlackPointsInput=document.getElementById('analysisBlackPoints');
+  for(const [input,color] of [[analysisWhitePointsInput,'w'],[analysisBlackPointsInput,'b']]){
+    if(!input)continue;
+    // Keep the typed value stable while editing; update engine state without
+    // rebuilding the whole Analysis UI underneath the focused number field.
+    input.addEventListener('input',()=>{
+      if(input.value.trim()==='')return;
+      setAnalysisBank(color,input.value,{syncInput:false});
+    });
+    input.addEventListener('change',()=>commitAnalysisBankInput(color,input));
+    input.addEventListener('blur',()=>commitAnalysisBankInput(color,input));
+    input.addEventListener('keydown',e=>{if(e.key==='Enter'){commitAnalysisBankInput(color,input);input.blur();}});
+  }
   document.getElementById('analysisWhiteMinus')?.addEventListener('click',()=>setAnalysisBank('w',(analysisState?.points.w||0)-1));document.getElementById('analysisWhitePlus')?.addEventListener('click',()=>setAnalysisBank('w',(analysisState?.points.w||0)+1));document.getElementById('analysisBlackMinus')?.addEventListener('click',()=>setAnalysisBank('b',(analysisState?.points.b||0)-1));document.getElementById('analysisBlackPlus')?.addEventListener('click',()=>setAnalysisBank('b',(analysisState?.points.b||0)+1));
   document.getElementById('analysisTurnSelect')?.addEventListener('change',e=>{if(!analysisState)return;analysisState.turn=e.target.value==='b'?'b':'w';analysisSelected=null;analysisLegal=[];analysisHistory[analysisHistoryIndex]=normalizeAnalysisState(analysisState);renderAnalysis();scheduleAnalysisEngine();});
   document.getElementById('analysisAbilitiesEnabled')?.addEventListener('change',e=>{if(!analysisState)return;analysisState.abilitiesEnabled=!!e.target.checked;analysisHistory[analysisHistoryIndex]=normalizeAnalysisState(analysisState);scheduleAnalysisEngine();});
   document.getElementById('analysisUpgradesEnabled')?.addEventListener('change',e=>{if(!analysisState)return;analysisState.upgradesEnabled=!!e.target.checked;analysisHistory[analysisHistoryIndex]=normalizeAnalysisState(analysisState);scheduleAnalysisEngine();});
-  document.getElementById('analysisEngineToggle')?.addEventListener('change',scheduleAnalysisEngine);document.getElementById('analysisDepthSelect')?.addEventListener('change',scheduleAnalysisEngine);
+  const analysisEngineToggleEl=document.getElementById('analysisEngineToggle');
+  analysisEngineToggleEl?.addEventListener('change',()=>{
+    if(analysisEngineToggleEl.checked){
+      initializeAnalysisWorkspaceSafely();
+      scheduleAnalysisEngine(0);
+    }else scheduleAnalysisEngine(0);
+  });
+  document.getElementById('analysisDepthSelect')?.addEventListener('change',()=>scheduleAnalysisEngine(0));
 
   // Build an independent analysis position during application boot. This makes the
   // board available before routing/navigation and removes route timing as a dependency.
