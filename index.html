@@ -4207,6 +4207,17 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     if(game) render(); renderHomeBoard();
   }
   function buildBoardPresets(){ boardPresets.replaceChildren(); for(const [name,light,dark] of BOARD_PRESETS){const b=document.createElement('button');b.type='button';b.className='board-preset';b.title=name;b.dataset.light=light;b.dataset.dark=dark;b.innerHTML=`<i style="background:${light}"></i><i style="background:${dark}"></i>`;b.addEventListener('click',()=>{settings.light=light;settings.dark=dark;saveSettings();});boardPresets.appendChild(b);} }
+  /* ===== Analysis state: declare before routing/boot ===== */
+  let analysisState=null;
+  let analysisSelected=null;
+  let analysisLegal=[];
+  let analysisHistory=[];
+  let analysisHistoryIndex=-1;
+  let analysisEngineGeneration=0;
+  let analysisWorkerRequestSeq=0;
+  let analysisEngineDebounce=null;
+  let analysisEngineBusy=false;
+
   let applyingBrowserRoute=false;
   const VALID_ROUTES=new Set(['home','play','game','abilities','analysis','settings','history','profile','tournaments','admin']);
   function currentRoute(){
@@ -5052,16 +5063,6 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
 
 
   /* ===== Dedicated analysis workspace ===== */
-  let analysisState=null;
-  let analysisSelected=null;
-  let analysisLegal=[];
-  let analysisHistory=[];
-  let analysisHistoryIndex=-1;
-  let analysisEngineGeneration=0;
-  let analysisWorkerRequestSeq=0;
-  let analysisEngineDebounce=null;
-  let analysisEngineBusy=false;
-
   function freshAnalysisState(){
     return {
       board:makeInitialBoard(),turn:'w',points:{w:0,b:0},upgrades:{w:{},b:{}},upgradeLimit:3,
