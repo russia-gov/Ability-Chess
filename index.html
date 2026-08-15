@@ -2591,29 +2591,110 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     if(check&&moves.length===0&&!abilityEscape){const winner=other(game.turn);game.winner=winner;game.resultReason='checkmate';game.resultDetail=`${winner==='w'?'White':'Black'} wins by checkmate.`;}
   }
 
-  function abilityCanProduceLegalContinuation(state,color){
-    if(state.abilitiesEnabled===false || state.abilityUsed) return false;
-    const points=state.points?.[color]||0;
-    const affordable=id=>{const d=ABILITIES.find(a=>a.id===id);return d&&points>=d.cost;};
-    // Double Move is available when a two-action sequence can ultimately
-    // resolve check, even if the first action does not resolve it by itself.
+  function findImmediateAbilityEscapeAction(state,color){
+    if(!state || state.abilitiesEnabled===false || state.abilityUsed) return null;
+    const points=Number(state.points?.[color]||0), enemy=other(color);
+    const affordable=id=>{const d=ABILITIES.find(a=>a.id===id);return !!d&&points>=d.cost;};
+    const followMove=t=>{t.turn=color;const moves=allLegalMoves(t,color);return moves[0]||null;};
+
+    // Double Move: the first move may leave the king attacked only when an
+    // actual legal second move completes the sequence and resolves check.
     if(affordable('double')){
-      const probe=cloneState(state); probe.turn=color; probe.doubleMoveActive=true; probe.movesRemaining=2;
-      if(allLegalMoves(probe,color).length) return true;
-    }
-    // Freeze may neutralize a checking non-king piece, after which a normal legal reply must exist.
-    if(affordable('freeze')){
-      for(let r=0;r<8;r++)for(let c=0;c<8;c++){
-        const p=pieceAt(state.board,r,c); if(!p||colorOf(p)!==other(color)||typeOf(p)==='k')continue;
-        const t=cloneState(state); t.turn=color; t.frozen=t.frozen||{w:null,b:null}; t.frozen[other(color)]={r,c};
-        if(!inCheck(t,color) && allLegalMoves(t,color).length) return true;
+      const probe=cloneState(state);probe.turn=color;probe.doubleMoveActive=true;probe.movesRemaining=2;
+      const firsts=allLegalMoves(probe,color);
+      for(const first of firsts){
+        const next=applyMoveToState(probe,{...first});if(!next)continue;
+        next.turn=color;next.doubleMoveActive=true;next.movesRemaining=1;
+        const seconds=allLegalMoves(next,color);
+        if(seconds.length)return {type:'double',first,second:seconds[0]};
       }
     }
-    // Teleport, swap, recall, bomb, shield and fortify can alter king safety; test conservative legal targets.
-    if(affordable('teleport')){
-      for(let r=0;r<8;r++)for(let c=0;c<8;c++){const p=pieceAt(state.board,r,c);if(!p||colorOf(p)!==color||typeOf(p)==='k')continue;for(let rr=0;rr<8;rr++)for(let cc=0;cc<8;cc++)if(!pieceAt(state.board,rr,cc)){const t=cloneState(state);t.board[rr][cc]=p;t.board[r][c]=null;if(!inCheck(t,color))return true;}}
+
+    // Freeze can remove the attack of a non-king checker.
+    if(affordable('freeze')){
+      for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+        const piece=pieceAt(state.board,r,c);
+        if(!piece||colorOf(piece)!==enemy||typeOf(piece)==='k'||isFortifiedAgainstAbility(state,r,c,color))continue;
+        const t=cloneState(state);t.turn=color;t.frozen=t.frozen||{w:null,b:null};t.frozen[enemy]={r,c};
+        if(inCheck(t,color))continue;
+        const move=followMove(t);if(move)return {type:'freeze',r,c,move};
+      }
     }
-    return false;
+
+    // Bomb may destroy a checking piece or open an escape square.
+    if(affordable('bomb')){
+      for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+        const center=pieceAt(state.board,r,c);if(!center||colorOf(center)!==color)continue;
+        let kingInBlast=false,fortified=false;
+        for(let rr=r-1;rr<=r+1;rr++)for(let cc=c-1;cc<=c+1;cc++)if(inBounds(rr,cc)){
+          const q=pieceAt(state.board,rr,cc);if(q&&typeOf(q)==='k')kingInBlast=true;
+          if(q&&isFortifiedAgainstAbility(state,rr,cc,color))fortified=true;
+        }
+        if(kingInBlast||fortified)continue;
+        const t=cloneState(state);t.turn=color;
+        for(let rr=r-1;rr<=r+1;rr++)for(let cc=c-1;cc<=c+1;cc++)if(inBounds(rr,cc))t.board[rr][cc]=null;
+        if(inCheck(t,color))continue;
+        const move=followMove(t);if(move)return {type:'bomb',r,c,move};
+      }
+    }
+
+    // Swap can interpose a piece or move the king's attacker/blocker geometry.
+    if(affordable('swap')){
+      const own=[];
+      for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+        const piece=pieceAt(state.board,r,c);if(piece&&colorOf(piece)===color&&typeOf(piece)!=='k')own.push({r,c});
+      }
+      for(let i=0;i<own.length;i++)for(let j=i+1;j<own.length;j++){
+        const a=own[i],b=own[j],t=cloneState(state);t.turn=color;
+        [t.board[a.r][a.c],t.board[b.r][b.c]]=[t.board[b.r][b.c],t.board[a.r][a.c]];
+        if(inCheck(t,color))continue;
+        const move=followMove(t);if(move)return {type:'swap',a,b,move};
+      }
+    }
+
+    // Recall may restore a piece to a blocking square.
+    if(affordable('recall')){
+      const m=state.lastMoveByColor?.[color];
+      if(m&&typeOf(m.piece)!=='k'){
+        const current=pieceAt(state.board,m.to.r,m.to.c);
+        if(current===m.resultPiece&&!pieceAt(state.board,m.from.r,m.from.c)){
+          const t=cloneState(state);t.turn=color;t.board[m.from.r][m.from.c]=current;t.board[m.to.r][m.to.c]=null;
+          if(!inCheck(t,color)){const move=followMove(t);if(move)return {type:'recall',move};}
+        }
+      }
+    }
+
+    // Reinforce may create a new blocking/capturing move.
+    if(affordable('reinforce')){
+      for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+        const p=pieceAt(state.board,r,c);const crossed=p&&p===color+'p'&&((color==='w'&&r<=3)||(color==='b'&&r>=4));
+        if(!crossed)continue;
+        for(const promoteTo of ['n','b']){
+          const t=cloneState(state);t.turn=color;t.board[r][c]=color+promoteTo;
+          if(inCheck(t,color))continue;
+          const move=followMove(t);if(move)return {type:'reinforce',r,c,promoteTo,move};
+        }
+      }
+    }
+
+    // Teleport consumes the move, so the resulting position itself must be safe.
+    if(affordable('teleport')){
+      for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+        const p=pieceAt(state.board,r,c);if(!p||colorOf(p)!==color||typeOf(p)==='k'||isFrozenPiece(state,r,c,color))continue;
+        const from={r,c};if(typeOf(p)==='p'&&!pawnOnOwnSide(color,r))continue;
+        for(let rr=0;rr<8;rr++)for(let cc=0;cc<8;cc++){
+          const to={r:rr,c:cc};if(pieceAt(state.board,rr,cc)||isFortifiedAgainstAbility(state,rr,cc,color))continue;
+          if(teleportPawnRestriction(p,from,to)||teleportWouldAttackEnemyKing(state,from,to))continue;
+          const t=cloneState(state);t.turn=color;t.board[rr][cc]=p;t.board[r][c]=null;
+          if(!inCheck(t,color))return {type:'teleport',from,to};
+        }
+      }
+    }
+    return null;
+  }
+
+  function abilityCanProduceLegalContinuation(state,color){
+    return !!findImmediateAbilityEscapeAction(state,color);
   }
 
   function hasAnyTurnAction(state,color){
@@ -3571,10 +3652,14 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
 
   function abilityFishFallback(token,depth=1){
     if(!game||game.over||game.mode!=='bot'||game.turn!=='b'||token!==botThinkToken)return;
-    const fallback=botBestNormalMove(cloneState(game),Math.max(1,Math.min(2,depth))).move;
-    const resolved=resolveAbilityFishMove(fallback);
-    if(resolved) makeMove(resolved,{source:'bot'});
-    else {evaluateGameStatus();enforceFinishedGamePresentation();render();}
+    const moves=allLegalMoves(game,'b');
+    if(!moves.length){
+      const escape=findImmediateAbilityEscapeAction(game,'b');
+      if(escape){executeAbilityFishAction(escape,token,{depth:1,fromFallback:true});return;}
+      evaluateGameStatus();enforceFinishedGamePresentation();render();return;
+    }
+    const fallback=chooseInstantBotFallback(moves);
+    if(fallback)makeMove(fallback,{source:'bot'});
   }
 
   function performAbilityFishFollowMove(move,token,depth=1){
@@ -3791,6 +3876,68 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     return true;
   }
 
+  function chooseInstantBotFallback(currentMoves){
+    if(!currentMoves?.length) return null;
+    // Keep fallback deliberately cheap: prefer captures/promotions, otherwise a legal move.
+    const scored=currentMoves.map(move=>{
+      const captured=pieceAt(game.board,move.to.r,move.to.c);
+      let score=(captured?VALUES[typeOf(captured)]||0:0)*20;
+      if(move.promotionRequired) score+=18;
+      if(move.castle) score+=4;
+      // Mild center preference prevents completely random-looking fallback play.
+      score+=4-Math.abs(3.5-move.to.r)-Math.abs(3.5-move.to.c);
+      return {move,score:score+Math.random()*2};
+    }).sort((a,b)=>b.score-a.score);
+    return scored[0]?.move||currentMoves[0];
+  }
+
+  function chooseInstantBotStrategicAction(currentMoves){
+    if(!game||game.turn!=='b')return null;
+    const ordinary=chooseInstantBotFallback(currentMoves);
+    const escape=findImmediateAbilityEscapeAction(game,'b');
+    if(inCheck(game,'b'))return escape|| (ordinary?{type:'normal',move:ordinary}:null);
+
+    // Cheap upgrade policy for the time-limit fallback. This prevents a worker
+    // timeout from silently turning the bot into an ordinary-chess-only player.
+    if(game.upgradesEnabled!==false){
+      ensureUpgradeState(game);
+      const limit=Math.max(0,Number(game.upgradeLimit??3));
+      const count=upgradeCount(game,'b');
+      if(count<limit){
+        const preferred=['veteran','archbishop','chancellor','royal_step','bastion','lancer','cardinal','turret','vanguard','escape_route','phase_step','charger','color_shift','reverse_gear'];
+        for(const id of preferred){
+          const up=upgradeDefinition(id);if(!up||game.upgrades.b?.[up.type]||Number(game.points?.b||0)<up.cost)continue;
+          // Save a small reserve unless this would be the bot's first upgrade.
+          if(Number(game.points.b)>=up.cost+2 || count===0)return {type:'upgrade',upgradeId:id};
+        }
+      }
+    }
+
+    if(game.abilitiesEnabled!==false&&!game.abilityUsed){
+      const points=Number(game.points?.b||0);
+      // Freeze a valuable enemy piece when affordable.
+      if(points>=3){
+        let best=null;
+        for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+          const p=pieceAt(game.board,r,c);if(!p||colorOf(p)!=='w'||typeOf(p)==='k'||isFortifiedAgainstAbility(game,r,c,'b'))continue;
+          const value=VALUES[typeOf(p)]||0;
+          if(value>=5&&(!best||value>best.value))best={r,c,value};
+        }
+        if(best&&ordinary)return {type:'freeze',r:best.r,c:best.c,move:ordinary};
+      }
+      // Shield an attacked major/minor piece rather than wasting the bank.
+      if(points>=3){
+        let best=null;
+        for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+          const p=pieceAt(game.board,r,c);if(!p||colorOf(p)!=='b'||typeOf(p)==='k'||!isSquareAttacked(game,r,c,'w'))continue;
+          const value=VALUES[typeOf(p)]||0;if(value>=3&&(!best||value>best.value))best={r,c,value};
+        }
+        if(best&&ordinary)return {type:'shield',r:best.r,c:best.c,move:ordinary};
+      }
+    }
+    return ordinary?{type:'normal',move:ordinary}:null;
+  }
+
   function maybeBotTurn(){
     if(!game||game.mode!=='bot'||game.turn!=='b')return;
     if(enforceFinishedGamePresentation())return;
@@ -3798,36 +3945,73 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     if(botMoveTimer){clearTimeout(botMoveTimer);botMoveTimer=null;}
     const timing=botTimingProfile();
     const difficulty=selectedBotDifficulty||'medium';
+
+    // Browser AbilityFish is intentionally time-limited. The future WASM engine
+    // can search much deeper without changing this website-facing interface.
     const config=difficulty==='easy'
-      ? {depth:1,useAbilities:true,useComplexAbilities:false,delay:Math.max(80,timing.delay||0)}
+      ? {depth:1,useAbilities:true,useComplexAbilities:false,delay:90,timeMs:450}
       : difficulty==='medium'
-        ? {depth:2,useAbilities:true,useComplexAbilities:true,delay:Math.max(70,timing.delay||0)}
-        : {depth:Math.max(3,Math.min(4,timing.depth||3)),useAbilities:true,useComplexAbilities:true,delay:Math.max(45,timing.delay||0)};
+        ? {depth:1,useAbilities:true,useComplexAbilities:true,delay:90,timeMs:850}
+        : {depth:2,useAbilities:true,useComplexAbilities:true,delay:80,timeMs:1800};
 
     const currentMoves=allLegalMoves(game,'b');
+    if(!currentMoves.length){
+      const escape=findImmediateAbilityEscapeAction(game,'b');
+      if(escape){botMoveTimer=setTimeout(()=>{botMoveTimer=null;if(token===botThinkToken&&game?.turn==='b')executeAbilityFishAction(escape,token,{depth:1});},config.delay);return;}
+      evaluateGameStatus();enforceFinishedGamePresentation();render();return;
+    }
+    const instantAction=chooseInstantBotStrategicAction(currentMoves);
+    const instantFallback=instantAction?.type==='normal'?instantAction.move:chooseInstantBotFallback(currentMoves);
     const immediate=currentMoves.find(m=>pieceAt(game.board,m.to.r,m.to.c)==='wk');
     if(immediate){botMoveTimer=setTimeout(()=>{if(token===botThinkToken&&game?.turn==='b')makeMove(immediate,{source:'bot'});},config.delay);return;}
     if(currentMoves.length===1&&game.abilitiesEnabled===false&&game.upgradesEnabled===false){botMoveTimer=setTimeout(()=>{if(token===botThinkToken&&game?.turn==='b')makeMove(currentMoves[0],{source:'bot'});},config.delay);return;}
 
-    let worker;
-    try{worker=createAbilityFishWorker();}
-    catch(error){console.warn('AbilityFish worker unavailable; using legacy bot.',error);botMoveTimer=setTimeout(()=>abilityFishFallback(token,config.depth),config.delay);return;}
+    let worker=null;
+    try{
+      // A fresh worker per bot turn is important: terminating it genuinely cancels
+      // an expensive stale search instead of leaving later positions queued behind it.
+      worker=new Worker(ensureAbilityFishWorkerUrl());
+    }catch(error){
+      console.warn('AbilityFish worker unavailable; using instant fallback.',error);
+      if(instantAction)botMoveTimer=setTimeout(()=>{if(token===botThinkToken&&game?.turn==='b')executeAbilityFishAction(instantAction,token,{depth:1,fromFallback:true});},config.delay);
+      return;
+    }
 
     let settled=false;
-    const timeoutMs=difficulty==='easy'?3000:difficulty==='medium'?7000:14000;
+    const cleanup=()=>{try{worker?.terminate();}catch{} worker=null;};
     const timeout=setTimeout(()=>{
-      if(settled)return;settled=true;worker.removeEventListener('message',handleMessage);
-      console.warn('AbilityFish timed out; using legacy bot fallback.');abilityFishFallback(token,config.depth);
-    },timeoutMs);
+      if(settled)return;
+      settled=true;cleanup();
+      console.warn('AbilityFish bot time limit reached; using instant fallback.');
+      if(instantAction&&token===botThinkToken&&game?.turn==='b'){
+        botMoveTimer=setTimeout(()=>{botMoveTimer=null;if(token===botThinkToken&&game?.turn==='b')executeAbilityFishAction(instantAction,token,{depth:1,fromFallback:true});},config.delay);
+      }
+    },config.timeMs);
+
     const handleMessage=(event)=>{
       if(event.data?.id!==token||settled)return;
-      settled=true;clearTimeout(timeout);worker.removeEventListener('message',handleMessage);
+      settled=true;clearTimeout(timeout);cleanup();
       if(!game||game.over||game.turn!=='b'||token!==botThinkToken)return;
-      if(event.data.error){console.warn('AbilityFish error; using fallback.',event.data.error);return abilityFishFallback(token,config.depth);}
+      if(event.data.error){
+        console.warn('AbilityFish bot error; using instant fallback.',event.data.error);
+        if(instantAction)botMoveTimer=setTimeout(()=>{botMoveTimer=null;if(token===botThinkToken&&game?.turn==='b')executeAbilityFishAction(instantAction,token,{depth:1,fromFallback:true});},config.delay);
+        return;
+      }
       const action=event.data.result?.bestAction||null;
-      botMoveTimer=setTimeout(()=>{botMoveTimer=null;executeAbilityFishAction(action,token,config);},config.delay);
+      if(!action){
+        if(instantAction)botMoveTimer=setTimeout(()=>{botMoveTimer=null;if(token===botThinkToken&&game?.turn==='b')executeAbilityFishAction(instantAction,token,{depth:1,fromFallback:true});},config.delay);
+        return;
+      }
+      botMoveTimer=setTimeout(()=>{botMoveTimer=null;executeAbilityFishAction(action,token,{...config,depth:1});},config.delay);
     };
-    worker.addEventListener('message',handleMessage);
+
+    worker.addEventListener('message',handleMessage,{once:false});
+    worker.addEventListener('error',(event)=>{
+      if(settled)return;
+      settled=true;clearTimeout(timeout);cleanup();
+      console.warn('AbilityFish worker crashed; using instant fallback.',event?.message||event);
+      if(instantAction&&token===botThinkToken&&game?.turn==='b')botMoveTimer=setTimeout(()=>{botMoveTimer=null;executeAbilityFishAction(instantAction,token,{depth:1,fromFallback:true});},config.delay);
+    },{once:true});
     worker.postMessage({id:token,state:cloneState(game),options:{depth:config.depth,useAbilities:config.useAbilities,useComplexAbilities:config.useComplexAbilities}});
   }
 
