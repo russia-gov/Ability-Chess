@@ -4226,7 +4226,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   function showScreen(target,options={}){
     if(!VALID_ROUTES.has(target))target='home';
     homeScreen.classList.add('hidden'); playHubScreen?.classList.remove('active'); gameScreen.classList.remove('active'); abilitiesScreen.classList.remove('active'); document.getElementById('analysisScreen')?.classList.remove('active'); settingsScreen.classList.remove('active'); historyScreen.classList.remove('active'); profileScreen?.classList.remove('active');document.getElementById('tournamentsScreen')?.classList.remove('active');document.getElementById('adminScreen')?.classList.remove('active');
-    if(target==='home') homeScreen.classList.remove('hidden'); else if(target==='play'){playHubScreen?.classList.add('active');renderPlayHub();} else if(target==='game') gameScreen.classList.add('active'); else if(target==='abilities') abilitiesScreen.classList.add('active'); else if(target==='analysis'){document.getElementById('analysisScreen')?.classList.add('active');openAnalysisWorkspace();} else if(target==='settings') settingsScreen.classList.add('active'); else if(target==='history'){historyScreen.classList.add('active');loadGameHistory();} else if(target==='profile'){profileScreen?.classList.add('active');} else if(target==='tournaments'){document.getElementById('tournamentsScreen')?.classList.add('active');loadTournaments();} else if(target==='admin'){document.getElementById('adminScreen')?.classList.add('active');loadAdminPanel();}
+    if(target==='home') homeScreen.classList.remove('hidden'); else if(target==='play'){playHubScreen?.classList.add('active');renderPlayHub();} else if(target==='game') gameScreen.classList.add('active'); else if(target==='abilities') abilitiesScreen.classList.add('active'); else if(target==='analysis'){document.getElementById('analysisScreen')?.classList.add('active');initializeAnalysisWorkspaceSafely();} else if(target==='settings') settingsScreen.classList.add('active'); else if(target==='history'){historyScreen.classList.add('active');loadGameHistory();} else if(target==='profile'){profileScreen?.classList.add('active');} else if(target==='tournaments'){document.getElementById('tournamentsScreen')?.classList.add('active');loadTournaments();} else if(target==='admin'){document.getElementById('adminScreen')?.classList.add('active');loadAdminPanel();}
     if(options.navigate!==false)updateRoute(target,!!options.replace,options.extra);
     if(options.scroll!==false)window.scrollTo({top:0,behavior:'instant'});
   }
@@ -5092,9 +5092,26 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     analysisState=freshAnalysisState();analysisSelected=null;analysisLegal=[];analysisHistory=[];analysisHistoryIndex=-1;analysisPushHistory();renderAnalysis();scheduleAnalysisEngine();
   }
 
-  function openAnalysisWorkspace(){
-    if(!analysisState)analysisReset();else renderAnalysis();
+  function initializeAnalysisWorkspaceSafely(){
+    const status=document.getElementById('analysisStatus');
+    try{
+      if(!analysisState){
+        analysisState=freshAnalysisState();
+        analysisSelected=null;analysisLegal=[];analysisHistory=[];analysisHistoryIndex=-1;
+        analysisPushHistory();
+      }
+      renderAnalysis();
+      if(document.getElementById('analysisEngineToggle')?.checked)scheduleAnalysisEngine();
+      return true;
+    }catch(error){
+      console.error('Ability Chess analysis initialization failed',error);
+      if(status)status.textContent=`Analysis failed to initialize: ${error?.message||String(error)}`;
+      const lines=document.getElementById('analysisLines');
+      if(lines)lines.innerHTML=`<div class="analysis-engine-off">Analysis initialization error: ${escapeHtml(error?.message||String(error))}</div>`;
+      return false;
+    }
   }
+  function openAnalysisWorkspace(){ return initializeAnalysisWorkspaceSafely(); }
 
   function analysisSquareName(pos){return pos?`${'abcdefgh'[pos.c]}${8-pos.r}`:'';}
   function analysisMoveLabel(move){
@@ -5160,22 +5177,35 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   function renderAnalysis(){
     if(!analysisState)return;
     const board=document.getElementById('analysisBoard');if(!board)return;
-    board.replaceChildren();
-    for(let r=0;r<8;r++)for(let c=0;c<8;c++){
-      const sq=document.createElement('div');sq.className='sq '+(((r+c)%2===0)?'light':'dark');sq.dataset.r=r;sq.dataset.c=c;
-      const p=analysisState.board?.[r]?.[c];if(p)sq.innerHTML=pieceMarkup(p);
-      if(analysisState.lastMove&&((analysisState.lastMove.from?.r===r&&analysisState.lastMove.from?.c===c)||(analysisState.lastMove.to?.r===r&&analysisState.lastMove.to?.c===c)))sq.classList.add('last-move');
-      if(analysisSelected?.r===r&&analysisSelected?.c===c)sq.classList.add('selected');
-      const legal=analysisLegal.find(m=>m.to.r===r&&m.to.c===c);if(legal)sq.classList.add(legal.capture?'analysis-capture':'analysis-legal');
-      if(p&&typeOf(p)==='k'&&inCheck(analysisState,colorOf(p)))sq.classList.add('king-in-check');
-      appendSquareStatusMarkers(sq,r,c,analysisState);
-      sq.addEventListener('click',()=>analysisBoardClick(r,c));board.appendChild(sq);
+    try{
+      const frag=document.createDocumentFragment();
+      for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+        const sq=document.createElement('div');sq.className='sq '+(((r+c)%2===0)?'light':'dark');sq.dataset.r=r;sq.dataset.c=c;
+        const p=analysisState.board?.[r]?.[c];if(p)sq.innerHTML=pieceMarkup(p);
+        if(analysisState.lastMove&&((analysisState.lastMove.from?.r===r&&analysisState.lastMove.from?.c===c)||(analysisState.lastMove.to?.r===r&&analysisState.lastMove.to?.c===c)))sq.classList.add('last-move');
+        if(analysisSelected?.r===r&&analysisSelected?.c===c)sq.classList.add('selected');
+        const legal=analysisLegal.find(m=>m.to.r===r&&m.to.c===c);if(legal)sq.classList.add(legal.capture?'analysis-capture':'analysis-legal');
+        if(p&&typeOf(p)==='k'){
+          try{if(inCheck(analysisState,colorOf(p)))sq.classList.add('king-in-check');}catch(error){console.warn('Analysis check-marker skipped',error);}
+        }
+        try{appendSquareStatusMarkers(sq,r,c,analysisState);}catch(error){console.warn('Analysis status-marker skipped',error);}
+        sq.addEventListener('click',()=>analysisBoardClick(r,c));frag.appendChild(sq);
+      }
+      board.replaceChildren(frag);
+      const wp=document.getElementById('analysisWhitePoints'),bp=document.getElementById('analysisBlackPoints'),turn=document.getElementById('analysisTurnSelect');
+      if(wp&&document.activeElement!==wp)wp.value=String(analysisState.points?.w??0);
+      if(bp&&document.activeElement!==bp)bp.value=String(analysisState.points?.b??0);
+      if(turn)turn.value=analysisState.turn==='b'?'b':'w';
+      const ae=document.getElementById('analysisAbilitiesEnabled'),ue=document.getElementById('analysisUpgradesEnabled');
+      if(ae)ae.checked=analysisState.abilitiesEnabled!==false;if(ue)ue.checked=analysisState.upgradesEnabled!==false;
+      let checked=false;try{checked=inCheck(analysisState,analysisState.turn);}catch{}
+      const status=document.getElementById('analysisStatus');if(status)status.textContent=`${analysisState.turn==='w'?'White':'Black'} to move${checked?' — in check':''}. White bank ${analysisState.points?.w??0}; Black bank ${analysisState.points?.b??0}.`;
+      const ub=document.getElementById('analysisUndoBtn'),rb=document.getElementById('analysisRedoBtn');if(ub)ub.disabled=analysisHistoryIndex<=0;if(rb)rb.disabled=analysisHistoryIndex>=analysisHistory.length-1;
+    }catch(error){
+      console.error('Analysis board render failed',error);
+      const status=document.getElementById('analysisStatus');if(status)status.textContent=`Analysis board error: ${error?.message||String(error)}`;
+      throw error;
     }
-    const wp=document.getElementById('analysisWhitePoints'),bp=document.getElementById('analysisBlackPoints'),turn=document.getElementById('analysisTurnSelect');
-    if(document.activeElement!==wp)wp.value=String(analysisState.points.w);if(document.activeElement!==bp)bp.value=String(analysisState.points.b);turn.value=analysisState.turn;
-    document.getElementById('analysisAbilitiesEnabled').checked=analysisState.abilitiesEnabled!==false;document.getElementById('analysisUpgradesEnabled').checked=analysisState.upgradesEnabled!==false;
-    const status=document.getElementById('analysisStatus');if(status)status.textContent=`${analysisState.turn==='w'?'White':'Black'} to move${inCheck(analysisState,analysisState.turn)?' — in check':''}. White bank ${analysisState.points.w}; Black bank ${analysisState.points.b}.`;
-    document.getElementById('analysisUndoBtn').disabled=analysisHistoryIndex<=0;document.getElementById('analysisRedoBtn').disabled=analysisHistoryIndex>=analysisHistory.length-1;
   }
 
   function analysisBoardClick(r,c){
@@ -5205,7 +5235,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     const white=-Number(score);if(Math.abs(white)>90000)return white>0?'M':'−M';const pawns=white/100;return `${pawns>=0?'+':''}${pawns.toFixed(2)}`;
   }
   function setAnalysisEval(score){
-    const white=-Number(score||0);const pct=50+Math.tanh(white/500)*46;document.getElementById('analysisEvalWhite').style.height=`${Math.max(2,Math.min(98,pct))}%`;document.getElementById('analysisEvalLabel').textContent=analysisEvalText(score);
+    const white=-Number(score||0);const pct=50+Math.tanh(white/500)*46;const fill=document.getElementById('analysisEvalWhite'),label=document.getElementById('analysisEvalLabel');if(fill)fill.style.height=`${Math.max(2,Math.min(98,pct))}%`;if(label)label.textContent=analysisEvalText(score);
   }
 
   async function runAnalysisEngine(){
@@ -5236,7 +5266,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
 
   function scheduleAnalysisEngine(){
     clearTimeout(analysisEngineDebounce);analysisEngineGeneration++;
-    const toggle=document.getElementById('analysisEngineToggle');if(!toggle?.checked){const lines=document.getElementById('analysisLines'),meta=document.getElementById('analysisEngineMeta');if(lines)lines.innerHTML='<div class="analysis-engine-off">Turn on Engine to see an AbilityFish evaluation and candidate lines.</div>';if(meta)meta.textContent='Engine is off.';setAnalysisEval(0);document.getElementById('analysisEvalLabel').textContent='—';return;}
+    const toggle=document.getElementById('analysisEngineToggle');if(!toggle?.checked){const lines=document.getElementById('analysisLines'),meta=document.getElementById('analysisEngineMeta');if(lines)lines.innerHTML='<div class="analysis-engine-off">Turn on Engine to see an AbilityFish evaluation and candidate lines.</div>';if(meta)meta.textContent='Engine is off.';setAnalysisEval(0);const evalLabel=document.getElementById('analysisEvalLabel');if(evalLabel)evalLabel.textContent='—';return;}
     analysisEngineDebounce=setTimeout(runAnalysisEngine,180);
   }
 
@@ -5250,6 +5280,10 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   document.getElementById('analysisAbilitiesEnabled')?.addEventListener('change',e=>{if(!analysisState)return;analysisState.abilitiesEnabled=!!e.target.checked;analysisHistory[analysisHistoryIndex]=normalizeAnalysisState(analysisState);scheduleAnalysisEngine();});
   document.getElementById('analysisUpgradesEnabled')?.addEventListener('change',e=>{if(!analysisState)return;analysisState.upgradesEnabled=!!e.target.checked;analysisHistory[analysisHistoryIndex]=normalizeAnalysisState(analysisState);scheduleAnalysisEngine();});
   document.getElementById('analysisEngineToggle')?.addEventListener('change',scheduleAnalysisEngine);document.getElementById('analysisDepthSelect')?.addEventListener('change',scheduleAnalysisEngine);
+
+  // Build an independent analysis position during application boot. This makes the
+  // board available before routing/navigation and removes route timing as a dependency.
+  initializeAnalysisWorkspaceSafely();
 
 
   /* ===== 2026 polish enhancements ===== */
