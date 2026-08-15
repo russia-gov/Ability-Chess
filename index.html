@@ -4759,7 +4759,10 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
       gameModeLabel.innerHTML='Mode: <b>No active game</b>';
       render();
     }
-    applyBrowserRoute();
+    // Defer route activation until the complete script has initialized.
+    // In particular, a direct/reloaded ?page=analysis URL must not call
+    // openAnalysisWorkspace() while its let-bound state is still in the TDZ.
+    queueMicrotask(()=>applyBrowserRoute());
   })();
   window.addEventListener('resize',()=>{ if(shieldMoveWarningEl) renderShieldMoveWarning(); });
   window.addEventListener('scroll',()=>{ if(shieldMoveWarningEl) renderShieldMoveWarning(); },true);
