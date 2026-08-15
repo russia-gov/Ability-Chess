@@ -4788,6 +4788,22 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   window.addEventListener('focus',()=>{if(memberSession||memberChallengeInboxKey){startGlobalChallengeWatcher();loadChallengeNotifications();}});
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&(memberSession||memberChallengeInboxKey)){startGlobalChallengeWatcher();loadChallengeNotifications();}});
 
+  // Tournament runtime state must exist before route boot. A direct or refreshed
+  // ?page=tournaments URL can call loadTournaments() during showScreen(), so keeping
+  // these let-bound variables below boot would place them in the temporal dead zone.
+  let tournamentMatchTimer=null;
+  let activeTournament=null;
+  let tournamentHubTab='standings';
+  let tournamentHubTimer=null;
+  let spectatorTimer=null;
+  let spectatorGame=null;
+  let tournamentChatLastId=0;
+  let tournamentChatLoadedFor=null;
+  let swissAutoMatchBusy=false;
+  let gameChatRoomId=null;
+  let gameChatLastId=0;
+  let gameChatPolling=false;
+
   importAuthRedirectSession();
   buildBoardPresets(); applySettings();
   renderAbilities();
@@ -4898,18 +4914,6 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   }
   async function loadProfileAwards(m){profilePageAwards.innerHTML='<div class="history-empty">Loading awards…</div>';try{const rows=await memberRpc('ability_chess_list_profile_awards',{p_user_id:m.id});profilePageAwards.replaceChildren();if(!rows?.length){profilePageAwards.innerHTML='<div class="history-empty">No awards yet.</div>';return;}for(const a of rows){const card=document.createElement('article');card.className='award-card';card.innerHTML=`${a.image_url?`<img class="award-image" src="${escapeHtml(a.image_url)}" alt="">`:'<div class="award-image">🏆</div>'}<h3>${escapeHtml(a.name)}</h3><p>${escapeHtml(a.description||'')}</p>`;profilePageAwards.appendChild(card);}}catch(e){profilePageAwards.innerHTML=`<div class="history-empty">${escapeHtml(e.message)}</div>`;}}
   async function loadProfileFriends(m){profilePageFriends.innerHTML='<div class="history-empty">Sign in to view friendship status.</div>';if(!memberSession)return;try{const rows=await memberRpc('ability_chess_list_friend_state');profilePageFriends.replaceChildren();const mine=memberProfile&&m.id===memberProfile.id;if(!mine){const state=(rows||[]).find(x=>x.other_id===m.id);profilePageFriends.innerHTML=`<div class="profile-bio">${state?state.status==='accepted'?'You are friends.':state.direction==='incoming'?'This member sent you a friend request.':'Friend request pending.':'You are not friends yet.'}</div>`;return;}if(!rows?.length){profilePageFriends.innerHTML='<div class="history-empty">No friends or requests yet.</div>';return;}for(const f of rows){const row=document.createElement('div');row.className='friend-row';row.innerHTML=`<div>${roleTagHtml(f)}<b>${escapeHtml(f.display_name||f.username)}</b><div class="member-meta"><span class="player-username" data-player-username="${escapeHtml(f.username)}">@${escapeHtml(f.username)}</span> · ${f.status}</div></div>`;const acts=document.createElement('div');if(f.status==='pending'&&f.direction==='incoming'){for(const [label,yes] of [['Accept',true],['Decline',false]]){const b=document.createElement('button');b.textContent=label;b.addEventListener('click',async()=>{await memberRpc('ability_chess_respond_friend_request',{p_request_id:f.request_id,p_accept:yes});loadProfileFriends(m);});acts.appendChild(b);}}else if(f.status==='accepted'){const view=document.createElement('button');view.textContent='Profile';view.addEventListener('click',()=>viewMemberProfile(f));const remove=document.createElement('button');remove.textContent='Remove';remove.addEventListener('click',async()=>{await memberRpc('ability_chess_remove_friend',{p_other_id:f.other_id});loadProfileFriends(m);});acts.append(view,remove);}row.appendChild(acts);profilePageFriends.appendChild(row);}}catch(e){profilePageFriends.innerHTML=`<div class="history-empty">${escapeHtml(e.message)}</div>`;}}
-  let tournamentMatchTimer=null;
-  let activeTournament=null;
-  let tournamentHubTab='standings';
-  let tournamentHubTimer=null;
-  let spectatorTimer=null;
-  let spectatorGame=null;
-  let tournamentChatLastId=0;
-  let tournamentChatLoadedFor=null;
-  let swissAutoMatchBusy=false;
-  let gameChatRoomId=null;
-  let gameChatLastId=0;
-  let gameChatPolling=false;
   const PIECE_GLYPHS={K:'♔',Q:'♕',R:'♖',B:'♗',N:'♘',P:'♙',k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'};
   function tournamentRoleBadge(row){return row?.is_owner?'<span class="role-tag owner-tag">O</span>':row?.is_staff?'<span class="role-tag staff-tag">S</span>':'';}
   function tournamentAvatar(row){return row?.avatar_url?`<img class="tournament-avatar" src="${escapeHtml(row.avatar_url)}" alt="">`:`<span class="tournament-avatar">${escapeHtml((row?.display_name||row?.username||'?').slice(0,1).toUpperCase())}</span>`;}
