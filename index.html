@@ -383,6 +383,29 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   .profile-time-badge{width:44px;height:40px}
 }
 
+
+/* ===== Compact expandable rating cards ===== */
+.profile-role-banner{display:none!important}
+#profileStatsPanel .profile-page-stats{display:grid!important;grid-template-columns:repeat(3,minmax(230px,1fr))!important;gap:14px!important;align-items:start}
+.rating-category-card{position:relative;background:#171c22;border:1px solid #313b46;border-radius:10px;padding:16px;min-height:188px;cursor:pointer;transition:background .15s ease,border-color .15s ease,transform .15s ease;overflow:hidden}
+.rating-category-card:hover{background:#1c232a;border-color:#465463}
+.rating-category-card:focus-visible{outline:2px solid #91ae5d;outline-offset:2px}
+.rating-category-card.open{border-color:#647a49;background:#1c2420}
+.rating-card-icon{position:absolute;right:14px;top:12px;width:30px;height:30px;display:grid;place-items:center;color:#e1b33b;opacity:.95}
+.rating-card-icon svg{width:26px;height:26px;fill:currentColor;stroke:currentColor}
+.rating-card-label{font-size:13px;font-weight:800;color:#dce3e9;margin-bottom:3px}
+.rating-card-value{font-size:32px;font-weight:900;line-height:1;color:#f1f4f6;letter-spacing:-.03em}
+.rating-mini-chart{height:92px;margin:10px 0 0}
+.rating-mini-chart svg{display:block;width:100%;height:100%;overflow:visible}
+.rating-mini-chart .axis{stroke:#3b4650;stroke-width:1}.rating-mini-chart .line{fill:none;stroke:#68b9cf;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.rating-mini-empty{height:92px;display:flex;align-items:center;color:#77838f;font-size:11px}
+.rating-card-advanced{display:none;margin-top:12px;padding-top:12px;border-top:1px solid #303a43;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.rating-category-card.open .rating-card-advanced{display:grid}
+.rating-advanced-stat{background:#12171c;border-radius:7px;padding:9px 10px}.rating-advanced-stat span{display:block;color:#8895a1;font-size:10px;text-transform:uppercase;letter-spacing:.05em}.rating-advanced-stat b{display:block;margin-top:2px;font-size:16px;color:#eef2f5}
+.rating-card-hint{font-size:10px;color:#798691;margin-top:8px}.rating-category-card.open .rating-card-hint{display:none}
+@media(max-width:900px){#profileStatsPanel .profile-page-stats{grid-template-columns:1fr 1fr!important}}
+@media(max-width:620px){#profileStatsPanel .profile-page-stats{grid-template-columns:1fr!important}}
+
 </style>
 </head>
 <body>
@@ -4165,7 +4188,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     profilePageName.innerHTML=`${roleTagHtml(m)}${escapeHtml(m.display_name||m.username)}`;
     profilePageHandle.innerHTML=`<span class="player-username" data-player-username="${escapeHtml(m.username||'')}">@${escapeHtml(m.username||'')}</span>`;
     const categories=['bullet','blitz','rapid'];
-    profilePageStats.innerHTML=categories.map(cat=>`<div class="profile-rating-card"><b>${Number(m[`${cat}_rating`]??1200)}</b><span>${cat[0].toUpperCase()+cat.slice(1)}</span><small>${Number(m[`${cat}_games`]||0)} games · ${Number(m[`${cat}_wins`]||0)}W ${Number(m[`${cat}_losses`]||0)}L ${Number(m[`${cat}_draws`]||0)}D</small></div>`).join('')+`<div class="profile-stat"><b>${Number(m.games_played||0)}</b><span>Total games</span></div><div class="profile-stat"><b>${Number(m.wins||0)}</b><span>Wins</span></div><div class="profile-stat"><b>${Number(m.losses||0)}</b><span>Losses</span></div><div class="profile-stat"><b>${Number(m.draws||0)}</b><span>Draws</span></div>`;renderRatingHistoryCharts(m);
+    profilePageStats.innerHTML=categories.map(cat=>ratingCategoryCardShell(m,cat)).join('');renderRatingHistoryCharts(m);
     const glance=document.getElementById('profileAtGlance');if(glance){const total=Number(m.games_played||0),wins=Number(m.wins||0),losses=Number(m.losses||0),draws=Number(m.draws||0);const best=Math.max(Number(m.bullet_rating??1200),Number(m.blitz_rating??1200),Number(m.rapid_rating??1200));glance.innerHTML=`<div class="profile-at-glance-row"><span>Games played</span><b>${total}</b></div><div class="profile-at-glance-row"><span>Record</span><b>${wins}W · ${losses}L · ${draws}D</b></div><div class="profile-at-glance-row"><span>Best rating</span><b>${best}</b></div><div class="profile-at-glance-row"><span>Member type</span><b>${m.is_owner?'Owner':m.is_staff?'Staff':'Member'}</b></div>`;}
     profilePageActions.replaceChildren();profilePageHistory.replaceChildren();profilePageAwards.replaceChildren();profilePageFriends.replaceChildren();profilePageBio.textContent=m.bio||'No bio yet.';
     if(m.is_owner||m.is_staff){const badge=document.createElement('div');badge.className=`profile-role-badge ${m.is_owner?'owner':'staff'}`;badge.innerHTML=`<span>♞</span><span>${m.is_owner?'Owner':'Staff Member'}</span>`;profilePageActions.appendChild(badge);}
@@ -4760,12 +4783,29 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   function startNotificationPolling(){clearInterval(notificationTimer);if(!memberSession)return;pollNotifications();notificationTimer=setInterval(pollNotifications,5000);}
   function installNotificationButtons(){document.querySelectorAll('.home-nav').forEach(nav=>{if(nav.querySelector('.sidebar-notification-btn'))return;const b=document.createElement('button');b.type='button';b.className='home-nav-item sidebar-notification-btn';b.innerHTML='<span class="home-nav-icon">●</span>Notifications <span class="notification-badge" hidden></span>';b.addEventListener('click',()=>{const p=ensureNotificationCenter();p.hidden=!p.hidden;renderNotifications();});nav.appendChild(b);});}
 
+  function ratingIconSvg(cat){
+    if(cat==='blitz')return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.6 1.8 5.9 13h5.2l-.8 9.2L18.1 11h-5.2z"></path></svg>';
+    if(cat==='rapid')return '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke-width="2"><circle cx="12" cy="12" r="8.5" fill="none"></circle><path d="M12 7v5l3.6 2.2" fill="none"></path><path d="M9 2h6" fill="none"></path></svg>';
+    return '<svg viewBox="0 0 28 24" aria-hidden="true"><path d="M3 9.1h13.7l5.8 2.9-5.8 2.9H3c-1.1 0-2-.9-2-2v-1.8c0-1.1.9-2 2-2z"></path><path d="M18.5 7.1 27 12l-8.5 4.9z"></path></svg>';
+  }
+  function ratingCategoryCardShell(m,cat){
+    const label=cat[0].toUpperCase()+cat.slice(1),rating=Number(m[`${cat}_rating`]??1200),games=Number(m[`${cat}_games`]||0),wins=Number(m[`${cat}_wins`]||0),losses=Number(m[`${cat}_losses`]||0),draws=Number(m[`${cat}_draws`]||0),winPct=games?Math.round((wins/games)*100):0;
+    return `<section class="rating-category-card" data-rating-category="${cat}" tabindex="0" role="button" aria-expanded="false" aria-label="${label} rating ${rating}. Open detailed ${label} statistics."><div class="rating-card-icon">${ratingIconSvg(cat)}</div><div class="rating-card-label">${label}</div><div class="rating-card-value">${rating}</div><div class="rating-mini-chart" data-rating-chart="${cat}"><div class="rating-mini-empty">Loading rating history…</div></div><div class="rating-card-hint">Click for detailed stats</div><div class="rating-card-advanced"><div class="rating-advanced-stat"><span>Games</span><b>${games}</b></div><div class="rating-advanced-stat"><span>Win rate</span><b>${winPct}%</b></div><div class="rating-advanced-stat"><span>Wins</span><b>${wins}</b></div><div class="rating-advanced-stat"><span>Losses</span><b>${losses}</b></div><div class="rating-advanced-stat"><span>Draws</span><b>${draws}</b></div><div class="rating-advanced-stat"><span>Record</span><b>${wins}-${losses}-${draws}</b></div></div></section>`;
+  }
   async function renderRatingHistoryCharts(m){
-    if(!m?.id||!profilePageStats)return;profilePageStats.querySelector('.rating-history-wrap')?.remove();
-    const wrap=document.createElement('div');wrap.className='rating-history-wrap';profilePageStats.appendChild(wrap);
+    if(!m?.id||!profilePageStats)return;
+    const toggle=card=>{const open=!card.classList.contains('open');profilePageStats.querySelectorAll('.rating-category-card').forEach(c=>{c.classList.remove('open');c.setAttribute('aria-expanded','false');});if(open){card.classList.add('open');card.setAttribute('aria-expanded','true');}};
+    profilePageStats.querySelectorAll('.rating-category-card').forEach(card=>{card.addEventListener('click',()=>toggle(card));card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle(card);}});});
     for(const cat of ['bullet','blitz','rapid']){
-      const card=document.createElement('div');card.className='rating-history-card';card.innerHTML=`<b>${cat[0].toUpperCase()+cat.slice(1)} history</b><div class="empty">Loading…</div>`;wrap.appendChild(card);
-      try{const rows=await memberRpc('ability_chess_rating_history',{p_user_id:m.id,p_category:cat});if(!rows?.length){card.querySelector('.empty').textContent='No rated games yet.';continue;}const vals=[Number(rows[0].rating_before||1200),...rows.map(r=>Number(r.rating_after||1200))];const min=Math.min(...vals)-20,max=Math.max(...vals)+20,range=Math.max(1,max-min);const pts=vals.map((v,i)=>`${8+(i/(Math.max(1,vals.length-1)))*224},${96-((v-min)/range)*80}`).join(' ');card.innerHTML=`<b>${cat[0].toUpperCase()+cat.slice(1)} history</b><svg viewBox="0 0 240 105" role="img" aria-label="${cat} rating history"><line class="axis" x1="8" y1="96" x2="232" y2="96"></line><polyline class="line" points="${pts}"></polyline></svg><small>${vals[0]} → ${vals[vals.length-1]} · ${rows.length} rated games</small>`;}catch(e){card.querySelector('.empty').textContent=e.message;}
+      const target=profilePageStats.querySelector(`[data-rating-chart="${cat}"]`);if(!target)continue;
+      try{
+        const rows=await memberRpc('ability_chess_rating_history',{p_user_id:m.id,p_category:cat});
+        if(!rows?.length){target.innerHTML='<div class="rating-mini-empty">No rated games yet.</div>';continue;}
+        const vals=[Number(rows[0].rating_before||1200),...rows.map(r=>Number(r.rating_after||1200))];
+        const min=Math.min(...vals)-20,max=Math.max(...vals)+20,range=Math.max(1,max-min);
+        const pts=vals.map((v,i)=>`${4+(i/(Math.max(1,vals.length-1)))*232},${84-((v-min)/range)*70}`).join(' ');
+        target.innerHTML=`<svg viewBox="0 0 240 90" role="img" aria-label="${cat} rating history"><line class="axis" x1="4" y1="84" x2="236" y2="84"></line><polyline class="line" points="${pts}"></polyline></svg>`;
+      }catch(e){target.innerHTML='<div class="rating-mini-empty">Rating history unavailable.</div>';}
     }
   }
 
@@ -4901,7 +4941,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   function updateSkeletonStates(){document.querySelectorAll('.history-empty,.member-empty,#moderationReports,#adminAuditLog').forEach(el=>{const loading=/^Loading|Loading…|Searching…/i.test(el.textContent.trim());el.classList.toggle('skeleton',loading);});}
   function requestDangerConfirmation(button){return new Promise(resolve=>{const overlay=document.createElement('div');overlay.className='ui-confirm-overlay';const label=(button.textContent||'this action').trim();overlay.innerHTML=`<section class="ui-confirm-card" role="alertdialog" aria-modal="true"><h2>Confirm action</h2><p>Are you sure you want to <strong>${escapeHtml(label.toLowerCase())}</strong>? This action may not be reversible.</p><div class="ui-confirm-actions"><button type="button" data-cancel>Cancel</button><button type="button" class="danger-button" data-confirm>Confirm</button></div></section>`;document.body.appendChild(overlay);const done=v=>{overlay.remove();resolve(v);};overlay.querySelector('[data-cancel]').addEventListener('click',()=>done(false));overlay.querySelector('[data-confirm]').addEventListener('click',()=>done(true));overlay.addEventListener('click',e=>{if(e.target===overlay)done(false);});overlay.querySelector('[data-confirm]').focus();});}
   document.addEventListener('click',async e=>{const b=e.target.closest?.('button.danger,button.danger-button');if(!b||b.dataset.confirmed==='1'||b.closest('.ui-confirm-overlay'))return;if(/decline|cancel|dismiss/i.test(b.textContent))return;e.preventDefault();e.stopImmediatePropagation();if(await requestDangerConfirmation(b)){b.dataset.confirmed='1';b.click();queueMicrotask(()=>delete b.dataset.confirmed);}},true);
-  function polishUiPass(){installPlayerStrips();updatePlayerStrips();formatMoveLog();addShortcutHelp();installGlobalSearchButtons();installStatsTab();polishTournamentCards();connectionPolish();installA11yLabels();polishEmptyStates();updateSkeletonStates();installProfileRoleBanner();}
+  function polishUiPass(){installPlayerStrips();updatePlayerStrips();formatMoveLog();addShortcutHelp();installGlobalSearchButtons();installStatsTab();polishTournamentCards();connectionPolish();installA11yLabels();polishEmptyStates();updateSkeletonStates();}
   const polishObserver=new MutationObserver(()=>requestAnimationFrame(polishUiPass));polishObserver.observe(document.body,{childList:true,subtree:true,characterData:false});
   setInterval(()=>{connectionPolish();updatePlayerStrips();polishTournamentCards();},3000);
   installKeyboardShortcuts();installStatusToasts();polishUiPass();
