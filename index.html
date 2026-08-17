@@ -828,6 +828,17 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
 <script>
 (() => {
   const boardEl = document.getElementById('board');
+  const memberRecovery=document.getElementById('memberRecovery');
+  const sendMemberChallengeBtn=document.getElementById('sendMemberChallengeBtn');
+  const memberChallengeSetupModal=document.getElementById('memberChallengeSetupModal');
+  const cancelMemberChallengeSetupBtn=document.getElementById('cancelMemberChallengeSetupBtn');
+  const challengeUpgradeLimitSlider=document.getElementById('challengeUpgradeLimitSlider');
+  const challengeStartingPointsSlider=document.getElementById('challengeStartingPointsSlider');
+  const challengeIncrementSlider=document.getElementById('challengeIncrementSlider');
+  const challengeBaseTimeSlider=document.getElementById('challengeBaseTimeSlider');
+  const memberCancelRecoveryBtn=document.getElementById('memberCancelRecoveryBtn');
+  const memberSavePasswordBtn=document.getElementById('memberSavePasswordBtn');
+  const memberForgotPasswordBtn=document.getElementById('memberForgotPasswordBtn');
   const annotationLayer = document.getElementById('annotationLayer');
   const statusEl = document.getElementById('status');
   const logEl = document.getElementById('log');
@@ -909,6 +920,8 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   const resetSettingsBtn = document.getElementById('resetSettingsBtn');
   const memberModal=document.getElementById('memberModal'), openMembersBtn=document.getElementById('openMembersBtn'), closeMemberBtn=document.getElementById('closeMemberBtn'), memberSignedOut=document.getElementById('memberSignedOut'), memberSignedIn=document.getElementById('memberSignedIn'), memberEmail=document.getElementById('memberEmail'), memberPassword=document.getElementById('memberPassword'), memberSignInBtn=document.getElementById('memberSignInBtn'), memberSignUpBtn=document.getElementById('memberSignUpBtn'), memberSignOutBtn=document.getElementById('memberSignOutBtn'), memberIdentity=document.getElementById('memberIdentity'), memberStats=document.getElementById('memberStats'), profileUsername=document.getElementById('profileUsername'), profileDisplayName=document.getElementById('profileDisplayName'), saveProfileBtn=document.getElementById('saveProfileBtn'), memberSearch=document.getElementById('memberSearch'), refreshMembersBtn=document.getElementById('refreshMembersBtn'), postOpenChallengeBtn=document.getElementById('postOpenChallengeBtn'), memberList=document.getElementById('memberList'), memberStatus=document.getElementById('memberStatus');
 
+
+  let notificationTimer=null,notificationLastId=0,notificationRows=[];
   let selectedGameMode = 'bot';
   let historyViewIndex = null;
   let analysisMode=false;
@@ -5422,7 +5435,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     loadThread();area.focus();
   }
 
-  let notificationTimer=null,notificationLastId=0,notificationRows=[];
+
   function ensureNotificationCenter(){
     let panel=document.getElementById('notificationCenter');if(panel)return panel;
     panel=document.createElement('section');panel.id='notificationCenter';panel.className='notification-center';panel.hidden=true;
