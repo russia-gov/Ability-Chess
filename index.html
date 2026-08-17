@@ -4709,6 +4709,34 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
       overlay.addEventListener('click',e=>{if(e.target===overlay){overlay.remove();resolve(null);}});
     });
   }
+  function ratingCategoryCardShell(m,cat){
+    const label=cat.charAt(0).toUpperCase()+cat.slice(1);
+    const rating=Number(m?.[`${cat}_rating`]??1200);
+    const games=Number(m?.[`${cat}_games`]??0);
+    const wins=Number(m?.[`${cat}_wins`]??0);
+    const losses=Number(m?.[`${cat}_losses`]??0);
+    const draws=Number(m?.[`${cat}_draws`]??Math.max(0,games-wins-losses));
+    const icon=cat==='bullet'?'●':cat==='blitz'?'ϟ':'◷';
+    return `<article class="profile-rating-card rating-category-card" data-rating-category="${cat}"><span class="rating-card-icon" aria-hidden="true">${icon}</span><div class="rating-card-label">${label}</div><div class="rating-card-value">${rating}</div><small>${games} game${games===1?'':'s'} · ${wins}W ${losses}L ${draws}D</small></article>`;
+  }
+  async function renderRatingHistoryCharts(m){
+    // Rating history is supplemental. A failed chart request must never block the profile itself.
+    if(!profilePageStats||!m?.id)return;
+    let wrap=profilePageStats.querySelector('.rating-history-wrap');
+    if(!wrap){wrap=document.createElement('div');wrap.className='rating-history-wrap';profilePageStats.appendChild(wrap);}
+    wrap.innerHTML=['bullet','blitz','rapid'].map(cat=>`<section class="rating-history-card" data-history-category="${cat}"><strong>${cat.charAt(0).toUpperCase()+cat.slice(1)} history</strong><div class="empty">Loading…</div></section>`).join('');
+    await Promise.all(['bullet','blitz','rapid'].map(async cat=>{
+      const card=wrap.querySelector(`[data-history-category="${cat}"]`);if(!card)return;
+      try{
+        const rows=await memberRpc('ability_chess_rating_history',{p_user_id:m.id,p_category:cat});
+        const values=(rows||[]).map(r=>Number(r.rating_after??r.rating??r.new_rating)).filter(Number.isFinite);
+        if(values.length<2){card.querySelector('.empty').textContent=values.length?'Not enough history yet.':'No rating history yet.';return;}
+        const w=260,h=96,pad=8,min=Math.min(...values),max=Math.max(...values),span=Math.max(1,max-min);
+        const pts=values.map((v,i)=>`${pad+(w-pad*2)*(i/Math.max(1,values.length-1))},${h-pad-(h-pad*2)*((v-min)/span)}`).join(' ');
+        card.innerHTML=`<strong>${cat.charAt(0).toUpperCase()+cat.slice(1)} history</strong><svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${cat} rating history"><line class="axis" x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}"></line><polyline class="line" points="${pts}"></polyline></svg><div class="history-meta">${values[0]} → ${values[values.length-1]}</div>`;
+      }catch(e){const empty=card.querySelector('.empty');if(empty)empty.textContent='Rating history unavailable.';}
+    }));
+  }
   async function viewMemberProfile(member,options={}){
     let m=member||memberProfile;if(!m){openMemberLobby();return;}m=await hydrateProfile(m);currentProfileMember=m;
     try{sessionStorage.setItem('abilityChessViewedProfile',JSON.stringify(m));}catch{}
@@ -4716,7 +4744,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     profilePageName.innerHTML=`${roleTagHtml(m)}${escapeHtml(m.display_name||m.username)}`;
     profilePageHandle.innerHTML=`<span class="player-username" data-player-username="${escapeHtml(m.username||'')}">@${escapeHtml(m.username||'')}</span>`;
     const categories=['bullet','blitz','rapid'];
-    profilePageStats.innerHTML=categories.map(cat=>ratingCategoryCardShell(m,cat)).join('');renderRatingHistoryCharts(m);
+    try{profilePageStats.innerHTML=categories.map(cat=>ratingCategoryCardShell(m,cat)).join('');renderRatingHistoryCharts(m).catch(()=>{});}catch(e){console.warn('Profile stats render failed',e);profilePageStats.innerHTML='';}
     const glance=document.getElementById('profileAtGlance');if(glance){const total=Number(m.games_played||0),wins=Number(m.wins||0),losses=Number(m.losses||0),draws=Number(m.draws||0);const best=Math.max(Number(m.bullet_rating??1200),Number(m.blitz_rating??1200),Number(m.rapid_rating??1200));glance.innerHTML=`<div class="profile-at-glance-row"><span>Games played</span><b>${total}</b></div><div class="profile-at-glance-row"><span>Record</span><b>${wins}W · ${losses}L · ${draws}D</b></div><div class="profile-at-glance-row"><span>Best rating</span><b>${best}</b></div><div class="profile-at-glance-row"><span>Member type</span><b>${m.is_owner?'Owner':m.is_staff?'Staff':'Member'}</b></div>`;}
     profilePageActions.replaceChildren();profilePageHistory.replaceChildren();profilePageAwards.replaceChildren();profilePageFriends.replaceChildren();profilePageBio.textContent=m.bio||'No bio yet.';
     if(m.is_owner||m.is_staff){const badge=document.createElement('div');badge.className=`profile-role-badge ${m.is_owner?'owner':'staff'}`;badge.innerHTML=`<span>♞</span><span>${m.is_owner?'Owner':'Staff Member'}</span>`;profilePageActions.appendChild(badge);}
