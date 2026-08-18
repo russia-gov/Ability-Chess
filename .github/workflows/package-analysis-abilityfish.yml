@@ -9,12 +9,19 @@ on:
       - 'scripts/patch_analysis_coi_runtime.py'
       - 'abilityfish-coi-serviceworker.js'
       - '.github/workflows/package-analysis-abilityfish.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'scripts/patch_analysis_wasm_runtime.py'
+      - 'scripts/patch_analysis_coi_runtime.py'
+      - 'abilityfish-coi-serviceworker.js'
+      - '.github/workflows/package-analysis-abilityfish.yml'
 
 permissions:
   contents: write
 
 concurrency:
-  group: abilityfish-analysis-package
+  group: abilityfish-analysis-package-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:
@@ -87,6 +94,7 @@ jobs:
           grep -q "return rootTurn==='b'?rootValue:-rootValue;" index.html
           grep -q "piece\[1\]==='k'?63" index.html
           grep -q 'frozen:analysisFrozenCasterMap(state.frozen)' index.html
+          grep -q 'beganTurnInCheck:state.beganTurnInCheck' index.html
           grep -q "./analysis-engine/abilityfish-worker.js" index.html
           test -s analysis-engine/abilityfish-stockfish.js
           test -s analysis-engine/abilityfish-stockfish.wasm
@@ -95,6 +103,7 @@ jobs:
           grep -q 'SharedArrayBuffer' analysis-engine/abilityfish-stockfish.js
 
       - name: Commit Analysis runtime to development branch
+        if: github.event_name == 'push'
         run: |
           git config user.name 'abilityfish-ci'
           git config user.email 'abilityfish-ci@users.noreply.github.com'
