@@ -11,7 +11,7 @@ if not p.exists():
     raise SystemExit(f"not a Fairy-Stockfish checkout: {root}")
 
 s = p.read_text()
-if "ABILITYFISH_SEARCH_HOOKS_V3" in s:
+if "ABILITYFISH_SEARCH_HOOKS_V4" in s:
     print("AbilityFish search hooks already applied")
     raise SystemExit(0)
 
@@ -23,7 +23,7 @@ hook = r'''    value = bestValue;
     singularQuietLMR = moveCountPruning = false;
     bool doubleExtension = false;
 
-    // ABILITYFISH_SEARCH_HOOKS_V3
+    // ABILITYFISH_SEARCH_HOOKS_V4
     if (!rootNode && pos.abilityfish_active())
     {
         auto abilityActions = pos.ability_actions();
@@ -43,12 +43,9 @@ hook = r'''    value = bestValue;
 
             if (!sideChanged && !consumesMove)
             {
-                // A same-turn ability (Ambush, Shield, Freeze, Reinforce, Portal,
-                // Fortify, Double Move, etc.) is followed by the player's board move.
-                // Do not recursively re-enter the identical search node at unchanged
-                // depth: once captures earn points that creates a large meta-action
-                // recursion tree and can run past SearchStack bounds. Search the next
-                // legal board move explicitly, consuming exactly one board-move depth.
+                // Same-turn abilities are followed by a real board move. Search that
+                // move explicitly so meta actions do not recursively re-enter the same
+                // node at unchanged board-move depth.
                 bool foundBoardMove = false;
                 for (const auto& boardMove : MoveList<LEGAL>(pos))
                 {
@@ -64,9 +61,18 @@ hook = r'''    value = bestValue;
                     (ss+1)->pv = nullptr;
 
                     const Depth childDepth = std::max(Depth(0), depth - 1);
-                    Value boardValue = boardSideChanged
-                        ? -search<NonPV>(pos, ss+1, -beta, -alpha, childDepth, false)
-                        :  search<NonPV>(pos, ss+1, alpha, beta, childDepth, false);
+                    Value boardValue;
+                    // Stockfish's NonPV search is a null-window search and asserts
+                    // alpha == beta - 1 in qsearch. A PV parent can have a wide window,
+                    // so preserve the parent's node type instead of forcing NonPV.
+                    if (PvNode)
+                        boardValue = boardSideChanged
+                            ? -search<PV>(pos, ss+1, -beta, -alpha, childDepth, false)
+                            :  search<PV>(pos, ss+1, alpha, beta, childDepth, false);
+                    else
+                        boardValue = boardSideChanged
+                            ? -search<NonPV>(pos, ss+1, -beta, -alpha, childDepth, false)
+                            :  search<NonPV>(pos, ss+1, alpha, beta, childDepth, false);
 
                     pos.undo_move(boardMove);
 
@@ -88,16 +94,22 @@ hook = r'''    value = bestValue;
             }
             else
             {
-                // Turn-consuming actions (notably upgrades and Teleport) already
-                // advance the game turn, so one ordinary child search is sufficient.
+                // Turn-consuming actions (upgrades and Teleport) already advance the
+                // game turn; search the resulting child while preserving PV/NonPV
+                // window invariants.
                 const Depth abilityDepth = std::max(Depth(0), depth - (consumesMove ? 1 : 0));
                 (ss+1)->currentMove = MOVE_NONE;
                 (ss+1)->continuationHistory = &thisThread->continuationHistory[0][0][NO_PIECE][0];
                 (ss+1)->pv = nullptr;
 
-                abilityValue = sideChanged
-                    ? -search<NonPV>(pos, ss+1, -beta, -alpha, abilityDepth, false)
-                    :  search<NonPV>(pos, ss+1, alpha, beta, abilityDepth, false);
+                if (PvNode)
+                    abilityValue = sideChanged
+                        ? -search<PV>(pos, ss+1, -beta, -alpha, abilityDepth, false)
+                        :  search<PV>(pos, ss+1, alpha, beta, abilityDepth, false);
+                else
+                    abilityValue = sideChanged
+                        ? -search<NonPV>(pos, ss+1, -beta, -alpha, abilityDepth, false)
+                        :  search<NonPV>(pos, ss+1, alpha, beta, abilityDepth, false);
             }
 
             pos.undo_ability_action(abilityUndo);
