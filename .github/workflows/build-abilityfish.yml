@@ -1,0 +1,103 @@
+name: Build AbilityFish development engine
+on:
+  workflow_dispatch:
+  push:
+    branches: [ abilityfish ]
+    paths:
+      - 'engine/**'
+      - 'scripts/**'
+      - '.github/workflows/build-abilityfish.yml'
+
+jobs:
+  native-rule-tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run AbilityFish native rule tests
+        run: engine/tests/run-native-tests.sh
+
+  fairy-native-integration:
+    runs-on: ubuntu-24.04
+    needs: native-rule-tests
+    steps:
+      - uses: actions/checkout@v6
+      - name: Checkout pinned Fairy-Stockfish
+        uses: actions/checkout@v6
+        with:
+          repository: fairy-stockfish/Fairy-Stockfish
+          ref: c19b5f6c66894fdb0e88d0dd100e3885f744760a
+          path: vendor/Fairy-Stockfish
+      - name: Apply AbilityFish integration
+        run: python3 scripts/prepare_fairy.py vendor/Fairy-Stockfish
+      - name: Compile native Fairy-Stockfish with AbilityFish hooks
+        working-directory: vendor/Fairy-Stockfish/src
+        run: make -j2 build ARCH=x86-64
+      - name: Root ability transport smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          printf '%s\n' \
+            'uci' \
+            'position fen 4k3/8/8/3q4/4R3/8/8/4K3 w - - 0 1' \
+            'abilityfish on' \
+            'abilitypoints 4 0' \
+            'go depth 3' \
+            'quit' | vendor/Fairy-Stockfish/src/stockfish | tee "$log"
+          grep -q 'info string abilityfish on' "$log"
+          grep -q '^bestmove ' "$log"
+      - name: AbilityFish depth-15 recursion smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          printf '%s\n' \
+            'uci' \
+            'position fen 4k3/8/8/8/8/8/8/1N2K3 w - - 0 1' \
+            'abilityfish on' \
+            'abilitypoints 3 0' \
+            'go depth 15' \
+            'quit' | vendor/Fairy-Stockfish/src/stockfish | tee "$log"
+          grep -q '^bestmove ' "$log"
+          grep -Eq 'info depth 15| depth 15 ' "$log"
+
+  fairy-wasm-kernel-build:
+    runs-on: ubuntu-24.04
+    needs: fairy-native-integration
+    env:
+      EM_VERSION: 1.39.16
+      EM_CACHE_FOLDER: emsdk-cache
+    steps:
+      - uses: actions/checkout@v6
+      - name: Checkout pinned Fairy-Stockfish
+        uses: actions/checkout@v6
+        with:
+          repository: fairy-stockfish/Fairy-Stockfish
+          ref: c19b5f6c66894fdb0e88d0dd100e3885f744760a
+          path: vendor/Fairy-Stockfish
+      - name: Apply AbilityFish integration
+        run: python3 scripts/prepare_fairy.py vendor/Fairy-Stockfish
+      - uses: actions/cache@v5
+        with:
+          path: ${{ env.EM_CACHE_FOLDER }}
+          key: emsdk-${{ env.EM_VERSION }}-${{ runner.os }}
+      - uses: mymindstorm/setup-emsdk@v16
+        with:
+          version: ${{ env.EM_VERSION }}
+          actions-cache-folder: ${{ env.EM_CACHE_FOLDER }}
+      - name: Compile patched Fairy sources to WASM
+        working-directory: vendor/Fairy-Stockfish/src
+        run: make -f Makefile_js build es6=yes
+      - name: Collect WASM compile artifact
+        run: |
+          mkdir -p dist
+          cp vendor/Fairy-Stockfish/tests/js/ffish.js dist/abilityfish-fairy.js
+          cp vendor/Fairy-Stockfish/tests/js/ffish.wasm dist/abilityfish-fairy.wasm
+          cp engine/fairy-depth15-worker.js dist/abilityfish-worker.js
+          cp engine/abilityfish-bridge.js dist/abilityfish-bridge.js
+          cp engine/WASM_RUNTIME_STATUS.md dist/WASM_RUNTIME_STATUS.md
+      - uses: actions/upload-artifact@v7
+        with:
+          name: abilityfish-development-wasm
+          path: dist/*
+          if-no-files-found: error
