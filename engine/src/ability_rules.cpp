@@ -27,14 +27,13 @@ bool own_piece(const BoardAdapter& b, Side s, Square q) {
 bool enemy_nonking(const BoardAdapter& b, Side s, Square q) {
   auto p=b.piece_at(q); return p.present() && p.side!=s && p.type!=PieceType::King;
 }
+bool frozen_for_side(const AbilityState& st, Side s, Square q) {
+  const auto& f=st.side[side_index(s)].frozenEnemy;
+  return f.active&&q.valid()&&f.square.index==q.index;
+}
 void clear_removed_piece_state(AbilityState& st, Square q) {
   if(!q.valid()) return;
-  st.squareUpgrades[q.index]=0;
-  for(auto& ss:st.side) {
-    if(ss.shield.active&&ss.shield.square.index==q.index) ss.shield={};
-    if(ss.frozenEnemy.active&&ss.frozenEnemy.square.index==q.index) ss.frozenEnemy={};
-    if(ss.ambush.active&&ss.ambush.square.index==q.index) ss.ambush={};
-  }
+  st.remove_piece_state(q);
 }
 }
 
@@ -69,8 +68,7 @@ bool upgrade_compatible(PieceType p, Upgrade up) {
   }
 }
 bool normal_move_allowed(const AbilityState& st, Side mover, Square from, Square captureSquare) {
-  const auto& mine=st.side[side_index(mover)];
-  if(mine.frozenEnemy.active&&from.valid()&&mine.frozenEnemy.square.index==from.index) return false;
+  if(frozen_for_side(st,mover,from)) return false;
   const auto& theirs=st.side[side_index(other(mover))];
   if(theirs.shield.active&&captureSquare.valid()&&theirs.shield.square.index==captureSquare.index) return false;
   return true;
@@ -81,6 +79,7 @@ std::vector<AbilityAction> generate_meta_actions(const AbilityState& st, const B
   const Side us=st.turn;
   const auto& ss=st.side[side_index(us)];
   auto push=[&](ActionKind k,Square a=Square{},Square z=Square{},uint8_t aux=0){ out.push_back({k,a.index,z.index,aux,0}); };
+  auto movable=[&](Square q){ return !frozen_for_side(st,us,q); };
 
   if(st.abilitiesEnabled && !ss.abilityUsedThisTurn) {
     if(st.can_afford(us,Ability::Shield))
@@ -101,12 +100,12 @@ std::vector<AbilityAction> generate_meta_actions(const AbilityState& st, const B
     }
 
     if(st.can_afford(us,Ability::Swap))
-      for(int a=0;a<64;a++) if(own_nonking(b,us,sq(a)))
-        for(int z=a+1;z<64;z++) if(own_nonking(b,us,sq(z))&&b.swap_would_be_safe(sq(a),sq(z),us)) push(ActionKind::SwapFinish,sq(a),sq(z));
+      for(int a=0;a<64;a++) if(own_nonking(b,us,sq(a))&&movable(sq(a)))
+        for(int z=a+1;z<64;z++) if(own_nonking(b,us,sq(z))&&movable(sq(z))&&b.swap_would_be_safe(sq(a),sq(z),us)) push(ActionKind::SwapFinish,sq(a),sq(z));
 
     if(st.can_afford(us,Ability::Recall) && ss.lastMove.valid && ss.lastMove.from.valid() && ss.lastMove.to.valid()) {
       auto p=b.piece_at(ss.lastMove.to);
-      if(p.present()&&p.side==us&&p.type!=PieceType::King&&p.code==ss.lastMove.pieceCode&&b.empty(ss.lastMove.from)&&b.recall_would_be_safe(ss.lastMove.to,ss.lastMove.from,us))
+      if(movable(ss.lastMove.to)&&p.present()&&p.side==us&&p.type!=PieceType::King&&p.code==ss.lastMove.pieceCode&&b.empty(ss.lastMove.from)&&b.recall_would_be_safe(ss.lastMove.to,ss.lastMove.from,us))
         push(ActionKind::Recall,ss.lastMove.to,ss.lastMove.from);
     }
 
@@ -114,7 +113,7 @@ std::vector<AbilityAction> generate_meta_actions(const AbilityState& st, const B
       for(int i=0;i<64;i++) if(own_nonking(b,us,sq(i))) push(ActionKind::Ambush,sq(i));
 
     if(st.can_afford(us,Ability::Teleport))
-      for(int f=0;f<64;f++) if(own_nonking(b,us,sq(f))) {
+      for(int f=0;f<64;f++) if(own_nonking(b,us,sq(f))&&movable(sq(f))) {
         auto p=b.piece_at(sq(f));
         if(p.type==PieceType::Pawn&&!pawn_on_own_half(us,sq(f))) continue;
         for(int t=0;t<64;t++) if(b.empty(sq(t))&&!protected_from_ability(st,us,sq(t))) {
@@ -179,7 +178,7 @@ ApplyResult apply_action(AbilityState& st, BoardAdapter& b, const AbilityAction&
       st.recompute_key(); return ok_same();
     }
     case ActionKind::SwapFinish: {
-      Square x{a.from},z{a.to}; if(!st.can_afford(us,Ability::Swap)||x.index==z.index||!own_nonking(b,us,x)||!own_nonking(b,us,z)||!b.swap_would_be_safe(x,z,us)) return bad("illegal swap");
+      Square x{a.from},z{a.to}; if(!st.can_afford(us,Ability::Swap)||x.index==z.index||!own_nonking(b,us,x)||!own_nonking(b,us,z)||frozen_for_side(st,us,x)||frozen_for_side(st,us,z)||!b.swap_would_be_safe(x,z,us)) return bad("illegal swap");
       spend_ability(st,us,Ability::Swap); b.swap_pieces(x,z); std::swap(st.squareUpgrades[x.index],st.squareUpgrades[z.index]);
       if(ss.shield.active&&(ss.shield.square.index==x.index||ss.shield.square.index==z.index)) ss.shield={};
       if(ss.ambush.active) { if(ss.ambush.square.index==x.index) ss.ambush.square=z; else if(ss.ambush.square.index==z.index) ss.ambush.square=x; }
@@ -188,7 +187,7 @@ ApplyResult apply_action(AbilityState& st, BoardAdapter& b, const AbilityAction&
     case ActionKind::Recall: {
       if(!st.can_afford(us,Ability::Recall)||!ss.lastMove.valid) return bad("no recall");
       Square from=ss.lastMove.to,to=ss.lastMove.from; auto p=b.piece_at(from);
-      if(!p.present()||p.side!=us||p.type==PieceType::King||p.code!=ss.lastMove.pieceCode||!b.empty(to)||!b.recall_would_be_safe(from,to,us)) return bad("illegal recall");
+      if(frozen_for_side(st,us,from)||!p.present()||p.side!=us||p.type==PieceType::King||p.code!=ss.lastMove.pieceCode||!b.empty(to)||!b.recall_would_be_safe(from,to,us)) return bad("illegal recall");
       spend_ability(st,us,Ability::Recall); b.move_piece(from,to); st.move_piece_state(from,to); st.recompute_key(); return ok_same();
     }
     case ActionKind::Ambush: {
@@ -197,7 +196,7 @@ ApplyResult apply_action(AbilityState& st, BoardAdapter& b, const AbilityAction&
     }
     case ActionKind::Teleport: {
       Square f{a.from},t{a.to}; auto p=b.piece_at(f);
-      if(!st.can_afford(us,Ability::Teleport)||!p.present()||p.side!=us||p.type==PieceType::King||!b.empty(t)||protected_from_ability(st,us,t)) return bad("illegal teleport");
+      if(!st.can_afford(us,Ability::Teleport)||frozen_for_side(st,us,f)||!p.present()||p.side!=us||p.type==PieceType::King||!b.empty(t)||protected_from_ability(st,us,t)) return bad("illegal teleport");
       if(p.type==PieceType::Pawn&&(!pawn_on_own_half(us,f)||!pawn_on_own_half(us,t))) return bad("illegal pawn teleport");
       if(!b.teleport_would_be_safe(f,t,us)||b.teleport_would_attack_enemy_king(f,t,us)) return bad("unsafe teleport");
       spend_ability(st,us,Ability::Teleport); b.move_piece(f,t); st.move_piece_state(f,t);
