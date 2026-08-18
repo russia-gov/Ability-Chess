@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Run AbilityFish native rule tests
-        run: engine/tests/run-native-tests.sh
+        run: bash engine/tests/run-native-tests.sh
 
   fairy-native-integration:
     runs-on: ubuntu-24.04
