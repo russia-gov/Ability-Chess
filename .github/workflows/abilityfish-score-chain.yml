@@ -1,0 +1,54 @@
+name: AbilityFish score-chain regression
+on:
+  workflow_dispatch:
+  push:
+    branches: [ abilityfish ]
+    paths:
+      - 'scripts/apply_fairy_search_hooks.py'
+      - 'scripts/apply_fairy_root_hooks.py'
+      - '.github/workflows/abilityfish-score-chain.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'scripts/apply_fairy_search_hooks.py'
+      - 'scripts/apply_fairy_root_hooks.py'
+      - '.github/workflows/abilityfish-score-chain.yml'
+
+jobs:
+  score-chain:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: fairy-stockfish/Fairy-Stockfish
+          ref: c19b5f6c66894fdb0e88d0dd100e3885f744760a
+          path: vendor/Fairy-Stockfish
+      - run: python3 scripts/prepare_fairy.py vendor/Fairy-Stockfish
+      - working-directory: vendor/Fairy-Stockfish/src
+        run: make -j2 build ARCH=x86-64
+      - name: Parent after Nc3, depth 9
+        run: |
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish --timeout 30 \
+            --command uci \
+            --command 'position fen rnbqkbnr/pppppppp/8/8/8/2N5/PPPPPPPP/R1BQKBNR b KQkq - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityturn b 1 0 0' \
+            --command 'abilityused 0 0' \
+            --command 'abilityflags 1 1 3' \
+            --command 'abilitylastmove w 1 18 2 1' \
+            --command 'go depth 9'
+      - name: Child after Nc3 d5, depth 8
+        run: |
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish --timeout 30 \
+            --command uci \
+            --command 'position fen rnbqkbnr/ppp1pppp/8/3p4/8/2N5/PPPPPPPP/R1BQKBNR w KQkq - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityturn w 1 0 0' \
+            --command 'abilityused 0 0' \
+            --command 'abilityflags 1 1 3' \
+            --command 'abilitylastmove w 1 18 2 1' \
+            --command 'abilitylastmove b 51 35 65 1' \
+            --command 'go depth 8'
