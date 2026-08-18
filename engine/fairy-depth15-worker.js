@@ -182,7 +182,14 @@ async function analyze(job) {
     const lines = new Map();
     let bestAbilityAction = null;
     const requestedDepth = Math.max(1, Math.min(40, Number(job.depth || 15)));
-    const multiPV = Math.max(1, Math.min(8, Number(job.multiPV || 3)));
+    // Three lines are useful for the quick pass, but MultiPV makes deep browser
+    // searches dramatically more expensive. Refine only the best line above d5.
+    const defaultMultiPV = requestedDepth > 5 ? 1 : 3;
+    const multiPV = Math.max(1, Math.min(8, Number(job.multiPV ?? defaultMultiPV)));
+    // Browser refinement is a responsiveness feature, not a benchmark. Put a
+    // ceiling on deep searches and report the depth actually completed.
+    const defaultTimeMs = requestedDepth >= 15 ? 9000 : requestedDepth >= 10 ? 4000 : 0;
+    const maxTimeMs = Math.max(0, Math.min(30000, Number(job.maxTimeMs ?? defaultTimeMs)));
     const listener = (line) => {
       if (typeof line !== 'string') return;
       if (line.startsWith('info string abilityaction ')) {
@@ -209,7 +216,15 @@ async function analyze(job) {
         cleanup();
         const bestmove = line.split(/\s+/)[1] || null;
         const ordered = [...lines.entries()].sort((a,b)=>a[0]-b[0]).map(([,v])=>v);
-        resolve({ bestmove: bestmove === '0000' && bestAbilityAction ? null : bestmove, abilityAction: bestAbilityAction, depth: requestedDepth, lines: ordered });
+        const achievedDepth = Number(ordered[0]?.depth || bestAbilityAction?.depth || 0);
+        resolve({
+          bestmove: bestmove === '0000' && bestAbilityAction ? null : bestmove,
+          abilityAction: bestAbilityAction,
+          depth: achievedDepth,
+          requestedDepth,
+          capped: maxTimeMs > 0 && achievedDepth < requestedDepth,
+          lines: ordered
+        });
       }
     };
     const cleanup = () => {
@@ -224,7 +239,9 @@ async function analyze(job) {
       engine.postMessage('isready');
       engine.postMessage(job.fen === 'startpos' ? 'position startpos' : `position fen ${job.fen}`);
       for (const command of abilityCommands(job)) engine.postMessage(command);
-      engine.postMessage(`go depth ${requestedDepth}`);
+      engine.postMessage(maxTimeMs > 0
+        ? `go depth ${requestedDepth} movetime ${maxTimeMs}`
+        : `go depth ${requestedDepth}`);
     } catch (err) {
       cleanup(); reject(err);
     }
