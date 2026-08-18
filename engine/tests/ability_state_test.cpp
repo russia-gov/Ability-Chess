@@ -26,11 +26,15 @@ int main() {
   assert(!s.side[0].ambush.active);
   assert(!s.side[1].frozenEnemy.active);
 
+  s = AbilityState{};
   s.turn = Side::White;
   s.boardMovesRemaining = 2;
   s.doubleMoveActive = true;
+  s.side[0].frozenEnemy = {Square{16}, 1, true};
   s.finish_board_move();
   assert(s.turn == Side::White && s.boardMovesRemaining == 1);
+  assert(s.side[0].frozenEnemy.active);
   s.finish_board_move();
   assert(s.turn == Side::Black && s.boardMovesRemaining == 1 && !s.doubleMoveActive);
+  assert(!s.side[0].frozenEnemy.active);
 }
