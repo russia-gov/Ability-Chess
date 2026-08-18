@@ -7,20 +7,24 @@ on:
     paths:
       - 'scripts/patch_analysis_wasm_runtime.py'
       - 'scripts/patch_analysis_coi_runtime.py'
+      - 'scripts/patch_analysis_interactions.py'
       - 'scripts/apply_fairy_single_thread_wasm.py'
       - 'scripts/embed_analysis_wasm_runtime.py'
       - 'scripts/run_wasm_uci_smoke.js'
       - 'scripts/run_analysis_browser_smoke.js'
+      - 'scripts/apply_fairy_position_hooks.py'
       - '.github/workflows/package-analysis-abilityfish.yml'
   pull_request:
     branches: [ main ]
     paths:
       - 'scripts/patch_analysis_wasm_runtime.py'
       - 'scripts/patch_analysis_coi_runtime.py'
+      - 'scripts/patch_analysis_interactions.py'
       - 'scripts/apply_fairy_single_thread_wasm.py'
       - 'scripts/embed_analysis_wasm_runtime.py'
       - 'scripts/run_wasm_uci_smoke.js'
       - 'scripts/run_analysis_browser_smoke.js'
+      - 'scripts/apply_fairy_position_hooks.py'
       - '.github/workflows/package-analysis-abilityfish.yml'
 
 permissions:
@@ -89,6 +93,7 @@ jobs:
         run: |
           python3 scripts/patch_analysis_wasm_runtime.py index.html
           python3 scripts/patch_analysis_coi_runtime.py index.html
+          python3 scripts/patch_analysis_interactions.py index.html
           python3 scripts/embed_analysis_wasm_runtime.py \
             index.html \
             vendor/Fairy-Wasm/src/emscripten/public/stockfish.js \
@@ -108,7 +113,7 @@ jobs:
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
 
-      - name: Prove embedded Analysis engine reaches depth 5 in Chromium
+      - name: Prove embedded Analysis engine and interactions in Chromium
         run: node scripts/run_analysis_browser_smoke.js index.html 5
 
       - name: Verify combined production + embedded Analysis integration
@@ -119,6 +124,11 @@ jobs:
           grep -q 'ANALYSIS_ABILITYFISH_EMBEDDED_V1' index.html
           grep -q 'ensureEmbeddedAnalysisAbilityFishWorkerUrl' index.html
           grep -q '15 — full' index.html
+          grep -q 'ANALYSIS_ABILITY_INTERACTIONS_V1' index.html
+          grep -q 'data-analysis-ability="ambush"' index.html
+          grep -q 'analysis-pv-move' index.html
+          grep -q 'analysisFollowEnginePv' index.html
+          grep -q 'M${mate}' index.html
           ! grep -q 'ABILITYFISH_ANALYSIS_COI_V1' index.html
           ! grep -q 'if(!window.crossOriginIsolated)' index.html
           grep -q "return rootTurn==='b'?rootValue:-rootValue;" index.html
@@ -145,4 +155,6 @@ jobs:
             exit 0
           fi
           git commit -m 'Embed browser-tested AbilityFish Analysis WASM [skip ci]'
+          git fetch origin abilityfish
+          git rebase origin/abilityfish
           git push origin HEAD:abilityfish
