@@ -9,7 +9,9 @@ on:
       - 'scripts/patch_analysis_wasm_runtime.py'
       - 'scripts/patch_analysis_coi_runtime.py'
       - 'scripts/apply_fairy_single_thread_wasm.py'
+      - 'scripts/embed_analysis_wasm_runtime.py'
       - 'scripts/run_wasm_uci_smoke.js'
+      - 'scripts/run_analysis_browser_smoke.js'
       - '.github/workflows/package-analysis-abilityfish.yml'
   pull_request:
     branches: [ main ]
@@ -18,7 +20,9 @@ on:
       - 'scripts/patch_analysis_wasm_runtime.py'
       - 'scripts/patch_analysis_coi_runtime.py'
       - 'scripts/apply_fairy_single_thread_wasm.py'
+      - 'scripts/embed_analysis_wasm_runtime.py'
       - 'scripts/run_wasm_uci_smoke.js'
+      - 'scripts/run_analysis_browser_smoke.js'
       - '.github/workflows/package-analysis-abilityfish.yml'
 
 permissions:
@@ -83,13 +87,18 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Prove packaged engine reaches depth 15
+      - name: Prove packaged engine reaches depth 15 in Node
         run: node scripts/run_wasm_uci_smoke.js vendor/Fairy-Wasm/src/emscripten/public 15
 
-      - name: Patch Analysis page and install engine assets
+      - name: Patch Analysis page, embed runtime, and install debug assets
         run: |
           python3 scripts/patch_analysis_wasm_runtime.py index.html
           python3 scripts/patch_analysis_coi_runtime.py index.html
+          python3 scripts/embed_analysis_wasm_runtime.py \
+            index.html \
+            vendor/Fairy-Wasm/src/emscripten/public/stockfish.js \
+            vendor/Fairy-Wasm/src/emscripten/public/stockfish.wasm \
+            engine/fairy-depth15-worker.js
           mkdir -p analysis-engine
           cp vendor/Fairy-Wasm/src/emscripten/public/stockfish.js analysis-engine/abilityfish-stockfish.js
           cp vendor/Fairy-Wasm/src/emscripten/public/stockfish.wasm analysis-engine/abilityfish-stockfish.wasm
@@ -98,12 +107,22 @@ jobs:
           rm -f analysis-engine/abilityfish-stockfish.worker.js
           rm -f abilityfish-coi-serviceworker.js
 
-      - name: Verify combined production + portable Analysis integration
+      - name: Install Chromium for real browser smoke test
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Prove embedded Analysis engine reaches depth 5 in Chromium
+        run: node scripts/run_analysis_browser_smoke.js index.html 5
+
+      - name: Verify combined production + embedded Analysis integration
         run: |
           grep -q 'Double Move canceled. Points refunded.' index.html
           grep -q "cancelAbilityBtn.textContent=pendingDouble?'Cancel Double Move':'Cancel ability'" index.html
           grep -q 'p_after_id:-1' index.html
-          grep -q 'ANALYSIS_ABILITYFISH_WORKER' index.html
+          grep -q 'ANALYSIS_ABILITYFISH_EMBEDDED_V1' index.html
+          grep -q 'ensureEmbeddedAnalysisAbilityFishWorkerUrl' index.html
           grep -q '15 — full' index.html
           ! grep -q 'ABILITYFISH_ANALYSIS_COI_V1' index.html
           ! grep -q 'if(!window.crossOriginIsolated)' index.html
@@ -111,7 +130,6 @@ jobs:
           grep -q "piece\[1\]==='k'?63" index.html
           grep -q 'frozen:analysisFrozenCasterMap(state.frozen)' index.html
           grep -q 'beganTurnInCheck:state.beganTurnInCheck' index.html
-          grep -q "./analysis-engine/abilityfish-worker.js" index.html
           test -s analysis-engine/abilityfish-stockfish.js
           test -s analysis-engine/abilityfish-stockfish.wasm
           test -s analysis-engine/abilityfish-worker.js
@@ -128,8 +146,8 @@ jobs:
           git add index.html analysis-engine/
           git add -u analysis-engine/ abilityfish-coi-serviceworker.js
           if git diff --cached --quiet; then
-            echo 'Portable AbilityFish site already up to date.'
+            echo 'Embedded AbilityFish site already up to date.'
             exit 0
           fi
-          git commit -m 'Use portable AbilityFish Analysis WASM [skip ci]'
+          git commit -m 'Embed browser-tested AbilityFish Analysis WASM [skip ci]'
           git push origin HEAD:abilityfish
