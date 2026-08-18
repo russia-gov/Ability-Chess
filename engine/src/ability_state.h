@@ -46,6 +46,7 @@ struct AbilityState {
   void begin_turn(Side owner, bool inCheck = false);
   void finish_board_move();
   void move_piece_state(Square from, Square to);
+  void remove_piece_state(Square sq);
   void recompute_key();
   bool can_afford(Side s, Ability a) const;
   bool can_afford(Side s, Upgrade u) const;
