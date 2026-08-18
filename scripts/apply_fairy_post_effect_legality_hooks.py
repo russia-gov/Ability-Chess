@@ -15,9 +15,9 @@ if "ABILITYFISH_POST_EFFECT_LEGALITY_V1" in s:
     print("AbilityFish post-effect legality hooks already applied")
     raise SystemExit(0)
 
-anchor = """  Bitboard occupied = (type_of(m) != DROP ? pieces() ^ from : pieces()) | to;
-
-  // Flying general rule and bikjang
+anchor = """  // En passant captures are a tricky special case. Because they are rather
+  // uncommon, we do it simply by testing whether the king is attacked after
+  // the move is made.
 """
 if s.count(anchor) != 1:
     raise SystemExit(f"post-effect legality anchor: expected one match, found {s.count(anchor)}")
@@ -25,8 +25,8 @@ if s.count(anchor) != 1:
 hook = r'''  // ABILITYFISH_POST_EFFECT_LEGALITY_V1
   // Portal routing and Ambush retaliation happen after the ordinary board move.
   // Their final board can therefore have different king safety from the normal
-  // chess destination. For affected moves, use AbilityFish's reversible
-  // make/unmake path and judge the actual final position.
+  // chess destination. Run this before Fairy's en-passant early return so
+  // en-passant + Ambush/Portal combinations are judged on the final board too.
   if (abilityfishActive && type_of(m) != DROP && type_of(m) != CASTLING)
   {
       bool postEffect = false;
@@ -72,9 +72,9 @@ hook = r'''  // ABILITYFISH_POST_EFFECT_LEGALITY_V1
       }
   }
 
-  Bitboard occupied = (type_of(m) != DROP ? pieces() ^ from : pieces()) | to;
-
-  // Flying general rule and bikjang
+  // En passant captures are a tricky special case. Because they are rather
+  // uncommon, we do it simply by testing whether the king is attacked after
+  // the move is made.
 '''
 s = s.replace(anchor, hook, 1)
 p.write_text(s)
