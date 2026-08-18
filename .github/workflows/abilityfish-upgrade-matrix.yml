@@ -1,0 +1,100 @@
+name: AbilityFish upgrade movement matrix
+on:
+  workflow_dispatch:
+  push:
+    branches: [ abilityfish ]
+    paths:
+      - 'engine/**'
+      - 'scripts/**'
+      - '.github/workflows/abilityfish-upgrade-matrix.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'engine/**'
+      - 'scripts/**'
+      - '.github/workflows/abilityfish-upgrade-matrix.yml'
+
+jobs:
+  upgrade-matrix:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Checkout pinned Fairy-Stockfish
+        uses: actions/checkout@v6
+        with:
+          repository: fairy-stockfish/Fairy-Stockfish
+          ref: c19b5f6c66894fdb0e88d0dd100e3885f744760a
+          path: vendor/Fairy-Stockfish
+      - name: Apply AbilityFish integration
+        run: python3 scripts/prepare_fairy.py vendor/Fairy-Stockfish
+      - name: Compile integrated Fairy-Stockfish
+        working-directory: vendor/Fairy-Stockfish/src
+        run: make -j2 build ARCH=x86-64
+      - name: Exercise every permanent movement upgrade
+        shell: bash
+        run: |
+          set -euo pipefail
+          engine=vendor/Fairy-Stockfish/src/stockfish
+
+          run_allowed() {
+            local label="$1" fen="$2" type_index="$3" code="$4" move="$5"
+            local log
+            log=$(mktemp)
+            echo "--- $label ---"
+            python3 scripts/run_uci_search.py "$engine" \
+              --timeout 30 \
+              --command uci \
+              --command "position fen $fen" \
+              --command 'abilityfish on' \
+              --command 'abilitypoints 0 0' \
+              --command "abilityupgrade w $type_index $code" \
+              --command "go depth 2 searchmoves $move" | tee "$log"
+            grep -q "^bestmove $move" "$log"
+            rm -f "$log"
+          }
+
+          run_blocked() {
+            local label="$1" fen="$2" type_index="$3" code="$4" move="$5"
+            local log
+            log=$(mktemp)
+            echo "--- $label ---"
+            python3 scripts/run_uci_search.py "$engine" \
+              --timeout 30 \
+              --command uci \
+              --command "position fen $fen" \
+              --command 'abilityfish on' \
+              --command 'abilitypoints 0 0' \
+              --command "abilityupgrade w $type_index $code" \
+              --command "go depth 1 searchmoves $move" | tee "$log"
+            grep -Eq '^bestmove (0000|\(none\))$' "$log"
+            rm -f "$log"
+          }
+
+          # Pawn upgrades
+          run_allowed Vanguard     '4k3/8/8/8/4P3/8/8/4K3 w - - 0 1' 0 1  e4d5
+          run_allowed ReverseGear  '4k3/8/8/8/4P3/8/8/4K3 w - - 0 1' 0 2  e4e3
+          run_allowed Veteran      '4k3/8/8/8/4P3/3p4/8/4K3 w - - 0 1' 0 3  e4d3
+
+          # Knight upgrades
+          run_allowed Lancer       '4k3/8/8/8/4N3/8/8/4K3 w - - 0 1' 1 4  e4d5
+          run_allowed Charger      '4k3/8/8/8/4N3/8/8/4K3 w - - 0 1' 1 5  e4e5
+
+          # Bishop upgrades
+          run_allowed Cardinal     '4k3/8/8/8/4B3/8/8/4K3 w - - 0 1' 2 6  e4e5
+          run_allowed ColorShift   '4k3/8/8/8/4B3/8/8/4K3 w - - 0 1' 2 7  e4e5
+          run_allowed Archbishop   '4k3/8/8/8/4B3/8/8/4K3 w - - 0 1' 2 8  e4f6
+          run_blocked ColorShiftCapture '4k3/8/8/4p3/4B3/8/8/4K3 w - - 0 1' 2 7 e4e5
+
+          # Rook upgrades
+          run_allowed Bastion      '4k3/8/8/8/8/8/P7/R3K3 w - - 0 1' 3 9  a1a3
+          run_allowed Turret       '4k3/8/8/8/4R3/8/8/4K3 w - - 0 1' 3 10 e4d5
+          run_allowed Chancellor   '4k3/8/8/8/4R3/8/8/4K3 w - - 0 1' 3 11 e4f6
+          run_blocked BastionEnemyBlocker '4k3/8/8/8/8/8/p7/R3K3 w - - 0 1' 3 9 a1a3
+
+          # Queen upgrade
+          run_allowed PhaseStep    '4k3/8/8/8/8/8/1P6/Q3K3 w - - 0 1' 4 12 a1c3
+          run_blocked PhaseEnemyBlocker '4k3/8/8/8/8/8/1p6/Q3K3 w - - 0 1' 4 12 a1c3
+
+          # King upgrades
+          run_allowed RoyalStep    '4k3/8/8/8/4K3/8/8/8 w - - 0 1' 5 13 e4f6
+          run_allowed EscapeRoute  '4k3/8/8/8/4K3/8/8/8 w - - 0 1' 5 14 e4e6
