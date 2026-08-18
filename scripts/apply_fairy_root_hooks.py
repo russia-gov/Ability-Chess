@@ -48,14 +48,14 @@ if "ABILITYFISH_ROOT_THREAD_COPY_V2" not in s:
     thread_cpp.write_text(s)
 
 s = search_cpp.read_text()
-if "ABILITYFISH_ROOT_SEARCH_V3" not in s:
+if "ABILITYFISH_ROOT_SEARCH_V4" not in s:
     s = replace_once(s,
         '''  trend = SCORE_ZERO;\n\n  int searchAgainCounter = 0;\n''',
         '''  trend = SCORE_ZERO;\n  rootAbility.clear();\n\n  int searchAgainCounter = 0;\n''',
         "root ability clear")
 
     anchor = '''      if (!Threads.stop)\n          completedDepth = rootDepth;\n'''
-    hook = r'''      // ABILITYFISH_ROOT_SEARCH_V3
+    hook = r'''      // ABILITYFISH_ROOT_SEARCH_V4
       if (!Threads.stop && rootPos.abilityfish_active())
       {
           Search::AbilityRootResult iterationAbility;
@@ -72,33 +72,83 @@ if "ABILITYFISH_ROOT_SEARCH_V3" not in s:
 
               const bool sideChanged = rootPos.side_to_move() != abilityUs;
               const bool consumesMove = abilityAction.consumes_board_move();
-              const Depth childDepth = std::max(Depth(0), rootDepth - (consumesMove ? 1 : 0));
+              Value abilityValue = -VALUE_INFINITE;
+              std::vector<Move> bestAbilityPv;
 
-              // A meta ability is a separate branch from the ordinary root search.
-              // Do not reuse the already-mutated root SearchStack: pruning/history
-              // fields from the normal root line can otherwise suppress the first
-              // post-ability board move (notably Ambush -> immediate mate).
-              Stack abilityStack[MAX_PLY + 10], *abilitySs = abilityStack + 7;
-              Move abilityPv[MAX_PLY + 1];
-              std::memset(abilitySs - 7, 0, 10 * sizeof(Stack));
-              for (int i = 7; i > 0; --i)
-                  (abilitySs-i)->continuationHistory = &continuationHistory[0][0][NO_PIECE][0];
+              if (!sideChanged && !consumesMove)
+              {
+                  // Meta abilities such as Ambush modify the position but leave the
+                  // same player to make the actual board move. Treat that next move
+                  // exactly like a root move instead of recursively re-entering the
+                  // same node. This avoids same-player/root assumptions in Stockfish
+                  // search and makes Ambush -> Qb5# a normal mate-in-one branch.
+                  bool foundBoardMove = false;
+                  for (const auto& boardMove : MoveList<LEGAL>(rootPos))
+                  {
+                      foundBoardMove = true;
+                      StateInfo moveSt;
+                      ASSERT_ALIGNED(&moveSt, Eval::NNUE::CacheLineSize);
+                      const bool givesCheck = rootPos.gives_check(boardMove);
+                      rootPos.do_move(boardMove, moveSt, givesCheck);
 
-              // Search ply must count board moves, not zero-time meta actions.
-              // Thus Ambush -> Qb5# is mate in one, while Teleport (which consumes
-              // the move) begins its continuation one logical ply later.
-              const int logicalPly = consumesMove ? 1 : 0;
-              for (int i = 0; i <= MAX_PLY + 2; ++i)
-                  (abilitySs+i)->ply = logicalPly + i;
+                      Stack childStack[MAX_PLY + 10], *childSs = childStack + 7;
+                      Move childPv[MAX_PLY + 1];
+                      std::memset(childSs - 7, 0, 10 * sizeof(Stack));
+                      for (int i = 7; i > 0; --i)
+                          (childSs-i)->continuationHistory = &continuationHistory[0][0][NO_PIECE][0];
+                      for (int i = 0; i <= MAX_PLY + 2; ++i)
+                          (childSs+i)->ply = 1 + i;
+                      childPv[0] = MOVE_NONE;
+                      childSs->pv = childPv;
+                      childSs->currentMove = boardMove;
+                      childSs->continuationHistory = &continuationHistory[0][0][NO_PIECE][0];
 
-              abilityPv[0] = MOVE_NONE;
-              abilitySs->pv = abilityPv;
-              abilitySs->currentMove = MOVE_NONE;
-              abilitySs->continuationHistory = &continuationHistory[0][0][NO_PIECE][0];
+                      const Depth remainingDepth = std::max(Depth(0), rootDepth - 1);
+                      Value boardValue = -Stockfish::search<PV>(rootPos, childSs,
+                                                                -VALUE_INFINITE, VALUE_INFINITE,
+                                                                remainingDepth, false);
+                      rootPos.undo_move(boardMove);
 
-              Value abilityValue = sideChanged
-                  ? -Stockfish::search<PV>(rootPos, abilitySs, -VALUE_INFINITE, VALUE_INFINITE, childDepth, false)
-                  :  Stockfish::search<PV>(rootPos, abilitySs, -VALUE_INFINITE, VALUE_INFINITE, childDepth, false);
+                      if (Threads.stop)
+                          break;
+
+                      if (boardValue > abilityValue)
+                      {
+                          abilityValue = boardValue;
+                          bestAbilityPv.clear();
+                          bestAbilityPv.push_back(boardMove);
+                          for (Move* m = childPv; *m != MOVE_NONE; ++m)
+                              bestAbilityPv.push_back(*m);
+                      }
+                  }
+
+                  if (!foundBoardMove)
+                      abilityValue = rootPos.checkers() ? rootPos.checkmate_value(0)
+                                                       : rootPos.stalemate_value();
+              }
+              else
+              {
+                  // Turn-consuming abilities already leave the position at the
+                  // opponent's turn. Search that child from a clean logical ply.
+                  Stack abilityStack[MAX_PLY + 10], *abilitySs = abilityStack + 7;
+                  Move abilityPv[MAX_PLY + 1];
+                  std::memset(abilitySs - 7, 0, 10 * sizeof(Stack));
+                  for (int i = 7; i > 0; --i)
+                      (abilitySs-i)->continuationHistory = &continuationHistory[0][0][NO_PIECE][0];
+                  for (int i = 0; i <= MAX_PLY + 2; ++i)
+                      (abilitySs+i)->ply = 1 + i;
+                  abilityPv[0] = MOVE_NONE;
+                  abilitySs->pv = abilityPv;
+                  abilitySs->currentMove = MOVE_NONE;
+                  abilitySs->continuationHistory = &continuationHistory[0][0][NO_PIECE][0];
+
+                  const Depth childDepth = std::max(Depth(0), rootDepth - 1);
+                  abilityValue = sideChanged
+                      ? -Stockfish::search<PV>(rootPos, abilitySs, -VALUE_INFINITE, VALUE_INFINITE, childDepth, false)
+                      :  Stockfish::search<PV>(rootPos, abilitySs, -VALUE_INFINITE, VALUE_INFINITE, childDepth, false);
+                  for (Move* m = abilityPv; *m != MOVE_NONE; ++m)
+                      bestAbilityPv.push_back(*m);
+              }
 
               rootPos.undo_ability_action(abilityUndo);
 
@@ -111,9 +161,7 @@ if "ABILITYFISH_ROOT_SEARCH_V3" not in s:
                   iterationAbility.action = abilityAction;
                   iterationAbility.score = abilityValue;
                   iterationAbility.selDepth = selDepth;
-                  iterationAbility.pv.clear();
-                  for (Move* m = abilityPv; *m != MOVE_NONE; ++m)
-                      iterationAbility.pv.push_back(*m);
+                  iterationAbility.pv = std::move(bestAbilityPv);
               }
           }
 
