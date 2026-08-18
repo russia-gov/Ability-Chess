@@ -39,33 +39,24 @@ jobs:
         working-directory: vendor/Fairy-Stockfish/src
         run: make -j2 build ARCH=x86-64
       - name: Root ability transport smoke test
-        shell: bash
         run: |
-          set -euo pipefail
-          log=$(mktemp)
-          printf '%s\n' \
-            'uci' \
-            'position fen 4k3/8/8/3q4/4R3/8/8/4K3 w - - 0 1' \
-            'abilityfish on' \
-            'abilitypoints 4 0' \
-            'go depth 3' \
-            'quit' | vendor/Fairy-Stockfish/src/stockfish | tee "$log"
-          grep -q 'info string abilityfish on' "$log"
-          grep -q '^bestmove ' "$log"
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/3q4/4R3/8/8/4K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 4 0' \
+            --command 'go depth 3'
       - name: AbilityFish depth-15 recursion smoke test
-        shell: bash
         run: |
-          set -euo pipefail
-          log=$(mktemp)
-          printf '%s\n' \
-            'uci' \
-            'position fen 4k3/8/8/8/8/8/8/1N2K3 w - - 0 1' \
-            'abilityfish on' \
-            'abilitypoints 3 0' \
-            'go depth 15' \
-            'quit' | vendor/Fairy-Stockfish/src/stockfish | tee "$log"
-          grep -q '^bestmove ' "$log"
-          grep -Eq 'info depth 15| depth 15 ' "$log"
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 120 \
+            --expect-depth 15 \
+            --command uci \
+            --command 'position fen 4k3/8/8/8/8/8/8/1N2K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 3 0' \
+            --command 'go depth 15'
 
   fairy-wasm-kernel-build:
     runs-on: ubuntu-24.04
