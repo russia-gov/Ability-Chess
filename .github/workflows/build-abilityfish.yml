@@ -1,0 +1,286 @@
+name: Build AbilityFish development engine
+on:
+  workflow_dispatch:
+  push:
+    branches: [ abilityfish ]
+    paths:
+      - 'engine/**'
+      - 'scripts/**'
+      - '.github/workflows/build-abilityfish.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'engine/**'
+      - 'scripts/**'
+      - '.github/workflows/build-abilityfish.yml'
+
+jobs:
+  native-rule-tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run AbilityFish native rule tests
+        run: bash engine/tests/run-native-tests.sh
+
+  fairy-native-integration:
+    runs-on: ubuntu-24.04
+    needs: native-rule-tests
+    steps:
+      - uses: actions/checkout@v6
+      - name: Checkout pinned Fairy-Stockfish
+        uses: actions/checkout@v6
+        with:
+          repository: fairy-stockfish/Fairy-Stockfish
+          ref: c19b5f6c66894fdb0e88d0dd100e3885f744760a
+          path: vendor/Fairy-Stockfish
+      - name: Apply AbilityFish integration
+        run: python3 scripts/prepare_fairy.py vendor/Fairy-Stockfish
+      - name: Compile native Fairy-Stockfish with AbilityFish hooks
+        working-directory: vendor/Fairy-Stockfish/src
+        run: make -j2 build ARCH=x86-64
+      - name: Root ability transport smoke test
+        run: |
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/3q4/4R3/8/8/4K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 4 0' \
+            --command 'go depth 3'
+      - name: Full AbilityFish state command loading smoke test
+        run: |
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/3n4/4N3/8/8/4K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 9 7' \
+            --command 'abilityturn w 2 1 0' \
+            --command 'abilityused 0 1' \
+            --command 'abilityflags 1 1 3' \
+            --command 'abilitytimed shield w 28 1 1' \
+            --command 'abilitytimed freeze b 28 1 1' \
+            --command 'abilitytimed ambush w 28 1 1' \
+            --command 'abilityfortify w 4 5 12 13 1 1' \
+            --command 'abilitylastmove w 6 28 2 1' \
+            --command 'abilityportal 0 16 24 w 3 1' \
+            --command 'abilityupgrade w 0 3' \
+            --command 'abilityupgrade b 3 11' \
+            --command 'abilityfish off' \
+            --command 'go depth 1'
+      - name: Freeze ordinary-move legality smoke test
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/8/8/8/8/1N2K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitytimed freeze w 1 1 1' \
+            --command 'go depth 1 searchmoves b1a3' | tee "$log"
+          grep -Eq '^bestmove (0000|\(none\))$' "$log"
+      - name: Shield ordinary-capture legality smoke test
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/3q4/4R3/8/8/4K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitytimed shield b 35 1 1' \
+            --command 'go depth 1 searchmoves e4d5' | tee "$log"
+          grep -Eq '^bestmove (0000|\(none\))$' "$log"
+      - name: Ambush reversible capture smoke test
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/3q4/4B3/8/8/4K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilitytimed ambush b 35 1 1' \
+            --command 'go depth 3 searchmoves e4d5' | tee "$log"
+          grep -q '^bestmove e4d5' "$log"
+      - name: Ambush rejects king capture smoke test
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/3q4/4K3/8/8/8 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilitytimed ambush b 35 1 1' \
+            --command 'go depth 1 searchmoves e4d5' | tee "$log"
+          grep -Eq '^bestmove (0000|\(none\))$' "$log"
+      - name: Portal reversible routing smoke test
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/8/4B3/8/8/4K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityportal 0 35 8 w 3 1' \
+            --command 'go depth 3 searchmoves e4d5' | tee "$log"
+          grep -q '^bestmove e4d5' "$log"
+      - name: Vanguard pawn movement smoke test
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/8/4P3/8/8/4K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityupgrade w 0 1' \
+            --command 'go depth 2 searchmoves e4d5' | tee "$log"
+          grep -q '^bestmove e4d5' "$log"
+      - name: Lancer knight movement smoke test
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/8/4N3/8/8/4K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityupgrade w 1 4' \
+            --command 'go depth 2 searchmoves e4d5' | tee "$log"
+          grep -q '^bestmove e4d5' "$log"
+      - name: Bastion rook jump smoke test
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/8/8/8/P7/R3K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityupgrade w 3 9' \
+            --command 'go depth 2 searchmoves a1a3' | tee "$log"
+          grep -q '^bestmove a1a3' "$log"
+      - name: Phase Step queen jump smoke test
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/8/8/8/1P6/Q3K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityupgrade w 4 12' \
+            --command 'go depth 2 searchmoves a1c3' | tee "$log"
+          grep -q '^bestmove a1c3' "$log"
+      - name: Escape Route king movement smoke test
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/8/4K3/8/8/8 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityupgrade w 5 14' \
+            --command 'go depth 2 searchmoves e4e6' | tee "$log"
+          grep -q '^bestmove e4e6' "$log"
+      - name: Color Shift cannot capture smoke test
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/4p3/4B3/8/8/4K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityupgrade w 2 7' \
+            --command 'go depth 1 searchmoves e4e5' | tee "$log"
+          grep -Eq '^bestmove (0000|\(none\))$' "$log"
+      - name: Reachable Double Move same-player recursion smoke test
+        run: |
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/8/8/8/8/1N2K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityturn w 2 1 0' \
+            --command 'abilityused 1 0' \
+            --command 'go depth 3'
+      - name: AbilityFish depth-15 recursion smoke test
+        run: |
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 120 \
+            --expect-depth 15 \
+            --command uci \
+            --command 'position fen 4k3/8/8/8/8/8/8/1N2K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 3 0' \
+            --command 'go depth 15'
+
+  fairy-wasm-kernel-build:
+    runs-on: ubuntu-24.04
+    needs: fairy-native-integration
+    env:
+      EM_VERSION: 2.0.26
+      EM_CACHE_FOLDER: emsdk-cache
+    steps:
+      - uses: actions/checkout@v6
+      - name: Checkout pinned interactive Fairy-Stockfish WASM port
+        uses: actions/checkout@v6
+        with:
+          repository: fairy-stockfish/fairy-stockfish.wasm
+          ref: 2e874fd689e35e23253c1ef5cfb5065314c24354
+          path: vendor/Fairy-Wasm
+          fetch-depth: 0
+      - name: Verify WASM port contains pinned Fairy source revision
+        run: |
+          test "$(git -C vendor/Fairy-Wasm rev-parse 2e874fd689e35e23253c1ef5cfb5065314c24354^2)" = "c19b5f6c66894fdb0e88d0dd100e3885f744760a"
+          git -C vendor/Fairy-Wasm update-ref refs/remotes/upstream/master c19b5f6c66894fdb0e88d0dd100e3885f744760a
+      - name: Apply AbilityFish integration to interactive WASM source
+        run: python3 scripts/prepare_fairy.py vendor/Fairy-Wasm
+      - uses: actions/cache@v5
+        with:
+          path: ${{ env.EM_CACHE_FOLDER }}
+          key: abilityfish-uci-emsdk-${{ env.EM_VERSION }}-${{ runner.os }}
+      - uses: mymindstorm/setup-emsdk@v16
+        with:
+          version: ${{ env.EM_VERSION }}
+          actions-cache-folder: ${{ env.EM_CACHE_FOLDER }}
+      - name: Compile patched interactive Fairy UCI runtime to WASM
+        run: |
+          make -C vendor/Fairy-Wasm/src emscripten_build ARCH=wasm \
+            nnue=no embedded_nnue=no wasm_simd=no largeboards=no all=no
+      - name: Provision modern Node for runtime validation
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Interactive AbilityFish WASM depth-15 runtime smoke test
+        run: node scripts/run_wasm_uci_smoke.js vendor/Fairy-Wasm/src/emscripten/public 15
+      - name: Collect interactive AbilityFish WASM runtime
+        run: |
+          mkdir -p dist
+          cp vendor/Fairy-Wasm/src/emscripten/public/stockfish.js dist/abilityfish-stockfish.js
+          cp vendor/Fairy-Wasm/src/emscripten/public/stockfish.wasm dist/abilityfish-stockfish.wasm
+          cp vendor/Fairy-Wasm/src/emscripten/public/stockfish.worker.js dist/abilityfish-stockfish.worker.js
+          cp engine/fairy-depth15-worker.js dist/abilityfish-worker.js
+          cp engine/abilityfish-bridge.js dist/abilityfish-bridge.js
+          cp engine/WASM_RUNTIME_STATUS.md dist/WASM_RUNTIME_STATUS.md
+      - uses: actions/upload-artifact@v7
+        with:
+          name: abilityfish-development-wasm
+          path: dist/*
+          if-no-files-found: error
