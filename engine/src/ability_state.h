@@ -32,7 +32,9 @@ struct SideState {
 
 struct AbilityState {
   std::array<SideState,2> side{};
-  std::array<uint16_t,64> squareUpgrades{};
+  // Indexed [side][pieceTypeIndex], where pieceTypeIndex is Pawn=0 through King=5.
+  // Value 0 means no upgrade; otherwise value is Upgrade enum value + 1.
+  std::array<std::array<uint8_t,6>,2> typeUpgrades{};
   std::array<Portal,2> portals{};
   uint8_t upgradeLimit = 3;
   bool abilitiesEnabled = true;
@@ -50,8 +52,11 @@ struct AbilityState {
   void recompute_key();
   bool can_afford(Side s, Ability a) const;
   bool can_afford(Side s, Upgrade u) const;
-  bool can_buy_upgrade(Side s, Square sq, Upgrade u) const;
-  int upgrades_on(Square sq) const;
+  bool can_buy_upgrade(Side s, uint8_t pieceTypeIndex, Upgrade u) const;
+  std::optional<Upgrade> upgrade_for(Side s, uint8_t pieceTypeIndex) const;
+  int owned_upgrade_types(Side s) const;
+  void set_upgrade(Side s, uint8_t pieceTypeIndex, Upgrade u);
+  void clear_upgrade(Side s, uint8_t pieceTypeIndex);
   static int ability_cost(Ability a);
   static int upgrade_cost(Upgrade u);
 };
