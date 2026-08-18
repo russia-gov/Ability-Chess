@@ -1,6 +1,6 @@
-/* Browser-facing bridge for the depth-15 Fairy-Stockfish evaluator. */
+/* Browser-facing bridge for the custom depth-15 AbilityFish runtime. */
 export class AbilityFishDepth15 {
-  constructor(workerUrl = './fairy-depth15-worker.js') {
+  constructor(workerUrl = './abilityfish-worker.js') {
     this.worker = new Worker(workerUrl);
     this.seq = 0;
     this.pending = new Map();
@@ -20,16 +20,46 @@ export class AbilityFishDepth15 {
     };
   }
 
-  analyzeFen(fen, { depth = 15, multiPV = 3, onInfo, onAbilityInfo } = {}) {
+  analyzeFen(fen, { depth = 15, multiPV = 3, abilityState = null, onInfo, onAbilityInfo } = {}) {
     const id = ++this.seq;
     return new Promise((resolve, reject) => {
       this.pending.set(id, { resolve, reject, onInfo, onAbilityInfo });
-      this.worker.postMessage({ id, fen, depth, multiPV });
+      this.worker.postMessage({ id, fen, depth, multiPV, abilityState });
+    });
+  }
+
+  analyzeState(state, { depth = 15, multiPV = 3, onInfo, onAbilityInfo } = {}) {
+    const fen = abilityStateBoardToFen(state);
+    return this.analyzeFen(fen, {
+      depth,
+      multiPV,
+      abilityState: normalizeAbilityState(state),
+      onInfo,
+      onAbilityInfo
     });
   }
 
   stop() { this.worker.postMessage({ type: 'stop' }); }
   terminate() { this.worker.terminate(); this.pending.clear(); }
+}
+
+export function normalizeAbilityState(state = {}) {
+  return {
+    whitePoints: Number(state.whitePoints ?? state.abilityPoints?.w ?? state.points?.w ?? 0) || 0,
+    blackPoints: Number(state.blackPoints ?? state.abilityPoints?.b ?? state.points?.b ?? 0) || 0,
+    turn: state.turn === 'b' ? 'b' : 'w',
+    abilityUsedThisTurn: state.abilityUsedThisTurn ?? state.abilityUsed ?? null,
+    boardMovesRemaining: Number(state.boardMovesRemaining ?? 1) || 1,
+    doubleMoveActive: Boolean(state.doubleMoveActive),
+    beganTurnInCheck: Boolean(state.beganTurnInCheck),
+    upgrades: state.upgrades ?? state.squareUpgrades ?? null,
+    shields: state.shields ?? state.shield ?? null,
+    frozen: state.frozen ?? state.frozenEnemy ?? null,
+    portals: state.portals ?? null,
+    ambushes: state.ambushes ?? state.ambush ?? null,
+    fortify: state.fortify ?? state.fortifications ?? null,
+    lastMove: state.lastMove ?? state.lastMoves ?? null
+  };
 }
 
 export function abilityStateBoardToFen(state) {
