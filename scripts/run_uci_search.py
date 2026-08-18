@@ -2,10 +2,11 @@
 """Run a UCI search to completion instead of aborting it with an immediate quit."""
 
 import argparse
+import queue
 import re
-import select
 import subprocess
 import sys
+import threading
 import time
 
 
@@ -28,6 +29,18 @@ def main() -> int:
     assert proc.stdin is not None
     assert proc.stdout is not None
 
+    lines: queue.Queue[str | None] = queue.Queue()
+
+    def read_output() -> None:
+        try:
+            for line in proc.stdout:
+                lines.put(line)
+        finally:
+            lines.put(None)
+
+    reader = threading.Thread(target=read_output, daemon=True)
+    reader.start()
+
     for command in args.command:
         proc.stdin.write(command + "\n")
     proc.stdin.flush()
@@ -39,17 +52,15 @@ def main() -> int:
     try:
         while time.monotonic() < deadline:
             remaining = max(0.0, deadline - time.monotonic())
-            ready, _, _ = select.select([proc.stdout], [], [], min(0.5, remaining))
-            if not ready:
+            try:
+                line = lines.get(timeout=min(0.5, remaining))
+            except queue.Empty:
                 if proc.poll() is not None:
                     break
                 continue
 
-            line = proc.stdout.readline()
-            if not line:
-                if proc.poll() is not None:
-                    break
-                continue
+            if line is None:
+                break
 
             sys.stdout.write(line)
             sys.stdout.flush()
@@ -73,6 +84,7 @@ def main() -> int:
             except subprocess.TimeoutExpired:
                 proc.kill()
                 proc.wait()
+        reader.join(timeout=1)
 
     if bestmove is None:
         print("UCI search did not produce bestmove before timeout", file=sys.stderr)
