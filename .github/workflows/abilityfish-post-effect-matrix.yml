@@ -93,8 +93,6 @@ jobs:
           log=$(mktemp)
           # Rxh7 would check Kh8 if the rook survived. h7 is Ambushed, so the
           # rook explodes; Black is NOT in check and must be allowed a reply.
-          # Bishop c2 guards h7, while g8/g7 are occupied, making this a strong
-          # regression against a stale checker falsely reporting mate.
           python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
             --timeout 30 \
             --command uci \
@@ -105,3 +103,21 @@ jobs:
             --command 'go depth 2 searchmoves h1h7' | tee "$log"
           grep -Eq ' pv h1h7 [a-h][1-8][a-h][1-8]' "$log"
           grep -q '^bestmove h1h7' "$log"
+      - name: Ambush queen then Qb5 is recognized as mate
+        shell: bash
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          # Without Ambush, after Qb5+ Black can answer Kxb5. With the queen on
+          # b4 Ambushed first, Kxb5 is illegal because the king would be destroyed.
+          # All other king escapes are covered, so AbilityFish must see the
+          # non-move-consuming Ambush followed by Qb5 as a mating continuation.
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 8/7R/k7/2B5/1Q6/2B5/8/7K w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 4 0' \
+            --command 'go depth 3' | tee "$log"
+          grep -Eq '^info string abilityaction [0-9]+ score mate [1-9][0-9]* depth ' "$log"
+          grep -q '^bestmove 0000' "$log"
