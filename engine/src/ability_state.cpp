@@ -99,6 +99,17 @@ void AbilityState::move_piece_state(Square from, Square to) {
   recompute_key();
 }
 
+void AbilityState::remove_piece_state(Square q) {
+  if (!q.valid()) return;
+  squareUpgrades[q.index] = 0;
+  for (auto& ss : side) {
+    if (ss.shield.active && ss.shield.square.index == q.index) ss.shield = {};
+    if (ss.frozenEnemy.active && ss.frozenEnemy.square.index == q.index) ss.frozenEnemy = {};
+    if (ss.ambush.active && ss.ambush.square.index == q.index) ss.ambush = {};
+  }
+  recompute_key();
+}
+
 void AbilityState::recompute_key() {
   uint64_t k = 0xAB1117F15AULL;
   k ^= mix(uint64_t(turn) | (uint64_t(boardMovesRemaining)<<8) | (uint64_t(doubleMoveActive)<<16) | (uint64_t(beganTurnInCheck)<<17));
