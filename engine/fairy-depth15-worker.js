@@ -39,11 +39,11 @@ function parseInfo(line) {
 function decodeAbilityAction(packed) {
   const v = packed >>> 0;
   return {
-    kind: v & 0x0f,
-    from: (v >>> 4) & 0x3f,
-    to: (v >>> 10) & 0x3f,
-    aux: (v >>> 16) & 0xff,
-    flags: (v >>> 24) & 0xff
+    kind: v & 0x1f,
+    from: (v >>> 5) & 0x7f,
+    to: (v >>> 12) & 0x7f,
+    aux: (v >>> 19) & 0x3f,
+    flags: (v >>> 25) & 0x7f
   };
 }
 
