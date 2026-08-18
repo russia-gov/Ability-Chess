@@ -25,40 +25,15 @@ jobs:
           ref: c19b5f6c66894fdb0e88d0dd100e3885f744760a
           path: vendor/Fairy-Stockfish
       - run: python3 scripts/prepare_fairy.py vendor/Fairy-Stockfish
-      - name: Instrument root state and Ambush continuation
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path('vendor/Fairy-Stockfish/src/thread.cpp')
-          s=p.read_text()
-          if '#include <iostream>' not in s:
-              s=s.replace('#include <cassert>\n','#include <cassert>\n#include <iostream>\n',1)
-          a='''      if (pos.abilityfish_active())\n          th->rootPos.ability_state() = pos.ability_state();\n'''
-          b='''      if (pos.abilityfish_active())\n          th->rootPos.ability_state() = pos.ability_state();\n      if (th == main())\n          std::cerr << "ABILITYROOTCOPY active=" << pos.abilityfish_active()\n                    << " livePts=" << int(pos.ability_state().side[0].points)\n                    << " liveEnabled=" << pos.ability_state().abilitiesEnabled\n                    << " rootPts=" << int(th->rootPos.ability_state().side[0].points)\n                    << " rootEnabled=" << th->rootPos.ability_state().abilitiesEnabled\n                    << std::endl;\n'''
-          if a not in s: raise SystemExit('thread root copy diagnostic anchor missing')
-          p.write_text(s.replace(a,b,1))
-
-          p=Path('vendor/Fairy-Stockfish/src/search.cpp')
-          s=p.read_text()
-          a='''          auto abilityActions = rootPos.ability_actions();\n          for (const auto& abilityAction : abilityActions)\n'''
-          b='''          auto abilityActions = rootPos.ability_actions();\n          if (mainThread)\n              sync_cout << "info string abilityrootdebug actions " << abilityActions.size()\n                        << " pts " << int(rootPos.ability_state().side[0].points)\n                        << " enabled " << rootPos.ability_state().abilitiesEnabled << sync_endl;\n          for (const auto& abilityAction : abilityActions)\n'''
-          if a not in s: raise SystemExit('root action diagnostic anchor missing')
-          s=s.replace(a,b,1)
-          a_mid='''              const bool sideChanged = rootPos.side_to_move() != abilityUs;\n              const Depth childDepth = std::max(Depth(0), rootDepth - (abilityAction.consumes_board_move() ? 1 : 0));\n'''
-          b_mid='''              const bool sideChanged = rootPos.side_to_move() != abilityUs;\n              if (mainThread && abilityfish::encode_action(abilityAction) == 262951)\n              {\n                  const auto& amb = rootPos.ability_state().side[0].ambush;\n                  std::string qb5Text = "b4b5";\n                  Move qb5 = UCI::to_move(rootPos, qb5Text);\n                  sync_cout << "info string ambushq active " << amb.active\n                            << " square " << int(amb.square.index)\n                            << " used " << rootPos.ability_state().side[0].abilityUsedThisTurn\n                            << " qb5 " << int(qb5)\n                            << " legal " << (qb5 != MOVE_NONE && rootPos.legal(qb5)) << sync_endl;\n                  if (qb5 != MOVE_NONE && rootPos.legal(qb5))\n                  {\n                      StateInfo qst;\n                      ASSERT_ALIGNED(&qst, Eval::NNUE::CacheLineSize);\n                      const bool gc = rootPos.gives_check(qb5);\n                      rootPos.do_move(qb5, qst, gc);\n                      int replies = 0;\n                      for (const auto& reply : MoveList<LEGAL>(rootPos))\n                      {\n                          (void) reply;\n                          ++replies;\n                      }\n                      Value endValue = VALUE_ZERO;\n                      const bool ended = rootPos.is_game_end(endValue, 0);\n                      sync_cout << "info string ambushqafter turn " << int(rootPos.side_to_move())\n                                << " checkers " << rootPos.checkers()\n                                << " replies " << replies\n                                << " ended " << ended\n                                << " endvalue " << int(endValue) << sync_endl;\n                      rootPos.undo_move(qb5);\n                  }\n              }\n              const Depth childDepth = std::max(Depth(0), rootDepth - (abilityAction.consumes_board_move() ? 1 : 0));\n'''
-          if a_mid not in s: raise SystemExit('Ambush continuation diagnostic anchor missing')
-          s=s.replace(a_mid,b_mid,1)
-          a2='''              rootPos.undo_ability_action(abilityUndo);\n\n              if (Threads.stop)\n'''
-          b2='''              rootPos.undo_ability_action(abilityUndo);\n\n              if (mainThread && abilityfish::encode_action(abilityAction) == 262951)\n                  sync_cout << "info string ambushqscore " << UCI::value(abilityValue)\n                            << " raw " << int(abilityValue) << " depth " << rootDepth << sync_endl;\n\n              if (Threads.stop)\n'''
-          if a2 not in s: raise SystemExit('root candidate diagnostic anchor missing')
-          p.write_text(s.replace(a2,b2,1))
-          PY
       - working-directory: vendor/Fairy-Stockfish/src
         run: make -j2 build ARCH=x86-64
-      - name: Root search finds Ambush then Qb5 mate
+      - name: Root search finds Ambush then Qb5 mate in one
         shell: bash
         run: |
           set -euo pipefail
+          # Without an Ambush the position has no M1. With exactly four points,
+          # Ambushing Qb4 makes Qb5# immediate because Kxb5 destroys the king's
+          # capturing piece under the live Ability Chess Ambush rule.
           fen='8/8/k1N5/8/1Q6/8/8/7K w - - 0 1'
           baseline=$(mktemp)
           abilities=$(mktemp)
@@ -66,16 +41,12 @@ jobs:
           python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
             --timeout 30 --command uci --command "position fen $fen" \
             --command 'abilityfish on' --command 'abilitypoints 0 0' \
-            --command 'go depth 3' 2>&1 | tee "$baseline"
+            --command 'go depth 3' | tee "$baseline"
           ! grep -Eq 'score mate 1' "$baseline"
 
           python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
             --timeout 30 --command uci --command "position fen $fen" \
             --command 'abilityfish on' --command 'abilitypoints 4 0' \
-            --command 'go depth 3' 2>&1 | tee "$abilities"
-          grep -q 'ABILITYROOTCOPY' "$abilities"
-          grep -q '^info string abilityrootdebug actions ' "$abilities"
-          grep -q '^info string ambushq active 1 square 25 used 1 ' "$abilities"
-          grep -q '^info string ambushqafter .* replies 0 ended 1 ' "$abilities"
-          grep -Eq '^info string abilityaction [0-9]+ score mate [1-9][0-9]* depth ' "$abilities"
+            --command 'go depth 3' | tee "$abilities"
+          grep -Eq '^info string abilityaction 262951 score mate 1 depth ' "$abilities"
           grep -q '^bestmove 0000' "$abilities"
