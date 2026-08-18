@@ -1,0 +1,105 @@
+name: Package AbilityFish into Analysis board
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ abilityfish ]
+    paths:
+      - 'scripts/patch_analysis_wasm_runtime.py'
+      - 'scripts/patch_analysis_coi_runtime.py'
+      - 'abilityfish-coi-serviceworker.js'
+      - '.github/workflows/package-analysis-abilityfish.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: abilityfish-analysis-package
+  cancel-in-progress: true
+
+jobs:
+  package-analysis:
+    runs-on: ubuntu-24.04
+    env:
+      EM_VERSION: 2.0.26
+      EM_CACHE_FOLDER: emsdk-cache
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: abilityfish
+          fetch-depth: 0
+
+      - name: Checkout pinned interactive Fairy-Stockfish WASM port
+        uses: actions/checkout@v6
+        with:
+          repository: fairy-stockfish/fairy-stockfish.wasm
+          ref: 2e874fd689e35e23253c1ef5cfb5065314c24354
+          path: vendor/Fairy-Wasm
+          fetch-depth: 0
+
+      - name: Verify pinned Fairy source
+        run: |
+          test "$(git -C vendor/Fairy-Wasm rev-parse 2e874fd689e35e23253c1ef5cfb5065314c24354^2)" = "c19b5f6c66894fdb0e88d0dd100e3885f744760a"
+          git -C vendor/Fairy-Wasm update-ref refs/remotes/upstream/master c19b5f6c66894fdb0e88d0dd100e3885f744760a
+
+      - name: Apply AbilityFish integration
+        run: python3 scripts/prepare_fairy.py vendor/Fairy-Wasm
+
+      - uses: actions/cache@v5
+        with:
+          path: ${{ env.EM_CACHE_FOLDER }}
+          key: abilityfish-analysis-emsdk-${{ env.EM_VERSION }}-${{ runner.os }}
+
+      - uses: mymindstorm/setup-emsdk@v16
+        with:
+          version: ${{ env.EM_VERSION }}
+          actions-cache-folder: ${{ env.EM_CACHE_FOLDER }}
+
+      - name: Build interactive AbilityFish WASM
+        run: |
+          make -C vendor/Fairy-Wasm/src emscripten_build ARCH=wasm \
+            nnue=no embedded_nnue=no wasm_simd=no largeboards=no all=no
+
+      - name: Provision modern Node for runtime validation
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Prove packaged engine reaches depth 15
+        run: node scripts/run_wasm_uci_smoke.js vendor/Fairy-Wasm/src/emscripten/public 15
+
+      - name: Patch Analysis page and install engine assets
+        run: |
+          python3 scripts/patch_analysis_wasm_runtime.py index.html
+          python3 scripts/patch_analysis_coi_runtime.py index.html
+          mkdir -p analysis-engine
+          cp vendor/Fairy-Wasm/src/emscripten/public/stockfish.js analysis-engine/abilityfish-stockfish.js
+          cp vendor/Fairy-Wasm/src/emscripten/public/stockfish.wasm analysis-engine/abilityfish-stockfish.wasm
+          cp vendor/Fairy-Wasm/src/emscripten/public/stockfish.worker.js analysis-engine/abilityfish-stockfish.worker.js
+          cp engine/fairy-depth15-worker.js analysis-engine/abilityfish-worker.js
+          cp engine/abilityfish-bridge.js analysis-engine/abilityfish-bridge.js
+
+      - name: Verify Analysis integration
+        run: |
+          grep -q 'ANALYSIS_ABILITYFISH_WORKER' index.html
+          grep -q '15 — full' index.html
+          grep -q 'ABILITYFISH_ANALYSIS_COI_V1' index.html
+          grep -q "return rootTurn==='b'?-rootValue:rootValue;" index.html
+          grep -q "./analysis-engine/abilityfish-worker.js" index.html
+          test -s analysis-engine/abilityfish-stockfish.js
+          test -s analysis-engine/abilityfish-stockfish.wasm
+          test -s analysis-engine/abilityfish-stockfish.worker.js
+          test -s analysis-engine/abilityfish-worker.js
+          grep -q 'SharedArrayBuffer' analysis-engine/abilityfish-stockfish.js
+
+      - name: Commit Analysis runtime to development branch
+        run: |
+          git config user.name 'abilityfish-ci'
+          git config user.email 'abilityfish-ci@users.noreply.github.com'
+          git add index.html analysis-engine/ abilityfish-coi-serviceworker.js
+          if git diff --cached --quiet; then
+            echo 'Analysis runtime already up to date.'
+            exit 0
+          fi
+          git commit -m 'Integrate depth-15 AbilityFish into Analysis board [skip ci]'
+          git push origin HEAD:abilityfish
