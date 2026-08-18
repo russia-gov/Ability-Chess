@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate AbilityFish normal moves against the final post-ability board."""
+"""Validate AbilityFish board moves against the final post-ability board."""
 from pathlib import Path
 import sys
 
@@ -25,14 +25,12 @@ if s.count(anchor) != 1:
 hook = r'''  // ABILITYFISH_POST_EFFECT_LEGALITY_V1
   // Portal routing and Ambush retaliation happen after the ordinary board move.
   // Their final board can therefore have different king safety from the normal
-  // chess destination. For only those affected NORMAL moves, use AbilityFish's
-  // reversible make/unmake path and judge the actual final position.
-  if (abilityfishActive && type_of(m) == NORMAL)
+  // chess destination. For affected moves, use AbilityFish's reversible
+  // make/unmake path and judge the actual final position.
+  if (abilityfishActive && type_of(m) != DROP && type_of(m) != CASTLING)
   {
       bool postEffect = false;
-      Square captureSq = to;
-      if (type_of(m) == EN_PASSANT)
-          captureSq = capture_square(to);
+      Square captureSq = type_of(m) == EN_PASSANT ? capture_square(to) : to;
 
       const auto& enemyAmbush = st->abilityState.side[
           abilityfish::side_index(abilityfish::other(af_side(us)))].ambush;
@@ -67,7 +65,7 @@ hook = r'''  // ABILITYFISH_POST_EFFECT_LEGALITY_V1
           if (self->count<KING>(us))
           {
               Square ownKing = self->square<KING>(us);
-              safe = !(self->attackers_to(ownKing, self->side_to_move()) & self->pieces(self->side_to_move()));
+              safe = !self->attackers_to(ownKing, self->side_to_move());
           }
           self->undo_move(m);
           return safe;
