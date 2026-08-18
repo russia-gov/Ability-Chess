@@ -5,7 +5,6 @@ on:
   push:
     branches: [ abilityfish ]
     paths:
-      - 'scripts/sync_main_aug18_site_patch.py'
       - 'scripts/patch_analysis_wasm_runtime.py'
       - 'scripts/patch_analysis_coi_runtime.py'
       - 'scripts/apply_fairy_single_thread_wasm.py'
@@ -16,7 +15,6 @@ on:
   pull_request:
     branches: [ main ]
     paths:
-      - 'scripts/sync_main_aug18_site_patch.py'
       - 'scripts/patch_analysis_wasm_runtime.py'
       - 'scripts/patch_analysis_coi_runtime.py'
       - 'scripts/apply_fairy_single_thread_wasm.py'
@@ -43,9 +41,6 @@ jobs:
         with:
           ref: abilityfish
           fetch-depth: 0
-
-      - name: Sync current production site changes
-        run: python3 scripts/sync_main_aug18_site_patch.py index.html
 
       - name: Checkout pinned interactive Fairy-Stockfish WASM port
         uses: actions/checkout@v6
