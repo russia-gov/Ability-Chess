@@ -5,6 +5,7 @@ on:
   push:
     branches: [ abilityfish ]
     paths:
+      - 'scripts/sync_main_aug18_site_patch.py'
       - 'scripts/patch_analysis_wasm_runtime.py'
       - 'scripts/patch_analysis_coi_runtime.py'
       - 'abilityfish-coi-serviceworker.js'
@@ -12,6 +13,7 @@ on:
   pull_request:
     branches: [ main ]
     paths:
+      - 'scripts/sync_main_aug18_site_patch.py'
       - 'scripts/patch_analysis_wasm_runtime.py'
       - 'scripts/patch_analysis_coi_runtime.py'
       - 'abilityfish-coi-serviceworker.js'
@@ -35,6 +37,9 @@ jobs:
         with:
           ref: abilityfish
           fetch-depth: 0
+
+      - name: Sync current production site changes
+        run: python3 scripts/sync_main_aug18_site_patch.py index.html
 
       - name: Checkout pinned interactive Fairy-Stockfish WASM port
         uses: actions/checkout@v6
@@ -86,8 +91,11 @@ jobs:
           cp engine/fairy-depth15-worker.js analysis-engine/abilityfish-worker.js
           cp engine/abilityfish-bridge.js analysis-engine/abilityfish-bridge.js
 
-      - name: Verify Analysis integration
+      - name: Verify combined production + Analysis integration
         run: |
+          grep -q 'Double Move canceled. Points refunded.' index.html
+          grep -q "cancelAbilityBtn.textContent=pendingDouble?'Cancel Double Move':'Cancel ability'" index.html
+          grep -q 'p_after_id:-1' index.html
           grep -q 'ANALYSIS_ABILITYFISH_WORKER' index.html
           grep -q '15 — full' index.html
           grep -q 'ABILITYFISH_ANALYSIS_COI_V1' index.html
@@ -102,15 +110,15 @@ jobs:
           test -s analysis-engine/abilityfish-worker.js
           grep -q 'SharedArrayBuffer' analysis-engine/abilityfish-stockfish.js
 
-      - name: Commit Analysis runtime to development branch
+      - name: Commit combined runtime to development branch
         if: github.event_name == 'push'
         run: |
           git config user.name 'abilityfish-ci'
           git config user.email 'abilityfish-ci@users.noreply.github.com'
           git add index.html analysis-engine/ abilityfish-coi-serviceworker.js
           if git diff --cached --quiet; then
-            echo 'Analysis runtime already up to date.'
+            echo 'Combined AbilityFish site already up to date.'
             exit 0
           fi
-          git commit -m 'Integrate depth-15 AbilityFish into Analysis board [skip ci]'
+          git commit -m 'Sync production site and AbilityFish Analysis [skip ci]'
           git push origin HEAD:abilityfish
