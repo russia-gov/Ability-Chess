@@ -56,6 +56,8 @@ bool square_in_fortification(const AbilityState& st, Side owner, Square sq);
 bool protected_from_ability(const AbilityState& st, Side actor, Square sq);
 bool pawn_on_own_half(Side s, Square sq);
 bool pawn_crossed_half(Side s, Square sq);
+bool upgrade_compatible(PieceType piece, Upgrade upgrade);
+bool normal_move_allowed(const AbilityState& st, Side mover, Square from, Square captureSquare = {});
 std::vector<AbilityAction> generate_meta_actions(const AbilityState& st, const BoardAdapter& board);
 ApplyResult apply_action(AbilityState& st, BoardAdapter& board, const AbilityAction& a);
 ApplyResult apply_action_reversible(AbilityState& st, BoardAdapter& board, const AbilityAction& a, ActionUndo& undo);
