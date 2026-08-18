@@ -206,8 +206,36 @@ public:
             "initial AbilityState")
 
     cs = replace_once(cs,
+        '''bool Position::legal(Move m) const {
+
+  assert(is_ok(m));
+  assert(type_of(m) != DROP || piece_drops());
+
+  Color us = sideToMove;
+''',
+        '''bool Position::legal(Move m) const {
+
+  assert(is_ok(m));
+  assert(type_of(m) != DROP || piece_drops());
+
+  Color us = sideToMove;
+  if (abilityfishActive && type_of(m) != DROP)
+  {
+      Square captureSquare = to_sq(m);
+      if (type_of(m) == EN_PASSANT)
+          captureSquare -= pawn_push(us);
+      abilityfish::Square abilityCapture{};
+      if (captureSquare >= SQ_A1 && captureSquare <= SQ_H8 && piece_on(captureSquare) != NO_PIECE)
+          abilityCapture = ability_sq(captureSquare);
+      if (!abilityfish::normal_move_allowed(st->abilityState, af_side(us), ability_sq(from_sq(m)), abilityCapture))
+          return false;
+  }
+''',
+        "ordinary AbilityFish legality")
+
+    cs = replace_once(cs,
         '  sideToMove = ~sideToMove;\n  if (counting_rule())\n',
-        '''  if (abilityfishActive)\n  {\n      auto& ast = st->abilityState;\n      if (captured && st->captureSquare >= SQ_A1 && st->captureSquare <= SQ_H8)\n          ast.squareUpgrades[uint8_t(st->captureSquare)] = 0;\n      if (from >= SQ_A1 && from <= SQ_H8 && to >= SQ_A1 && to <= SQ_H8 && from != to)\n          ast.move_piece_state(ability_sq(from), ability_sq(to));\n      auto& usState = ast.side[abilityfish::side_index(af_side(us))];\n      if (captured)\n          usState.points = uint8_t(std::min(255, int(usState.points) + af_capture_points(type_of(captured))));\n      if (from >= SQ_A1 && from <= SQ_H8 && to >= SQ_A1 && to <= SQ_H8 && type_of(pc) != KING)\n          usState.lastMove = {ability_sq(from), ability_sq(to), uint8_t(pc), true};\n      auto transition = abilityfish::transition_after_normal_move(ast, false);\n      sideToMove = transition.sideChanged ? ~sideToMove : sideToMove;\n      if (!transition.sideChanged)\n      {\n          st->key ^= Zobrist::side;\n          st->checkersBB = count<KING>(sideToMove) ? attackers_to(square<KING>(sideToMove), ~sideToMove) & pieces(~sideToMove) : Bitboard(0);\n      }\n  }\n  else\n      sideToMove = ~sideToMove;\n  if (counting_rule())\n''',
+        '''  if (abilityfishActive)\n  {\n      auto& ast = st->abilityState;\n      if (captured && st->captureSquare >= SQ_A1 && st->captureSquare <= SQ_H8)\n          ast.remove_piece_state(ability_sq(st->captureSquare));\n      if (from >= SQ_A1 && from <= SQ_H8 && to >= SQ_A1 && to <= SQ_H8 && from != to)\n          ast.move_piece_state(ability_sq(from), ability_sq(to));\n      auto& usState = ast.side[abilityfish::side_index(af_side(us))];\n      if (captured)\n          usState.points = uint8_t(std::min(255, int(usState.points) + af_capture_points(type_of(captured))));\n      if (from >= SQ_A1 && from <= SQ_H8 && to >= SQ_A1 && to <= SQ_H8 && type_of(pc) != KING)\n          usState.lastMove = {ability_sq(from), ability_sq(to), uint8_t(pc), true};\n      auto transition = abilityfish::transition_after_normal_move(ast, false);\n      sideToMove = transition.sideChanged ? ~sideToMove : sideToMove;\n      if (!transition.sideChanged)\n      {\n          st->key ^= Zobrist::side;\n          st->checkersBB = count<KING>(sideToMove) ? attackers_to(square<KING>(sideToMove), ~sideToMove) & pieces(~sideToMove) : Bitboard(0);\n      }\n  }\n  else\n      sideToMove = ~sideToMove;\n  if (counting_rule())\n''',
         "normal move side transition")
 
     cs = replace_once(cs,
