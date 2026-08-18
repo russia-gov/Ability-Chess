@@ -67,7 +67,7 @@ for old, new in normalizations:
 position_cpp.write_text(pos_text)
 
 (dest / "UPSTREAM_INTEGRATION_STATUS.txt").write_text(
-    "AbilityFish kernel installed; Position, frozen attacks, Ambush, Portal routing, recursive search, root transport, and UCI hooks applied.\n"
+    "AbilityFish kernel installed; Position, frozen attacks, Ambush, Portal routing, type-wide upgrade movement, recursive search, root transport, and UCI hooks applied.\n"
 )
 
 for script in (
@@ -75,6 +75,7 @@ for script in (
     "apply_fairy_freeze_attack_hooks.py",
     "apply_fairy_ambush_hooks.py",
     "apply_fairy_portal_hooks.py",
+    "apply_fairy_upgrade_move_hooks.py",
     "apply_fairy_search_hooks.py",
     "apply_fairy_root_hooks.py",
     "apply_fairy_protocol_hooks.py",
