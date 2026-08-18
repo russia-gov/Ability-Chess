@@ -92,6 +92,43 @@ function lastMoveCommand(side, value) {
   return `abilitylastmove ${side} ${sq(entry.from)} ${sq(entry.to)} ${int(entry.pieceCode ?? entry.code ?? 0)} ${bit(entry.valid ?? (entry.from != null && entry.to != null))}`;
 }
 
+const UPGRADE_CODE = Object.freeze({
+  vanguard:1,
+  reverse_gear:2,
+  veteran:3,
+  lancer:4,
+  charger:5,
+  cardinal:6,
+  color_shift:7,
+  archbishop:8,
+  bastion:9,
+  turret:10,
+  chancellor:11,
+  phase_step:12,
+  royal_step:13,
+  escape_route:14
+});
+const PIECE_TYPE_INDEX = Object.freeze({p:0,n:1,b:2,r:3,q:4,k:5,pawn:0,knight:1,bishop:2,rook:3,queen:4,king:5});
+
+function upgradeCommands(value) {
+  const commands=[];
+  if (!value || typeof value !== 'object') return commands;
+  for (const side of ['w','b']) {
+    const sideUpgrades=sideEntry(value,side);
+    if (!sideUpgrades || typeof sideUpgrades !== 'object') continue;
+    for (const [pieceKey, rawUpgrade] of Object.entries(sideUpgrades)) {
+      const typeIndex=PIECE_TYPE_INDEX[String(pieceKey).toLowerCase()];
+      if (typeIndex == null) continue;
+      const id=typeof rawUpgrade==='string'
+        ? rawUpgrade
+        : rawUpgrade?.id ?? rawUpgrade?.upgradeId ?? rawUpgrade?.name ?? null;
+      const encoded=UPGRADE_CODE[String(id||'').toLowerCase()] || int(rawUpgrade?.encoded ?? rawUpgrade?.code ?? 0);
+      if (encoded>=0 && encoded<=14) commands.push(`abilityupgrade ${side} ${typeIndex} ${encoded}`);
+    }
+  }
+  return commands;
+}
+
 function abilityCommands(job) {
   const state = job.abilityState || {};
   const commands = ['abilityfish on'];
@@ -114,21 +151,22 @@ function abilityCommands(job) {
     }
   }
 
-  const portals = Array.isArray(state.portals) ? state.portals : [];
-  for (let i = 0; i < Math.min(2, portals.length); i++) {
-    const p = portals[i] || {};
-    commands.push(`abilityportal ${i} ${sq(p.a)} ${sq(p.b)} ${sideName(p.owner)} ${int(p.ownerTurnsRemaining ?? p.turnsRemaining ?? p.turns ?? 0)} ${bit(p.active ?? true)}`);
-  }
-
-  const upgrades = state.upgrades ?? state.squareUpgrades;
-  if (Array.isArray(upgrades)) {
-    upgrades.forEach((mask, i) => { if (int(mask) !== 0) commands.push(`abilityupgrade ${i} ${int(mask) & 0xffff}`); });
-  } else if (upgrades && typeof upgrades === 'object') {
-    for (const [square, mask] of Object.entries(upgrades)) {
-      const index = sq(/^\d+$/.test(square) ? Number(square) : square);
-      if (index < 64 && int(mask) !== 0) commands.push(`abilityupgrade ${index} ${int(mask) & 0xffff}`);
+  const portalsValue=state.portals;
+  if (Array.isArray(portalsValue)) {
+    for (let i = 0; i < Math.min(2, portalsValue.length); i++) {
+      const p = portalsValue[i] || {};
+      commands.push(`abilityportal ${i} ${sq(p.a)} ${sq(p.b)} ${sideName(p.owner)} ${int(p.ownerTurnsRemaining ?? p.turnsRemaining ?? p.turns ?? 0)} ${bit(p.active ?? true)}`);
+    }
+  } else if (portalsValue && typeof portalsValue==='object') {
+    let i=0;
+    for (const side of ['w','b']) {
+      const p=sideEntry(portalsValue,side);
+      if (!p || i>=2) continue;
+      commands.push(`abilityportal ${i++} ${sq(p.a)} ${sq(p.b)} ${side} ${int(p.ownerTurnsRemaining ?? p.turnsRemaining ?? p.turns ?? 0)} ${bit(p.active ?? true)}`);
     }
   }
+
+  commands.push(...upgradeCommands(state.upgrades));
   return commands;
 }
 
