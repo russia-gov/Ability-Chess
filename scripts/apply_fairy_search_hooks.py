@@ -11,7 +11,7 @@ if not p.exists():
     raise SystemExit(f"not a Fairy-Stockfish checkout: {root}")
 
 s = p.read_text()
-if "ABILITYFISH_SEARCH_HOOKS_V2" in s:
+if "ABILITYFISH_SEARCH_HOOKS_V3" in s:
     print("AbilityFish search hooks already applied")
     raise SystemExit(0)
 
@@ -23,7 +23,7 @@ hook = r'''    value = bestValue;
     singularQuietLMR = moveCountPruning = false;
     bool doubleExtension = false;
 
-    // ABILITYFISH_SEARCH_HOOKS_V2
+    // ABILITYFISH_SEARCH_HOOKS_V3
     if (!rootNode && pos.abilityfish_active())
     {
         auto abilityActions = pos.ability_actions();
@@ -38,30 +38,66 @@ hook = r'''    value = bestValue;
                 continue;
 
             const bool sideChanged = pos.side_to_move() != abilityUs;
-            const Depth abilityDepth = depth - (abilityAction.consumes_board_move() ? 1 : 0);
-            (ss+1)->currentMove = MOVE_NONE;
-            (ss+1)->continuationHistory = &thisThread->continuationHistory[0][0][NO_PIECE][0];
-            (ss+1)->pv = nullptr;
+            const bool consumesMove = abilityAction.consumes_board_move();
+            Value abilityValue = -VALUE_INFINITE;
 
-            Value abilityValue;
-            if (sideChanged)
-                abilityValue = -search<NonPV>(pos, ss+1, -beta, -alpha,
-                                               std::max(Depth(0), abilityDepth), false);
-            else
-                abilityValue = search<NonPV>(pos, ss+1, alpha, beta,
-                                              std::max(Depth(0), abilityDepth), false);
-
-            // Same-player meta abilities (Ambush, Shield, Freeze, Portal, Fortify,
-            // etc.) do not consume a chess move. The recursive Stockfish call still
-            // advances SearchStack by one slot, which otherwise makes an immediate
-            // Ambush -> mating move appear one ply farther away. Remove that purely
-            // internal ply from mate scores so move-count mate distances stay correct.
-            if (!sideChanged && !abilityAction.consumes_board_move())
+            if (!sideChanged && !consumesMove)
             {
-                if (abilityValue >= VALUE_MATE_IN_MAX_PLY)
-                    abilityValue = Value(abilityValue + 1);
-                else if (abilityValue <= VALUE_MATED_IN_MAX_PLY)
-                    abilityValue = Value(abilityValue - 1);
+                // A same-turn ability (Ambush, Shield, Freeze, Reinforce, Portal,
+                // Fortify, Double Move, etc.) is followed by the player's board move.
+                // Do not recursively re-enter the identical search node at unchanged
+                // depth: once captures earn points that creates a large meta-action
+                // recursion tree and can run past SearchStack bounds. Search the next
+                // legal board move explicitly, consuming exactly one board-move depth.
+                bool foundBoardMove = false;
+                for (const auto& boardMove : MoveList<LEGAL>(pos))
+                {
+                    foundBoardMove = true;
+                    StateInfo moveSt;
+                    ASSERT_ALIGNED(&moveSt, Eval::NNUE::CacheLineSize);
+                    const Color boardUs = pos.side_to_move();
+                    pos.do_move(boardMove, moveSt, pos.gives_check(boardMove));
+                    const bool boardSideChanged = pos.side_to_move() != boardUs;
+
+                    (ss+1)->currentMove = boardMove;
+                    (ss+1)->continuationHistory = &thisThread->continuationHistory[0][0][NO_PIECE][0];
+                    (ss+1)->pv = nullptr;
+
+                    const Depth childDepth = std::max(Depth(0), depth - 1);
+                    Value boardValue = boardSideChanged
+                        ? -search<NonPV>(pos, ss+1, -beta, -alpha, childDepth, false)
+                        :  search<NonPV>(pos, ss+1, alpha, beta, childDepth, false);
+
+                    pos.undo_move(boardMove);
+
+                    if (Threads.stop.load(std::memory_order_relaxed))
+                    {
+                        pos.undo_ability_action(abilityUndo);
+                        return VALUE_ZERO;
+                    }
+
+                    if (boardValue > abilityValue)
+                        abilityValue = boardValue;
+                    if (abilityValue >= beta)
+                        break;
+                }
+
+                if (!foundBoardMove)
+                    abilityValue = pos.checkers() ? pos.checkmate_value(ss->ply)
+                                                  : pos.stalemate_value();
+            }
+            else
+            {
+                // Turn-consuming actions (notably upgrades and Teleport) already
+                // advance the game turn, so one ordinary child search is sufficient.
+                const Depth abilityDepth = std::max(Depth(0), depth - (consumesMove ? 1 : 0));
+                (ss+1)->currentMove = MOVE_NONE;
+                (ss+1)->continuationHistory = &thisThread->continuationHistory[0][0][NO_PIECE][0];
+                (ss+1)->pv = nullptr;
+
+                abilityValue = sideChanged
+                    ? -search<NonPV>(pos, ss+1, -beta, -alpha, abilityDepth, false)
+                    :  search<NonPV>(pos, ss+1, alpha, beta, abilityDepth, false);
             }
 
             pos.undo_ability_action(abilityUndo);
