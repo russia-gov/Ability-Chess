@@ -53,6 +53,10 @@ bool AbilityState::can_buy_upgrade(Side s, Square sq, Upgrade u) const {
 }
 
 void AbilityState::begin_turn(Side owner, bool inCheck) {
+  // Freeze belongs to the side that was prevented from moving. It remains active
+  // through that side's whole turn and expires only when that turn has ended.
+  age(side[side_index(other(owner))].frozenEnemy);
+
   turn = owner;
   boardMovesRemaining = 1;
   doubleMoveActive = false;
