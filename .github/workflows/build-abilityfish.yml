@@ -122,8 +122,12 @@ jobs:
         run: |
           make -C vendor/Fairy-Wasm/src emscripten_build ARCH=wasm \
             nnue=no embedded_nnue=no wasm_simd=no largeboards=no all=no
+      - name: Provision modern Node for runtime validation
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
       - name: Interactive AbilityFish WASM depth-15 runtime smoke test
-        run: /usr/bin/node scripts/run_wasm_uci_smoke.js vendor/Fairy-Wasm/src/emscripten/public 15
+        run: node scripts/run_wasm_uci_smoke.js vendor/Fairy-Wasm/src/emscripten/public 15
       - name: Collect interactive AbilityFish WASM runtime
         run: |
           mkdir -p dist
