@@ -7,6 +7,12 @@ on:
       - 'engine/**'
       - 'scripts/**'
       - '.github/workflows/build-abilityfish.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'engine/**'
+      - 'scripts/**'
+      - '.github/workflows/build-abilityfish.yml'
 
 jobs:
   native-rule-tests:
