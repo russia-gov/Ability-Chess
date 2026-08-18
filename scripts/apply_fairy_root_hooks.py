@@ -40,11 +40,15 @@ if "Search::AbilityRootResult rootAbility" not in s:
     thread_h.write_text(s)
 
 s = thread_cpp.read_text()
-if "ABILITYFISH_ROOT_THREAD_COPY_V1" not in s:
+if "ABILITYFISH_ROOT_THREAD_COPY_V2" not in s:
     s = replace_once(s,
         '''      th->rootMoves = rootMoves;\n      th->rootPos.set(pos.variant(), pos.fen(), pos.is_chess960(), &th->rootState, th);\n      th->rootState = setupStates->back();\n''',
-        '''      th->rootMoves = rootMoves;\n      th->rootAbility.clear();\n      th->rootPos.set(pos.variant(), pos.fen(), pos.is_chess960(), &th->rootState, th);\n      th->rootState = setupStates->back();\n      // ABILITYFISH_ROOT_THREAD_COPY_V1\n      th->rootPos.set_abilityfish_active(pos.abilityfish_active());\n''',
+        '''      th->rootMoves = rootMoves;\n      th->rootAbility.clear();\n      th->rootPos.set(pos.variant(), pos.fen(), pos.is_chess960(), &th->rootState, th);\n      th->rootState = setupStates->back();\n      // ABILITYFISH_ROOT_THREAD_COPY_V2\n      // UCI ability commands mutate the live Position state after the FEN/setup\n      // state was created. Copy that live AbilityState explicitly; otherwise root\n      // search threads silently lose points, timed effects, portals and upgrades.\n      th->rootPos.set_abilityfish_active(pos.abilityfish_active());\n      if (pos.abilityfish_active())\n          th->rootPos.ability_state() = pos.ability_state();\n''',
         "thread root copy")
+    # Upgrade already-patched V1 trees when this script is applied incrementally.
+    s = s.replace(
+        '''      // ABILITYFISH_ROOT_THREAD_COPY_V1\n      th->rootPos.set_abilityfish_active(pos.abilityfish_active());\n''',
+        '''      // ABILITYFISH_ROOT_THREAD_COPY_V2\n      // UCI ability commands mutate the live Position state after the FEN/setup\n      // state was created. Copy that live AbilityState explicitly; otherwise root\n      // search threads silently lose points, timed effects, portals and upgrades.\n      th->rootPos.set_abilityfish_active(pos.abilityfish_active());\n      if (pos.abilityfish_active())\n          th->rootPos.ability_state() = pos.ability_state();\n''', 1)
     thread_cpp.write_text(s)
 
 s = search_cpp.read_text()
