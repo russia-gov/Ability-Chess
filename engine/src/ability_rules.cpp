@@ -226,7 +226,12 @@ ApplyResult apply_action(AbilityState& st, BoardAdapter& b, const AbilityAction&
     case ActionKind::Upgrade: {
       Square q{a.from}; if(a.aux>=uint8_t(Upgrade::Count)) return bad("bad upgrade id"); Upgrade up=Upgrade(a.aux); auto p=b.piece_at(q);
       if(!p.present()||p.side!=us||!upgrade_compatible(p.type,up)||!st.can_buy_upgrade(us,q,up)) return bad("illegal upgrade");
-      spend_upgrade(st,us,up); st.squareUpgrades[q.index] |= uint16_t(1u<<unsigned(up)); st.recompute_key(); return ok_same();
+      spend_upgrade(st,us,up);
+      st.squareUpgrades[q.index] |= uint16_t(1u<<unsigned(up));
+      st.boardMovesRemaining=1;
+      st.doubleMoveActive=false;
+      st.begin_turn(other(us),false);
+      return {true,true,true,nullptr};
     }
     case ActionKind::NormalMove:
       return bad("normal move belongs to Fairy Position");
