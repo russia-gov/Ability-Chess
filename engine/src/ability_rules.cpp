@@ -27,6 +27,15 @@ bool own_piece(const BoardAdapter& b, Side s, Square q) {
 bool enemy_nonking(const BoardAdapter& b, Side s, Square q) {
   auto p=b.piece_at(q); return p.present() && p.side!=s && p.type!=PieceType::King;
 }
+void clear_removed_piece_state(AbilityState& st, Square q) {
+  if(!q.valid()) return;
+  st.squareUpgrades[q.index]=0;
+  for(auto& ss:st.side) {
+    if(ss.shield.active&&ss.shield.square.index==q.index) ss.shield={};
+    if(ss.frozenEnemy.active&&ss.frozenEnemy.square.index==q.index) ss.frozenEnemy={};
+    if(ss.ambush.active&&ss.ambush.square.index==q.index) ss.ambush={};
+  }
+}
 }
 
 bool square_in_fortification(const AbilityState& st, Side owner, Square q) {
@@ -46,6 +55,25 @@ bool pawn_crossed_half(Side s, Square q) {
   if(!q.valid()) return false;
   const int r=row(q);
   return s==Side::White ? r>=4 : r<=3;
+}
+bool upgrade_compatible(PieceType p, Upgrade up) {
+  const unsigned u=unsigned(up);
+  switch(p) {
+    case PieceType::Pawn: return u<=unsigned(Upgrade::Veteran);
+    case PieceType::Knight: return u>=unsigned(Upgrade::Lancer)&&u<=unsigned(Upgrade::Charger);
+    case PieceType::Bishop: return u>=unsigned(Upgrade::Cardinal)&&u<=unsigned(Upgrade::Archbishop);
+    case PieceType::Rook: return u>=unsigned(Upgrade::Bastion)&&u<=unsigned(Upgrade::Chancellor);
+    case PieceType::Queen: return u==unsigned(Upgrade::PhaseStep);
+    case PieceType::King: return u>=unsigned(Upgrade::RoyalStep)&&u<=unsigned(Upgrade::EscapeRoute);
+    default: return false;
+  }
+}
+bool normal_move_allowed(const AbilityState& st, Side mover, Square from, Square captureSquare) {
+  const auto& mine=st.side[side_index(mover)];
+  if(mine.frozenEnemy.active&&from.valid()&&mine.frozenEnemy.square.index==from.index) return false;
+  const auto& theirs=st.side[side_index(other(mover))];
+  if(theirs.shield.active&&captureSquare.valid()&&theirs.shield.square.index==captureSquare.index) return false;
+  return true;
 }
 
 std::vector<AbilityAction> generate_meta_actions(const AbilityState& st, const BoardAdapter& b) {
@@ -120,17 +148,7 @@ std::vector<AbilityAction> generate_meta_actions(const AbilityState& st, const B
       auto p=b.piece_at(sq(i)); if(!p.present()||p.side!=us) continue;
       for(unsigned u=0;u<unsigned(Upgrade::Count);u++) {
         Upgrade up=Upgrade(u);
-        bool compatible=false;
-        switch(p.type) {
-          case PieceType::Pawn: compatible=u<=unsigned(Upgrade::Veteran); break;
-          case PieceType::Knight: compatible=u>=unsigned(Upgrade::Lancer)&&u<=unsigned(Upgrade::Charger); break;
-          case PieceType::Bishop: compatible=u>=unsigned(Upgrade::Cardinal)&&u<=unsigned(Upgrade::Archbishop); break;
-          case PieceType::Rook: compatible=u>=unsigned(Upgrade::Bastion)&&u<=unsigned(Upgrade::Chancellor); break;
-          case PieceType::Queen: compatible=u==unsigned(Upgrade::PhaseStep); break;
-          case PieceType::King: compatible=u>=unsigned(Upgrade::RoyalStep)&&u<=unsigned(Upgrade::EscapeRoute); break;
-          default: break;
-        }
-        if(compatible&&st.can_buy_upgrade(us,sq(i),up)) push(ActionKind::Upgrade,sq(i),Square{},uint8_t(u));
+        if(upgrade_compatible(p.type,up)&&st.can_buy_upgrade(us,sq(i),up)) push(ActionKind::Upgrade,sq(i),Square{},uint8_t(u));
       }
     }
   return out;
@@ -157,7 +175,7 @@ ApplyResult apply_action(AbilityState& st, BoardAdapter& b, const AbilityAction&
       if(!b.bomb_would_be_safe(c,us)) return bad("bomb exposes king");
       int gain=0; for(int i=0;i<64;i++) if(adjacent_3x3(sq(i),c)) { auto p=b.piece_at(sq(i)); if(p.present()&&p.side!=us) { static constexpr int v[]={0,1,3,3,5,9,0}; gain+=v[int(p.type)]; } }
       spend_ability(st,us,Ability::Bomb); ss.points=uint8_t(std::min(255,int(ss.points)+gain));
-      for(int i=0;i<64;i++) if(adjacent_3x3(sq(i),c)&&b.piece_at(sq(i)).present()) { b.remove_piece(sq(i)); st.squareUpgrades[i]=0; }
+      for(int i=0;i<64;i++) if(adjacent_3x3(sq(i),c)&&b.piece_at(sq(i)).present()) { b.remove_piece(sq(i)); clear_removed_piece_state(st,sq(i)); }
       st.recompute_key(); return ok_same();
     }
     case ActionKind::SwapFinish: {
@@ -189,7 +207,7 @@ ApplyResult apply_action(AbilityState& st, BoardAdapter& b, const AbilityAction&
     case ActionKind::Reinforce: {
       Square q{a.from}; auto p=b.piece_at(q); PieceType nt=PieceType(a.aux);
       if(!st.can_afford(us,Ability::Reinforce)||!p.present()||p.side!=us||p.type!=PieceType::Pawn||!pawn_crossed_half(us,q)||(nt!=PieceType::Knight&&nt!=PieceType::Bishop)) return bad("illegal reinforce");
-      spend_ability(st,us,Ability::Reinforce); b.replace_piece(q,nt,us); st.recompute_key(); return ok_same();
+      spend_ability(st,us,Ability::Reinforce); b.replace_piece(q,nt,us); st.squareUpgrades[q.index]=0; st.recompute_key(); return ok_same();
     }
     case ActionKind::PortalFinish: {
       Square x{a.from},z{a.to}; if(!st.can_afford(us,Ability::Portal)||x.index==z.index||!b.empty(x)||!b.empty(z)||protected_from_ability(st,us,x)||protected_from_ability(st,us,z)) return bad("illegal portal");
@@ -208,7 +226,7 @@ ApplyResult apply_action(AbilityState& st, BoardAdapter& b, const AbilityAction&
     }
     case ActionKind::Upgrade: {
       Square q{a.from}; if(a.aux>=uint8_t(Upgrade::Count)) return bad("bad upgrade id"); Upgrade up=Upgrade(a.aux); auto p=b.piece_at(q);
-      if(!p.present()||p.side!=us||!st.can_buy_upgrade(us,q,up)) return bad("illegal upgrade");
+      if(!p.present()||p.side!=us||!upgrade_compatible(p.type,up)||!st.can_buy_upgrade(us,q,up)) return bad("illegal upgrade");
       spend_upgrade(st,us,up); st.squareUpgrades[q.index] |= uint16_t(1u<<unsigned(up)); st.recompute_key(); return ok_same();
     }
     case ActionKind::NormalMove:
