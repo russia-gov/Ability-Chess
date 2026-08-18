@@ -86,3 +86,22 @@ jobs:
             --command 'abilitytimed ambush b 35 1 1' \
             --command 'go depth 3 searchmoves e4d5' | tee "$log"
           grep -q '^bestmove e4d5' "$log"
+      - name: Ambush explosion rebuilds checker cache
+        shell: bash
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          # Rxh7 would check Kh8 if the rook survived. h7 is Ambushed, so the
+          # rook explodes; Black is NOT in check and must be allowed a reply.
+          # Bishop c2 guards h7, while g8/g7 are occupied, making this a strong
+          # regression against a stale checker falsely reporting mate.
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 6nk/p6q/6p1/8/8/8/2B5/4K2R w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilitytimed ambush b 55 1 1' \
+            --command 'go depth 2 searchmoves h1h7' | tee "$log"
+          grep -Eq ' pv h1h7 [a-h][1-8][a-h][1-8]' "$log"
+          grep -q '^bestmove h1h7' "$log"
