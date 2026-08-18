@@ -144,17 +144,32 @@ jobs:
           grep -Eq '^info depth 3 .* pv e5d4 [a-h][1-8][a-h][1-8] a7[a-h][1-8]' "$log"
           rm -f "$log"
 
-          # Occupied exit a2 disables routing, so the bishop remains on d5.
+          # If a2 is occupied, the portal exit is blocked. Bishop e4-d5 must
+          # remain on d5, where it blocks the black rook from White's king d4.
           log=$(mktemp)
           python3 scripts/run_uci_search.py "$engine" \
             --timeout 30 \
             --command uci \
-            --command 'position fen 4k3/8/8/8/4B3/8/P7/4K3 w - - 0 1' \
+            --command 'position fen 3rk3/8/8/8/3KB3/8/P7/8 w - - 0 1' \
             --command 'abilityfish on' \
             --command 'abilitypoints 0 0' \
             --command 'abilityportal 0 35 8 w 3 1' \
-            --command 'go depth 3 searchmoves e4d5' | tee "$log"
-          grep -Eq '^info depth 3 .* pv e4d5 [a-h][1-8][a-h][1-8] d5[a-h][1-8]' "$log"
+            --command 'go depth 1 searchmoves e4d5' | tee "$log"
+          grep -q '^bestmove e4d5' "$log"
+          rm -f "$log"
+
+          # With the same exit empty, e4-d5 routes the bishop to a2 and exposes
+          # White's king on d4 to the rook on d8. Final-state legality must reject it.
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py "$engine" \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 3rk3/8/8/8/3KB3/8/8/8 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityportal 0 35 8 w 3 1' \
+            --command 'go depth 1 searchmoves e4d5' | tee "$log"
+          grep -Eq '^bestmove (0000|\(none\))$' "$log"
           rm -f "$log"
 
           # d6 is normally attacked by the white knight on e4. Once frozen, that
