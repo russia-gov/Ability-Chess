@@ -98,7 +98,7 @@ jobs:
           python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
             --timeout 30 \
             --command uci \
-            --command 'position fen 4k3/8/8/3q4/4R3/8/8/4K3 w - - 0 1' \
+            --command 'position fen 4k3/8/8/3q4/4B3/8/8/4K3 w - - 0 1' \
             --command 'abilityfish on' \
             --command 'abilitypoints 0 0' \
             --command 'abilitytimed ambush b 35 1 1' \
