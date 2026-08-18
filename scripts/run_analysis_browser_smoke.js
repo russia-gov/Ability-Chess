@@ -60,27 +60,28 @@ function applyOrdinaryUci(state,uci){
     page.on('console',msg=>{if(msg.type()==='error')console.error('browser console:',msg.text());});
     await page.goto(`http://127.0.0.1:${port}/${path.basename(indexPath)}`,{waitUntil:'domcontentloaded',timeout:30000});
     await page.waitForFunction(()=>typeof window.__ABILITYFISH_ANALYSIS_TEST__==='function',null,{timeout:15000});
-    await page.waitForFunction(()=>typeof window.__ABILITYFISH_ANALYSIS_INTERACTIONS_TEST__==='object',null,{timeout:15000});
+    await page.waitForFunction(()=>typeof window.__ABILITYFISH_ANALYSIS_INTERACTIONS_TEST__==='object'&&typeof window.__ABILITYFISH_ANALYSIS_INTERACTIONS_TEST__.reset==='function',null,{timeout:15000});
 
-    // Prove that the Analysis interaction layer is functional, not merely rendered.
+    // Prove that the Analysis interaction layer is functional through its stable
+    // browser-test bridge rather than reaching into the page's lexical scope.
     const interaction=await page.evaluate(()=>{
-      analysisCreateTree(freshAnalysisState(),{title:'Browser interaction smoke'});
-      analysisState.points.w=10;
-      renderAnalysis();
       const api=window.__ABILITYFISH_ANALYSIS_INTERACTIONS_TEST__;
+      api.reset(10,'Browser interaction smoke');
       const mateOne=api.analysisEvalText(-98999);
       const mateFive=api.analysisEvalText(-98995);
-      const uciMove=api.analysisMoveFromUci(analysisState,'e2e4');
+      const before=api.snapshot();
+      const uciMove=api.analysisMoveFromUci(before,'e2e4');
       const started=api.startAbility('ambush');
       const targeted=api.targetAbility(6,3); // white pawn on d2
+      const after=api.snapshot();
       return {
         mateOne,mateFive,
         uciMove:uciMove?{from:uciMove.from,to:uciMove.to}:null,
         started,targeted,
-        points:analysisState.points.w,
-        ambush:analysisState.ambushed?.w||null,
+        points:after.points.w,
+        ambush:after.ambushed?.w||null,
         buttonCount:document.querySelectorAll('[data-analysis-ability]').length,
-        pvClassPresent:!!document.querySelector('style')?.textContent?.includes('analysis-pv-move')
+        pvClassPresent:Array.from(document.querySelectorAll('style')).some(el=>el.textContent.includes('analysis-pv-move'))
       };
     });
     if(interaction.mateOne!=='M1'||interaction.mateFive!=='M5')throw new Error(`Mate distance formatting failed: ${JSON.stringify(interaction)}`);
@@ -92,7 +93,7 @@ function applyOrdinaryUci(state,uci){
     console.log(`ANALYSIS_INTERACTIONS_OK ${JSON.stringify(interaction)}`);
 
     // Reset to a neutral state before engine consistency checks.
-    await page.evaluate(()=>{analysisCreateTree(freshAnalysisState(),{title:'Engine smoke'});renderAnalysis();});
+    await page.evaluate(()=>window.__ABILITYFISH_ANALYSIS_INTERACTIONS_TEST__.reset(0,'Engine smoke'));
     const analyze=async(state,requestedDepth,options={})=>page.evaluate(async({state,requestedDepth,options})=>
       await window.__ABILITYFISH_ANALYSIS_TEST__(state,{depth:requestedDepth,...options}),{state,requestedDepth,options});
 
@@ -130,7 +131,7 @@ function applyOrdinaryUci(state,uci){
   }catch(error){
     console.error('Embedded AbilityFish browser smoke failed');console.error(error&&error.stack||error);
     if(pageErrors.length)console.error('Browser page errors:',pageErrors.slice(0,5));
-    if(page){try{console.error('Browser page diagnostics:',JSON.stringify(await page.evaluate(()=>({title:document.title,engineHook:typeof window.__ABILITYFISH_ANALYSIS_TEST__,interactionHook:typeof window.__ABILITYFISH_ANALYSIS_INTERACTIONS_TEST__,ready:document.readyState}))));}catch{}}
+    if(page){try{console.error('Browser page diagnostics:',JSON.stringify(await page.evaluate(()=>({title:document.title,engineHook:typeof window.__ABILITYFISH_ANALYSIS_TEST__,interactionHook:typeof window.__ABILITYFISH_ANALYSIS_INTERACTIONS_TEST__,resetHook:typeof window.__ABILITYFISH_ANALYSIS_INTERACTIONS_TEST__?.reset,ready:document.readyState}))));}catch{}}
     settled=true;clearTimeout(failTimer);try{if(browser)await browser.close();}catch{}try{server.close();}catch{}process.exit(1);
   }
 })();
