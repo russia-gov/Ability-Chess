@@ -1,0 +1,39 @@
+name: AbilityFish search sanitizer
+on:
+  workflow_dispatch:
+  push:
+    branches: [ abilityfish ]
+    paths:
+      - 'engine/**'
+      - 'scripts/**'
+      - '.github/workflows/abilityfish-sanitizer.yml'
+
+jobs:
+  sanitize-search:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: fairy-stockfish/Fairy-Stockfish
+          ref: c19b5f6c66894fdb0e88d0dd100e3885f744760a
+          path: vendor/Fairy-Stockfish
+      - run: python3 scripts/prepare_fairy.py vendor/Fairy-Stockfish
+      - name: Build with address/undefined sanitizers
+        working-directory: vendor/Fairy-Stockfish/src
+        run: make -j2 build ARCH=x86-64 sanitize=address,undefined optimize=no debug=yes
+      - name: Reproduce earned-points Ambush search crash
+        shell: bash
+        env:
+          ASAN_OPTIONS: abort_on_error=1:detect_leaks=0:print_stacktrace=1
+          UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+        run: |
+          set -o pipefail
+          printf '%s\n' \
+            'uci' \
+            'position fen 4k3/8/8/3q4/4B3/8/8/4K3 w - - 0 1' \
+            'abilityfish on' \
+            'abilitypoints 0 0' \
+            'abilitytimed ambush b 35 1 1' \
+            'go depth 3 searchmoves e4d5' \
+            'quit' | vendor/Fairy-Stockfish/src/stockfish 2>&1 | tee sanitizer.log
