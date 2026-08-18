@@ -58,7 +58,6 @@ int main(){
   assert(!normal_move_allowed(ordinary,Side::White,Square{20},Square{10}));
   assert(normal_move_allowed(ordinary,Side::White,Square{20},Square{11}));
 
-  // Freeze blocks indirect movement abilities as well as ordinary moves.
   AbilityState frozen; frozen.turn=Side::White; frozen.side[0].points=20;
   frozen.side[0].frozenEnemy={Square{12},1,true}; frozen.recompute_key();
   b.p[12]=W(PieceType::Knight,3); b.p[20]=W(PieceType::Bishop,5); b.p[28]={};
@@ -96,6 +95,9 @@ int main(){
   b.p[12]=W(PieceType::Pawn,3);
   r=apply_action(s,b,{ActionKind::Upgrade,12,64,uint8_t(Upgrade::Chancellor),0});
   assert(!r.ok);
+  r=apply_action(s,b,{ActionKind::Upgrade,12,64,uint8_t(Upgrade::Vanguard),0});
+  assert(r.ok&&r.sideChanged&&r.consumeDepth&&s.turn==Side::Black&&s.side[0].points==16);
+  assert(s.squareUpgrades[12]&(1u<<unsigned(Upgrade::Vanguard)));
 
   s.begin_turn(Side::White,false); s.side[0].points=20; b.p[36]=W(PieceType::Pawn,9);
   s.squareUpgrades[36]=uint16_t(1u<<unsigned(Upgrade::Vanguard));
