@@ -1,6 +1,5 @@
 #include "ability_state.h"
 #include <algorithm>
-#include <bit>
 
 namespace abilityfish {
 namespace {
@@ -9,6 +8,18 @@ uint64_t mix(uint64_t x) {
   x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
   x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
   return x ^ (x >> 31);
+}
+int bit_count(uint16_t x) {
+#if defined(__GNUC__) || defined(__clang__)
+  return __builtin_popcount(static_cast<unsigned>(x));
+#else
+  int count = 0;
+  while (x) {
+    x &= static_cast<uint16_t>(x - 1);
+    ++count;
+  }
+  return count;
+#endif
 }
 void age(TimedSquare& x) {
   if (!x.active) return;
@@ -33,7 +44,7 @@ bool AbilityState::can_afford(Side s, Upgrade u) const {
 }
 int AbilityState::upgrades_on(Square sq) const {
   if (!sq.valid()) return 0;
-  return std::popcount(squareUpgrades[sq.index]);
+  return bit_count(squareUpgrades[sq.index]);
 }
 bool AbilityState::can_buy_upgrade(Side s, Square sq, Upgrade u) const {
   if (!sq.valid() || !can_afford(s,u)) return false;
