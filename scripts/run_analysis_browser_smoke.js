@@ -58,6 +58,61 @@ function startingBoard() {
   ];
 }
 
+function baseState() {
+  return {
+    board: startingBoard(),
+    turn: 'w',
+    castlingRights: {w:{k:true,q:true},b:{k:true,q:true}},
+    enPassant: null,
+    halfmoveClock: 0,
+    points: {w:0,b:0},
+    abilityUsed: false,
+    movesRemaining: 1,
+    doubleMoveActive: false,
+    beganTurnInCheck: false,
+    abilitiesEnabled: true,
+    upgradesEnabled: true,
+    upgradeLimit: 3,
+    upgrades: {w:{},b:{}},
+    shielded: {w:null,b:null},
+    frozen: {w:null,b:null},
+    ambushed: {w:null,b:null},
+    fortified: {w:null,b:null},
+    portals: {w:null,b:null},
+    lastMoveByColor: {w:null,b:null},
+  };
+}
+
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function squareToRC(sq) {
+  return {r: 8 - Number(sq[1]), c: sq.toLowerCase().charCodeAt(0) - 97};
+}
+
+function applyOrdinaryUci(state, uci) {
+  if (!/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(String(uci || ''))) {
+    throw new Error(`Smoke test cannot apply non-ordinary UCI move: ${uci}`);
+  }
+  const next = clone(state);
+  const from = squareToRC(uci.slice(0,2));
+  const to = squareToRC(uci.slice(2,4));
+  const moving = next.board[from.r][from.c];
+  if (!moving) throw new Error(`No piece on ${uci.slice(0,2)} while applying ${uci}`);
+  const side = moving[0];
+  next.board[from.r][from.c] = null;
+  next.board[to.r][to.c] = uci[4] ? side + uci[4] : moving;
+  next.lastMoveByColor[side] = {from, to, piece:moving};
+  next.turn = side === 'w' ? 'b' : 'w';
+  next.abilityUsed = false;
+  next.movesRemaining = 1;
+  next.doubleMoveActive = false;
+  next.beganTurnInCheck = false;
+  next.enPassant = null;
+  return next;
+}
+
 (async () => {
   let browser;
   let page = null;
@@ -67,7 +122,7 @@ function startingBoard() {
     if (settled) return;
     console.error('Browser AbilityFish smoke test timed out');
     process.exit(1);
-  }, 90000);
+  }, 120000);
 
   try {
     await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -90,32 +145,12 @@ function startingBoard() {
       { timeout: 15000 }
     );
 
-    const state = {
-      board: startingBoard(),
-      turn: 'w',
-      castlingRights: {w:{k:true,q:true},b:{k:true,q:true}},
-      enPassant: null,
-      halfmoveClock: 0,
-      points: {w:0,b:0},
-      abilityUsed: false,
-      movesRemaining: 1,
-      doubleMoveActive: false,
-      beganTurnInCheck: false,
-      abilitiesEnabled: true,
-      upgradesEnabled: true,
-      upgradeLimit: 3,
-      upgrades: {w:{},b:{}},
-      shielded: {w:null,b:null},
-      frozen: {w:null,b:null},
-      ambushed: {w:null,b:null},
-      fortified: {w:null,b:null},
-      portals: {w:null,b:null},
-      lastMoveByColor: {w:null,b:null},
-    };
+    const analyze = async (state, requestedDepth) => page.evaluate(async ({ state, requestedDepth }) => {
+      return await window.__ABILITYFISH_ANALYSIS_TEST__(state, { depth: requestedDepth });
+    }, { state, requestedDepth });
 
-    const result = await page.evaluate(async ({ state, depth }) => {
-      return await window.__ABILITYFISH_ANALYSIS_TEST__(state, { depth });
-    }, { state, depth });
+    const state = baseState();
+    const result = await analyze(state, depth);
 
     const reportedDepth = Number(result && result.depth || 0);
     const nodes = Number(result && result.nodes || 0);
@@ -128,6 +163,34 @@ function startingBoard() {
     if (!(nodes > 0)) {
       throw new Error(`Browser Analysis reported ${nodes} nodes; expected > 0`);
     }
+
+    // Regression for the exact class of problem seen in the UI: a depth-N root
+    // score should agree closely with the same best-move child searched to N-1.
+    // The adapter stores scores in one fixed (black-positive) perspective, so
+    // parent and child should have the same sign and nearly the same value.
+    if (depth >= 5) {
+      const parentState = applyOrdinaryUci(baseState(), 'b1c3');
+      const parent = await analyze(parentState, 5);
+      const topPv = String(parent?.displayLines?.[0]?.pv || '').trim().split(/\s+/).filter(Boolean);
+      const bestMove = topPv[0];
+      if (!bestMove) throw new Error(`No principal variation in Nc3 regression: ${JSON.stringify(parent)}`);
+      const childState = applyOrdinaryUci(parentState, bestMove);
+      const child = await analyze(childState, 4);
+      const parentScore = Number(parent?.score);
+      const childScore = Number(child?.score);
+      const delta = Math.abs(parentScore - childScore);
+      console.log(`ABILITYFISH_SCORE_CHAIN move=${bestMove} parent=${parentScore} child=${childScore} delta=${delta}`);
+      if (!Number.isFinite(parentScore) || !Number.isFinite(childScore)) {
+        throw new Error('AbilityFish score chain returned a non-finite score');
+      }
+      if (Math.sign(parentScore) !== 0 && Math.sign(childScore) !== 0 && Math.sign(parentScore) !== Math.sign(childScore)) {
+        throw new Error(`AbilityFish fixed-perspective score flipped after its own best move: ${parentScore} -> ${childScore}`);
+      }
+      if (delta > 40) {
+        throw new Error(`AbilityFish best-move score changed by ${delta} cp between depth 5 root and depth 4 child`);
+      }
+    }
+
     if (pageErrors.length) {
       console.warn('Non-fatal page errors during smoke:', pageErrors.slice(0,5));
     }
