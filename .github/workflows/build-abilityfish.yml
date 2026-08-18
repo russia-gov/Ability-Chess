@@ -107,6 +107,7 @@ jobs:
       - name: Verify WASM port contains pinned Fairy source revision
         run: |
           test "$(git -C vendor/Fairy-Wasm rev-parse 2e874fd689e35e23253c1ef5cfb5065314c24354^2)" = "c19b5f6c66894fdb0e88d0dd100e3885f744760a"
+          git -C vendor/Fairy-Wasm update-ref refs/remotes/upstream/master c19b5f6c66894fdb0e88d0dd100e3885f744760a
       - name: Apply AbilityFish integration to interactive WASM source
         run: python3 scripts/prepare_fairy.py vendor/Fairy-Wasm
       - uses: actions/cache@v5
@@ -119,7 +120,7 @@ jobs:
           actions-cache-folder: ${{ env.EM_CACHE_FOLDER }}
       - name: Compile patched interactive Fairy UCI runtime to WASM
         run: |
-          make -C vendor/Fairy-Wasm/src -j2 emscripten_build ARCH=wasm \
+          make -C vendor/Fairy-Wasm/src emscripten_build ARCH=wasm \
             nnue=no embedded_nnue=no wasm_simd=no largeboards=no all=no
       - name: Collect interactive AbilityFish WASM runtime
         run: |
