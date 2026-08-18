@@ -60,6 +60,39 @@ function applyOrdinaryUci(state,uci){
     page.on('console',msg=>{if(msg.type()==='error')console.error('browser console:',msg.text());});
     await page.goto(`http://127.0.0.1:${port}/${path.basename(indexPath)}`,{waitUntil:'domcontentloaded',timeout:30000});
     await page.waitForFunction(()=>typeof window.__ABILITYFISH_ANALYSIS_TEST__==='function',null,{timeout:15000});
+    await page.waitForFunction(()=>typeof window.__ABILITYFISH_ANALYSIS_INTERACTIONS_TEST__==='object',null,{timeout:15000});
+
+    // Prove that the Analysis interaction layer is functional, not merely rendered.
+    const interaction=await page.evaluate(()=>{
+      analysisCreateTree(freshAnalysisState(),{title:'Browser interaction smoke'});
+      analysisState.points.w=10;
+      renderAnalysis();
+      const api=window.__ABILITYFISH_ANALYSIS_INTERACTIONS_TEST__;
+      const mateOne=api.analysisEvalText(-98999);
+      const mateFive=api.analysisEvalText(-98995);
+      const uciMove=api.analysisMoveFromUci(analysisState,'e2e4');
+      const started=api.startAbility('ambush');
+      const targeted=api.targetAbility(6,3); // white pawn on d2
+      return {
+        mateOne,mateFive,
+        uciMove:uciMove?{from:uciMove.from,to:uciMove.to}:null,
+        started,targeted,
+        points:analysisState.points.w,
+        ambush:analysisState.ambushed?.w||null,
+        buttonCount:document.querySelectorAll('[data-analysis-ability]').length,
+        pvClassPresent:!!document.querySelector('style')?.textContent?.includes('analysis-pv-move')
+      };
+    });
+    if(interaction.mateOne!=='M1'||interaction.mateFive!=='M5')throw new Error(`Mate distance formatting failed: ${JSON.stringify(interaction)}`);
+    if(!interaction.uciMove||interaction.uciMove.from.r!==6||interaction.uciMove.from.c!==4||interaction.uciMove.to.r!==4||interaction.uciMove.to.c!==4)
+      throw new Error(`Clickable-PV UCI resolution failed: ${JSON.stringify(interaction)}`);
+    if(!interaction.started||!interaction.targeted||interaction.points!==6||interaction.ambush?.r!==6||interaction.ambush?.c!==3)
+      throw new Error(`Analysis Ambush interaction failed: ${JSON.stringify(interaction)}`);
+    if(interaction.buttonCount<8||!interaction.pvClassPresent)throw new Error(`Analysis interaction UI incomplete: ${JSON.stringify(interaction)}`);
+    console.log(`ANALYSIS_INTERACTIONS_OK ${JSON.stringify(interaction)}`);
+
+    // Reset to a neutral state before engine consistency checks.
+    await page.evaluate(()=>{analysisCreateTree(freshAnalysisState(),{title:'Engine smoke'});renderAnalysis();});
     const analyze=async(state,requestedDepth,options={})=>page.evaluate(async({state,requestedDepth,options})=>
       await window.__ABILITYFISH_ANALYSIS_TEST__(state,{depth:requestedDepth,...options}),{state,requestedDepth,options});
 
@@ -97,7 +130,7 @@ function applyOrdinaryUci(state,uci){
   }catch(error){
     console.error('Embedded AbilityFish browser smoke failed');console.error(error&&error.stack||error);
     if(pageErrors.length)console.error('Browser page errors:',pageErrors.slice(0,5));
-    if(page){try{console.error('Browser page diagnostics:',JSON.stringify(await page.evaluate(()=>({title:document.title,hook:typeof window.__ABILITYFISH_ANALYSIS_TEST__,ready:document.readyState}))));}catch{}}
+    if(page){try{console.error('Browser page diagnostics:',JSON.stringify(await page.evaluate(()=>({title:document.title,engineHook:typeof window.__ABILITYFISH_ANALYSIS_TEST__,interactionHook:typeof window.__ABILITYFISH_ANALYSIS_INTERACTIONS_TEST__,ready:document.readyState}))));}catch{}}
     settled=true;clearTimeout(failTimer);try{if(browser)await browser.close();}catch{}try{server.close();}catch{}process.exit(1);
   }
 })();
