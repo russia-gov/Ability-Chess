@@ -1,0 +1,52 @@
+name: AbilityFish Ambush mate regression
+on:
+  workflow_dispatch:
+  push:
+    branches: [ abilityfish ]
+    paths:
+      - 'engine/**'
+      - 'scripts/**'
+      - '.github/workflows/abilityfish-ambush-mate.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'engine/**'
+      - 'scripts/**'
+      - '.github/workflows/abilityfish-ambush-mate.yml'
+
+jobs:
+  ambush-mate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: fairy-stockfish/Fairy-Stockfish
+          ref: c19b5f6c66894fdb0e88d0dd100e3885f744760a
+          path: vendor/Fairy-Stockfish
+      - run: python3 scripts/prepare_fairy.py vendor/Fairy-Stockfish
+      - working-directory: vendor/Fairy-Stockfish/src
+        run: make -j2 build ARCH=x86-64
+      - name: Root search finds Ambush then Qb5 mate
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Queen b4 can check with Qb5, but Black King a6 can capture it unless
+          # it is Ambushed. Knight c8 covers a7. The queen itself covers a5,
+          # b6 and b7 after Qb5. There should be no ordinary M1.
+          fen='2N5/8/k7/8/1Q6/8/8/7K w - - 0 1'
+          baseline=$(mktemp)
+          abilities=$(mktemp)
+
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 --command uci --command "position fen $fen" \
+            --command 'abilityfish on' --command 'abilitypoints 0 0' \
+            --command 'go depth 3' | tee "$baseline"
+          ! grep -Eq 'score mate 1' "$baseline"
+
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 --command uci --command "position fen $fen" \
+            --command 'abilityfish on' --command 'abilitypoints 4 0' \
+            --command 'go depth 3' | tee "$abilities"
+          grep -Eq '^info string abilityaction [0-9]+ score mate [1-9][0-9]* depth ' "$abilities"
+          grep -q '^bestmove 0000' "$abilities"
