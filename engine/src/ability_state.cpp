@@ -90,9 +90,12 @@ void AbilityState::move_piece_state(Square from, Square to) {
   if (!from.valid() || !to.valid()) return;
   squareUpgrades[to.index] = squareUpgrades[from.index];
   squareUpgrades[from.index] = 0;
-  for (auto& ss : side)
+  for (auto& ss : side) {
     if (ss.shield.active && ss.shield.square.index == from.index)
       ss.shield = {};
+    if (ss.ambush.active && ss.ambush.square.index == from.index)
+      ss.ambush.square = to;
+  }
   recompute_key();
 }
 
