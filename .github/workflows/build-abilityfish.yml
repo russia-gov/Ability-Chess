@@ -78,7 +78,7 @@ jobs:
             --command 'abilityfish on' \
             --command 'abilitytimed freeze w 1 1 1' \
             --command 'go depth 1 searchmoves b1a3' | tee "$log"
-          grep -q '^bestmove 0000' "$log"
+          grep -Eq '^bestmove (0000|\(none\))$' "$log"
       - name: Shield ordinary-capture legality smoke test
         run: |
           set -euo pipefail
@@ -90,7 +90,7 @@ jobs:
             --command 'abilityfish on' \
             --command 'abilitytimed shield b 35 1 1' \
             --command 'go depth 1 searchmoves e4d5' | tee "$log"
-          grep -q '^bestmove 0000' "$log"
+          grep -Eq '^bestmove (0000|\(none\))$' "$log"
       - name: Reachable Double Move same-player recursion smoke test
         run: |
           python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
