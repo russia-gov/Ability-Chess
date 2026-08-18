@@ -6,27 +6,23 @@ const ENGINE_WASM = './abilityfish-stockfish.wasm';
 const ENGINE_WORKER = './abilityfish-stockfish.worker.js';
 
 self.Module = self.Module || {};
-self.Module.locateFile = (path) => {
-  if (path.endsWith('.wasm')) return ENGINE_WASM;
-  if (path.endsWith('.worker.js')) return ENGINE_WORKER;
-  return path;
-};
+self.Module.locateFile = locateEngineFile;
 importScripts(ENGINE_JS);
 
 let enginePromise = null;
 let active = null;
 
+function locateEngineFile(path) {
+  if (path.endsWith('.wasm')) return ENGINE_WASM;
+  if (path.endsWith('.worker.js')) return ENGINE_WORKER;
+  return path;
+}
+
 function getEngine() {
   if (!enginePromise) {
     enginePromise = Promise.resolve(
       typeof Stockfish === 'function'
-        ? Stockfish({
-            locateFile: (path) => {
-              if (path.endsWith('.wasm')) return ENGINE_WASM;
-              if (path.endsWith('.worker.js')) return ENGINE_WORKER;
-              return path;
-            }
-          })
+        ? Stockfish({ locateFile: locateEngineFile })
         : Promise.reject(new Error('Custom AbilityFish WASM module did not load'))
     ).then((engine) => {
       engine.postMessage('uci');
@@ -59,14 +55,81 @@ function decodeAbilityAction(packed) {
   };
 }
 
+const int = (v, d = 0) => Number.isFinite(Number(v)) ? Math.trunc(Number(v)) : d;
+const bit = (v) => v ? 1 : 0;
+const sideName = (v) => v === 'b' || v === 1 || v === 'black' ? 'b' : 'w';
+function sq(v) {
+  if (v == null) return 64;
+  if (typeof v === 'number') return Math.max(0, Math.min(64, int(v, 64)));
+  if (typeof v === 'string' && /^[a-h][1-8]$/i.test(v)) {
+    return (Number(v[1]) - 1) * 8 + (v.toLowerCase().charCodeAt(0) - 97);
+  }
+  if (typeof v === 'object') {
+    if (v.index != null) return sq(v.index);
+    if (v.r != null && v.c != null) return Math.max(0, Math.min(63, (7 - int(v.r)) * 8 + int(v.c)));
+  }
+  return 64;
+}
+
+function sideEntry(value, side) {
+  if (Array.isArray(value)) return value[side === 'w' ? 0 : 1] || null;
+  if (!value || typeof value !== 'object') return null;
+  return value[side] ?? value[side === 'w' ? 'white' : 'black'] ?? value[side === 'w' ? 0 : 1] ?? null;
+}
+
+function timedCommand(kind, side, value) {
+  const entry = sideEntry(value, side);
+  if (!entry) return null;
+  const square = sq(entry.square ?? entry.sq ?? entry.index ?? entry);
+  const turns = int(entry.ownerTurnsRemaining ?? entry.turnsRemaining ?? entry.turns ?? 0);
+  const activeFlag = entry.active == null ? square < 64 : Boolean(entry.active);
+  return `abilitytimed ${kind} ${side} ${square} ${turns} ${bit(activeFlag)}`;
+}
+
+function lastMoveCommand(side, value) {
+  const entry = sideEntry(value, side);
+  if (!entry) return null;
+  return `abilitylastmove ${side} ${sq(entry.from)} ${sq(entry.to)} ${int(entry.pieceCode ?? entry.code ?? 0)} ${bit(entry.valid ?? (entry.from != null && entry.to != null))}`;
+}
+
 function abilityCommands(job) {
   const state = job.abilityState || {};
-  const whitePoints = Number(state.whitePoints ?? state.points?.w ?? 0) || 0;
-  const blackPoints = Number(state.blackPoints ?? state.points?.b ?? 0) || 0;
-  return [
-    'abilityfish on',
-    `abilitypoints ${Math.max(0, whitePoints)} ${Math.max(0, blackPoints)}`
-  ];
+  const commands = ['abilityfish on'];
+  commands.push(`abilitypoints ${Math.max(0, int(state.whitePoints ?? state.points?.w ?? 0))} ${Math.max(0, int(state.blackPoints ?? state.points?.b ?? 0))}`);
+  commands.push(`abilityturn ${sideName(state.turn)} ${Math.max(0, int(state.boardMovesRemaining, 1))} ${bit(state.doubleMoveActive)} ${bit(state.beganTurnInCheck)}`);
+
+  const used = state.abilityUsedThisTurn ?? state.abilityUsed ?? {};
+  commands.push(`abilityused ${bit(sideEntry(used, 'w'))} ${bit(sideEntry(used, 'b'))}`);
+  commands.push(`abilityflags ${bit(state.abilitiesEnabled ?? true)} ${bit(state.upgradesEnabled ?? true)} ${Math.max(0, int(state.upgradeLimit, 3))}`);
+
+  for (const side of ['w', 'b']) {
+    for (const [kind, value] of [['shield', state.shields ?? state.shield], ['freeze', state.frozen ?? state.frozenEnemy], ['ambush', state.ambushes ?? state.ambush]]) {
+      const cmd = timedCommand(kind, side, value); if (cmd) commands.push(cmd);
+    }
+    const lm = lastMoveCommand(side, state.lastMove ?? state.lastMoves); if (lm) commands.push(lm);
+    const fort = sideEntry(state.fortify ?? state.fortifications, side);
+    if (fort) {
+      const squares = fort.squares || [];
+      commands.push(`abilityfortify ${side} ${sq(squares[0])} ${sq(squares[1])} ${sq(squares[2])} ${sq(squares[3])} ${int(fort.ownerTurnsRemaining ?? fort.turnsRemaining ?? fort.turns ?? 0)} ${bit(fort.active ?? true)}`);
+    }
+  }
+
+  const portals = Array.isArray(state.portals) ? state.portals : [];
+  for (let i = 0; i < Math.min(2, portals.length); i++) {
+    const p = portals[i] || {};
+    commands.push(`abilityportal ${i} ${sq(p.a)} ${sq(p.b)} ${sideName(p.owner)} ${int(p.ownerTurnsRemaining ?? p.turnsRemaining ?? p.turns ?? 0)} ${bit(p.active ?? true)}`);
+  }
+
+  const upgrades = state.upgrades ?? state.squareUpgrades;
+  if (Array.isArray(upgrades)) {
+    upgrades.forEach((mask, i) => { if (int(mask) !== 0) commands.push(`abilityupgrade ${i} ${int(mask) & 0xffff}`); });
+  } else if (upgrades && typeof upgrades === 'object') {
+    for (const [square, mask] of Object.entries(upgrades)) {
+      const index = sq(/^\d+$/.test(square) ? Number(square) : square);
+      if (index < 64 && int(mask) !== 0) commands.push(`abilityupgrade ${index} ${int(mask) & 0xffff}`);
+    }
+  }
+  return commands;
 }
 
 async function analyze(job) {
