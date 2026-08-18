@@ -46,7 +46,7 @@ const server = http.createServer((req, res) => {
 });
 
 function startingBoard() {
-  const rows = [
+  return [
     ['br','bn','bb','bq','bk','bb','bn','br'],
     Array(8).fill('bp'),
     Array(8).fill(null),
@@ -56,12 +56,13 @@ function startingBoard() {
     Array(8).fill('wp'),
     ['wr','wn','wb','wq','wk','wb','wn','wr'],
   ];
-  return rows;
 }
 
 (async () => {
   let browser;
+  let page = null;
   let settled = false;
+  const pageErrors = [];
   const failTimer = setTimeout(() => {
     if (settled) return;
     console.error('Browser AbilityFish smoke test timed out');
@@ -72,8 +73,7 @@ function startingBoard() {
     await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
     const { port } = server.address();
     browser = await chromium.launch({ headless: true });
-    const page = await browser.newPage();
-    const pageErrors = [];
+    page = await browser.newPage();
     page.on('pageerror', err => pageErrors.push(String(err && err.stack || err)));
     page.on('console', msg => {
       if (msg.type() === 'error') console.error('browser console:', msg.text());
@@ -84,9 +84,8 @@ function startingBoard() {
       timeout: 30000,
     });
 
-    await page.waitForFunction(() =>
-      typeof requestAbilityFishAnalysis === 'function' &&
-      typeof ensureEmbeddedAnalysisAbilityFishWorkerUrl === 'function',
+    await page.waitForFunction(
+      () => typeof window.__ABILITYFISH_ANALYSIS_TEST__ === 'function',
       null,
       { timeout: 15000 }
     );
@@ -115,7 +114,7 @@ function startingBoard() {
     };
 
     const result = await page.evaluate(async ({ state, depth }) => {
-      return await requestAbilityFishAnalysis(state, { depth });
+      return await window.__ABILITYFISH_ANALYSIS_TEST__(state, { depth });
     }, { state, depth });
 
     const reportedDepth = Number(result && result.depth || 0);
@@ -130,7 +129,7 @@ function startingBoard() {
       throw new Error(`Browser Analysis reported ${nodes} nodes; expected > 0`);
     }
     if (pageErrors.length) {
-      console.warn('Non-fatal page errors during smoke:', pageErrors.slice(0,3));
+      console.warn('Non-fatal page errors during smoke:', pageErrors.slice(0,5));
     }
 
     console.log(`ABILITYFISH_BROWSER_DEPTH_${depth}_OK nodes=${nodes}`);
@@ -141,6 +140,19 @@ function startingBoard() {
   } catch (error) {
     console.error('Embedded AbilityFish browser smoke failed');
     console.error(error && error.stack || error);
+    if (pageErrors.length) {
+      console.error('Browser page errors:', pageErrors.slice(0,5));
+    }
+    if (page) {
+      try {
+        const diag = await page.evaluate(() => ({
+          title: document.title,
+          hook: typeof window.__ABILITYFISH_ANALYSIS_TEST__,
+          ready: document.readyState,
+        }));
+        console.error('Browser page diagnostics:', JSON.stringify(diag));
+      } catch {}
+    }
     settled = true;
     clearTimeout(failTimer);
     try { if (browser) await browser.close(); } catch {}
