@@ -64,7 +64,8 @@ jobs:
             --command 'abilityfortify w 4 5 12 13 1 1' \
             --command 'abilitylastmove w 6 28 2 1' \
             --command 'abilityportal 0 16 24 w 3 1' \
-            --command 'abilityupgrade 28 8' \
+            --command 'abilityupgrade w 0 3' \
+            --command 'abilityupgrade b 3 11' \
             --command 'abilityfish off' \
             --command 'go depth 1'
       - name: Freeze ordinary-move legality smoke test
@@ -116,6 +117,97 @@ jobs:
             --command 'abilitypoints 0 0' \
             --command 'abilitytimed ambush b 35 1 1' \
             --command 'go depth 1 searchmoves e4d5' | tee "$log"
+          grep -Eq '^bestmove (0000|\(none\))$' "$log"
+      - name: Portal reversible routing smoke test
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/8/4B3/8/8/4K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityportal 0 35 8 w 3 1' \
+            --command 'go depth 3 searchmoves e4d5' | tee "$log"
+          grep -q '^bestmove e4d5' "$log"
+      - name: Vanguard pawn movement smoke test
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/8/4P3/8/8/4K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityupgrade w 0 1' \
+            --command 'go depth 2 searchmoves e4d5' | tee "$log"
+          grep -q '^bestmove e4d5' "$log"
+      - name: Lancer knight movement smoke test
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/8/4N3/8/8/4K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityupgrade w 1 4' \
+            --command 'go depth 2 searchmoves e4d5' | tee "$log"
+          grep -q '^bestmove e4d5' "$log"
+      - name: Bastion rook jump smoke test
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/8/8/8/P7/R3K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityupgrade w 3 9' \
+            --command 'go depth 2 searchmoves a1a3' | tee "$log"
+          grep -q '^bestmove a1a3' "$log"
+      - name: Phase Step queen jump smoke test
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/8/8/8/1P6/Q3K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityupgrade w 4 12' \
+            --command 'go depth 2 searchmoves a1c3' | tee "$log"
+          grep -q '^bestmove a1c3' "$log"
+      - name: Escape Route king movement smoke test
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/8/4K3/8/8/8 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityupgrade w 5 14' \
+            --command 'go depth 2 searchmoves e4e6' | tee "$log"
+          grep -q '^bestmove e4e6' "$log"
+      - name: Color Shift cannot capture smoke test
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/4p3/4B3/8/8/4K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityupgrade w 2 7' \
+            --command 'go depth 1 searchmoves e4e5' | tee "$log"
           grep -Eq '^bestmove (0000|\(none\))$' "$log"
       - name: Reachable Double Move same-player recursion smoke test
         run: |
