@@ -67,6 +67,30 @@ jobs:
             --command 'abilityupgrade 28 8' \
             --command 'abilityfish off' \
             --command 'go depth 1'
+      - name: Freeze ordinary-move legality smoke test
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/8/8/8/8/1N2K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitytimed freeze w 1 1 1' \
+            --command 'go depth 1 searchmoves b1a3' | tee "$log"
+          grep -q '^bestmove 0000' "$log"
+      - name: Shield ordinary-capture legality smoke test
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/3q4/4R3/8/8/4K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitytimed shield b 35 1 1' \
+            --command 'go depth 1 searchmoves e4d5' | tee "$log"
+          grep -q '^bestmove 0000' "$log"
       - name: Reachable Double Move same-player recursion smoke test
         run: |
           python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
