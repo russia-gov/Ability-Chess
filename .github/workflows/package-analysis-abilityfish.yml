@@ -8,6 +8,8 @@ on:
       - 'scripts/sync_main_aug18_site_patch.py'
       - 'scripts/patch_analysis_wasm_runtime.py'
       - 'scripts/patch_analysis_coi_runtime.py'
+      - 'scripts/apply_fairy_single_thread_wasm.py'
+      - 'scripts/run_wasm_uci_smoke.js'
       - '.github/workflows/package-analysis-abilityfish.yml'
   pull_request:
     branches: [ main ]
@@ -15,6 +17,8 @@ on:
       - 'scripts/sync_main_aug18_site_patch.py'
       - 'scripts/patch_analysis_wasm_runtime.py'
       - 'scripts/patch_analysis_coi_runtime.py'
+      - 'scripts/apply_fairy_single_thread_wasm.py'
+      - 'scripts/run_wasm_uci_smoke.js'
       - '.github/workflows/package-analysis-abilityfish.yml'
 
 permissions:
@@ -55,25 +59,13 @@ jobs:
       - name: Apply AbilityFish integration
         run: python3 scripts/prepare_fairy.py vendor/Fairy-Wasm
 
-      - name: Convert interactive runtime to single-threaded WASM
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path('vendor/Fairy-Wasm/src/emscripten/Makefile')
-          s=p.read_text()
-          s=s.replace('\n\t-s USE_PTHREADS=1 \\\n\t-s PROXY_TO_PTHREAD=1 \\\n','\n')
-          s=s.replace('stockfish.js stockfish.wasm stockfish.worker.js \\\n','stockfish.js stockfish.wasm \\\n')
-          s=s.replace('cp -f ../AUTHORS ../Copying.txt stockfish.js stockfish.wasm emscripten/public\n\tcat stockfish.worker.js emscripten/worker-postamble.js > emscripten/public/stockfish.worker.js',
-                      'cp -f ../AUTHORS ../Copying.txt stockfish.js stockfish.wasm emscripten/public')
-          if 'USE_PTHREADS=1' in s or 'PROXY_TO_PTHREAD=1' in s:
-              raise SystemExit('pthread flags still present')
-          p.write_text(s)
-          PY
+      - name: Apply portable single-thread runtime
+        run: python3 scripts/apply_fairy_single_thread_wasm.py vendor/Fairy-Wasm
 
       - uses: actions/cache@v5
         with:
           path: ${{ env.EM_CACHE_FOLDER }}
-          key: abilityfish-analysis-single-emsdk-${{ env.EM_VERSION }}-${{ runner.os }}
+          key: abilityfish-analysis-single-v2-emsdk-${{ env.EM_VERSION }}-${{ runner.os }}
 
       - uses: mymindstorm/setup-emsdk@v16
         with:
@@ -83,6 +75,7 @@ jobs:
       - name: Build portable AbilityFish WASM
         run: |
           make -C vendor/Fairy-Wasm/src emscripten_build ARCH=wasm \
+            ABILITYFISH_SINGLE_THREAD=yes \
             nnue=no embedded_nnue=no wasm_simd=no largeboards=no all=no
 
       - name: Provision modern Node for runtime validation
@@ -103,6 +96,7 @@ jobs:
           cp engine/fairy-depth15-worker.js analysis-engine/abilityfish-worker.js
           cp engine/abilityfish-bridge.js analysis-engine/abilityfish-bridge.js
           rm -f analysis-engine/abilityfish-stockfish.worker.js
+          rm -f abilityfish-coi-serviceworker.js
 
       - name: Verify combined production + portable Analysis integration
         run: |
@@ -121,7 +115,10 @@ jobs:
           test -s analysis-engine/abilityfish-stockfish.js
           test -s analysis-engine/abilityfish-stockfish.wasm
           test -s analysis-engine/abilityfish-worker.js
+          test ! -e analysis-engine/abilityfish-stockfish.worker.js
+          test ! -e abilityfish-coi-serviceworker.js
           ! grep -q 'SharedArrayBuffer' analysis-engine/abilityfish-stockfish.js
+          ! grep -q 'PThread' analysis-engine/abilityfish-stockfish.js
 
       - name: Commit combined runtime to development branch
         if: github.event_name == 'push'
