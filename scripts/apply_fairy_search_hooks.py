@@ -11,7 +11,7 @@ if not p.exists():
     raise SystemExit(f"not a Fairy-Stockfish checkout: {root}")
 
 s = p.read_text()
-if "ABILITYFISH_SEARCH_HOOKS_V1" in s:
+if "ABILITYFISH_SEARCH_HOOKS_V2" in s:
     print("AbilityFish search hooks already applied")
     raise SystemExit(0)
 
@@ -23,7 +23,7 @@ hook = r'''    value = bestValue;
     singularQuietLMR = moveCountPruning = false;
     bool doubleExtension = false;
 
-    // ABILITYFISH_SEARCH_HOOKS_V1
+    // ABILITYFISH_SEARCH_HOOKS_V2
     if (!rootNode && pos.abilityfish_active())
     {
         auto abilityActions = pos.ability_actions();
@@ -50,6 +50,19 @@ hook = r'''    value = bestValue;
             else
                 abilityValue = search<NonPV>(pos, ss+1, alpha, beta,
                                               std::max(Depth(0), abilityDepth), false);
+
+            // Same-player meta abilities (Ambush, Shield, Freeze, Portal, Fortify,
+            // etc.) do not consume a chess move. The recursive Stockfish call still
+            // advances SearchStack by one slot, which otherwise makes an immediate
+            // Ambush -> mating move appear one ply farther away. Remove that purely
+            // internal ply from mate scores so move-count mate distances stay correct.
+            if (!sideChanged && !abilityAction.consumes_board_move())
+            {
+                if (abilityValue >= VALUE_MATE_IN_MAX_PLY)
+                    abilityValue = Value(abilityValue + 1);
+                else if (abilityValue <= VALUE_MATED_IN_MAX_PLY)
+                    abilityValue = Value(abilityValue - 1);
+            }
 
             pos.undo_ability_action(abilityUndo);
 
