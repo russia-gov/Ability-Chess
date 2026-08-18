@@ -7,6 +7,9 @@ constexpr Square sq(int i){ return Square{static_cast<uint8_t>(i)}; }
 int row(Square s){ return int(s.index)/8; }
 int col(Square s){ return int(s.index)%8; }
 bool adjacent_3x3(Square a, Square c){ return std::abs(row(a)-row(c))<=1 && std::abs(col(a)-col(c))<=1; }
+uint8_t piece_type_index(PieceType p) {
+  return p>=PieceType::Pawn&&p<=PieceType::King ? uint8_t(p)-1 : 255;
+}
 
 void spend_ability(AbilityState& st, Side s, Ability ab) {
   auto& ss = st.side[side_index(s)];
@@ -142,14 +145,17 @@ std::vector<AbilityAction> generate_meta_actions(const AbilityState& st, const B
       push(ActionKind::DoubleMove);
   }
 
-  if(st.upgradesEnabled)
-    for(int i=0;i<64;i++) {
-      auto p=b.piece_at(sq(i)); if(!p.present()||p.side!=us) continue;
+  if(st.upgradesEnabled) {
+    for(unsigned p=unsigned(PieceType::Pawn); p<=unsigned(PieceType::King); ++p) {
+      const PieceType pt=PieceType(p);
+      const uint8_t typeIndex=piece_type_index(pt);
       for(unsigned u=0;u<unsigned(Upgrade::Count);u++) {
         Upgrade up=Upgrade(u);
-        if(upgrade_compatible(p.type,up)&&st.can_buy_upgrade(us,sq(i),up)) push(ActionKind::Upgrade,sq(i),Square{},uint8_t(u));
+        if(upgrade_compatible(pt,up)&&st.can_buy_upgrade(us,typeIndex,up))
+          out.push_back({ActionKind::Upgrade,uint8_t(pt),64,uint8_t(u),0});
       }
     }
+  }
   return out;
 }
 
@@ -179,7 +185,7 @@ ApplyResult apply_action(AbilityState& st, BoardAdapter& b, const AbilityAction&
     }
     case ActionKind::SwapFinish: {
       Square x{a.from},z{a.to}; if(!st.can_afford(us,Ability::Swap)||x.index==z.index||!own_nonking(b,us,x)||!own_nonking(b,us,z)||frozen_for_side(st,us,x)||frozen_for_side(st,us,z)||!b.swap_would_be_safe(x,z,us)) return bad("illegal swap");
-      spend_ability(st,us,Ability::Swap); b.swap_pieces(x,z); std::swap(st.squareUpgrades[x.index],st.squareUpgrades[z.index]);
+      spend_ability(st,us,Ability::Swap); b.swap_pieces(x,z);
       if(ss.shield.active&&(ss.shield.square.index==x.index||ss.shield.square.index==z.index)) ss.shield={};
       if(ss.ambush.active) { if(ss.ambush.square.index==x.index) ss.ambush.square=z; else if(ss.ambush.square.index==z.index) ss.ambush.square=x; }
       st.recompute_key(); return ok_same();
@@ -206,7 +212,7 @@ ApplyResult apply_action(AbilityState& st, BoardAdapter& b, const AbilityAction&
     case ActionKind::Reinforce: {
       Square q{a.from}; auto p=b.piece_at(q); PieceType nt=PieceType(a.aux);
       if(!st.can_afford(us,Ability::Reinforce)||!p.present()||p.side!=us||p.type!=PieceType::Pawn||!pawn_crossed_half(us,q)||(nt!=PieceType::Knight&&nt!=PieceType::Bishop)) return bad("illegal reinforce");
-      spend_ability(st,us,Ability::Reinforce); b.replace_piece(q,nt,us); st.squareUpgrades[q.index]=0; st.recompute_key(); return ok_same();
+      spend_ability(st,us,Ability::Reinforce); b.replace_piece(q,nt,us); st.recompute_key(); return ok_same();
     }
     case ActionKind::PortalFinish: {
       Square x{a.from},z{a.to}; if(!st.can_afford(us,Ability::Portal)||x.index==z.index||!b.empty(x)||!b.empty(z)||protected_from_ability(st,us,x)||protected_from_ability(st,us,z)) return bad("illegal portal");
@@ -224,10 +230,11 @@ ApplyResult apply_action(AbilityState& st, BoardAdapter& b, const AbilityAction&
       spend_ability(st,us,Ability::DoubleMove); st.doubleMoveActive=true; st.boardMovesRemaining=2; st.beganTurnInCheck=b.in_check(us); st.recompute_key(); return ok_same();
     }
     case ActionKind::Upgrade: {
-      Square q{a.from}; if(a.aux>=uint8_t(Upgrade::Count)) return bad("bad upgrade id"); Upgrade up=Upgrade(a.aux); auto p=b.piece_at(q);
-      if(!p.present()||p.side!=us||!upgrade_compatible(p.type,up)||!st.can_buy_upgrade(us,q,up)) return bad("illegal upgrade");
+      if(a.from<uint8_t(PieceType::Pawn)||a.from>uint8_t(PieceType::King)||a.aux>=uint8_t(Upgrade::Count)) return bad("bad upgrade id");
+      PieceType pt=PieceType(a.from); Upgrade up=Upgrade(a.aux); uint8_t typeIndex=piece_type_index(pt);
+      if(!upgrade_compatible(pt,up)||!st.can_buy_upgrade(us,typeIndex,up)) return bad("illegal upgrade");
       spend_upgrade(st,us,up);
-      st.squareUpgrades[q.index] |= uint16_t(1u<<unsigned(up));
+      st.set_upgrade(us,typeIndex,up);
       st.boardMovesRemaining=1;
       st.doubleMoveActive=false;
       st.begin_turn(other(us),false);
