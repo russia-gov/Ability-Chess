@@ -25,15 +25,27 @@ jobs:
           ref: c19b5f6c66894fdb0e88d0dd100e3885f744760a
           path: vendor/Fairy-Stockfish
       - run: python3 scripts/prepare_fairy.py vendor/Fairy-Stockfish
+      - name: Instrument root ability candidates for regression diagnostics
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('vendor/Fairy-Stockfish/src/search.cpp')
+          s=p.read_text()
+          a='''          auto abilityActions = rootPos.ability_actions();\n          for (const auto& abilityAction : abilityActions)\n'''
+          b='''          auto abilityActions = rootPos.ability_actions();\n          if (mainThread)\n              sync_cout << "info string abilityrootdebug actions " << abilityActions.size() << sync_endl;\n          for (const auto& abilityAction : abilityActions)\n'''
+          if a not in s: raise SystemExit('root action diagnostic anchor missing')
+          s=s.replace(a,b,1)
+          a2='''              rootPos.undo_ability_action(abilityUndo);\n\n              if (Threads.stop)\n'''
+          b2='''              rootPos.undo_ability_action(abilityUndo);\n\n              if (mainThread)\n                  sync_cout << "info string abilityrootcandidate "\n                            << abilityfish::encode_action(abilityAction)\n                            << " score " << UCI::value(abilityValue)\n                            << " raw " << int(abilityValue)\n                            << " depth " << rootDepth << sync_endl;\n\n              if (Threads.stop)\n'''
+          if a2 not in s: raise SystemExit('root candidate diagnostic anchor missing')
+          p.write_text(s.replace(a2,b2,1))
+          PY
       - working-directory: vendor/Fairy-Stockfish/src
         run: make -j2 build ARCH=x86-64
       - name: Root search finds Ambush then Qb5 mate
         shell: bash
         run: |
           set -euo pipefail
-          # Queen b4 can check with Qb5, but Black King a6 can capture it unless
-          # it is Ambushed. Knight c6 covers a7 without protecting b5 or b6.
-          # The queen itself covers a5, b6 and b7 after Qb5.
           fen='8/8/k1N5/8/1Q6/8/8/7K w - - 0 1'
           baseline=$(mktemp)
           abilities=$(mktemp)
@@ -48,5 +60,6 @@ jobs:
             --timeout 30 --command uci --command "position fen $fen" \
             --command 'abilityfish on' --command 'abilitypoints 4 0' \
             --command 'go depth 3' | tee "$abilities"
+          grep -q '^info string abilityrootdebug actions ' "$abilities"
           grep -Eq '^info string abilityaction [0-9]+ score mate [1-9][0-9]* depth ' "$abilities"
           grep -q '^bestmove 0000' "$abilities"
