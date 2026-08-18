@@ -145,12 +145,12 @@ function applyOrdinaryUci(state, uci) {
       { timeout: 15000 }
     );
 
-    const analyze = async (state, requestedDepth) => page.evaluate(async ({ state, requestedDepth }) => {
-      return await window.__ABILITYFISH_ANALYSIS_TEST__(state, { depth: requestedDepth });
-    }, { state, requestedDepth });
+    const analyze = async (state, requestedDepth, options={}) => page.evaluate(async ({ state, requestedDepth, options }) => {
+      return await window.__ABILITYFISH_ANALYSIS_TEST__(state, { depth: requestedDepth, ...options });
+    }, { state, requestedDepth, options });
 
     const state = baseState();
-    const result = await analyze(state, depth);
+    const result = await analyze(state, depth, {multiPV:3});
 
     const reportedDepth = Number(result && result.depth || 0);
     const nodes = Number(result && result.nodes || 0);
@@ -164,30 +164,41 @@ function applyOrdinaryUci(state, uci) {
       throw new Error(`Browser Analysis reported ${nodes} nodes; expected > 0`);
     }
 
-    // Regression for the exact class of problem seen in the UI: a depth-N root
-    // score should agree closely with the same best-move child searched to N-1.
-    // The adapter stores scores in one fixed (black-positive) perspective, so
-    // parent and child should have the same sign and nearly the same value.
     if (depth >= 5) {
       const parentState = applyOrdinaryUci(baseState(), 'b1c3');
-      const parent = await analyze(parentState, 5);
-      const topPv = String(parent?.displayLines?.[0]?.pv || '').trim().split(/\s+/).filter(Boolean);
-      const bestMove = topPv[0];
-      if (!bestMove) throw new Error(`No principal variation in Nc3 regression: ${JSON.stringify(parent)}`);
-      const childState = applyOrdinaryUci(parentState, bestMove);
-      const child = await analyze(childState, 4);
-      const parentScore = Number(parent?.score);
-      const childScore = Number(child?.score);
-      const delta = Math.abs(parentScore - childScore);
-      console.log(`ABILITYFISH_SCORE_CHAIN move=${bestMove} parent=${parentScore} child=${childScore} delta=${delta}`);
-      if (!Number.isFinite(parentScore) || !Number.isFinite(childScore)) {
+
+      async function scoreChain(abilityFishEnabled) {
+        const parent = await analyze(parentState, 5, {multiPV:1, abilityFishEnabled});
+        const topPv = String(parent?.displayLines?.[0]?.pv || '').trim().split(/\s+/).filter(Boolean);
+        const bestMove = topPv[0];
+        if (!bestMove) throw new Error(`No principal variation in Nc3 regression: ${JSON.stringify(parent)}`);
+        const childState = applyOrdinaryUci(parentState, bestMove);
+        const child = await analyze(childState, 4, {multiPV:1, abilityFishEnabled});
+        const parentScore = Number(parent?.score);
+        const childScore = Number(child?.score);
+        const delta = Math.abs(parentScore - childScore);
+        return {bestMove,parentScore,childScore,delta};
+      }
+
+      const plain = await scoreChain(false);
+      console.log(`PLAIN_SCORE_CHAIN move=${plain.bestMove} parent=${plain.parentScore} child=${plain.childScore} delta=${plain.delta}`);
+      if (!Number.isFinite(plain.parentScore) || !Number.isFinite(plain.childScore)) {
+        throw new Error('Plain Fairy score chain returned a non-finite score');
+      }
+      if (Math.sign(plain.parentScore) !== 0 && Math.sign(plain.childScore) !== 0 && Math.sign(plain.parentScore) !== Math.sign(plain.childScore)) {
+        throw new Error(`Plain Fairy fixed-perspective score flipped after its own best move: ${plain.parentScore} -> ${plain.childScore}`);
+      }
+
+      const ability = await scoreChain(true);
+      console.log(`ABILITYFISH_SCORE_CHAIN move=${ability.bestMove} parent=${ability.parentScore} child=${ability.childScore} delta=${ability.delta}`);
+      if (!Number.isFinite(ability.parentScore) || !Number.isFinite(ability.childScore)) {
         throw new Error('AbilityFish score chain returned a non-finite score');
       }
-      if (Math.sign(parentScore) !== 0 && Math.sign(childScore) !== 0 && Math.sign(parentScore) !== Math.sign(childScore)) {
-        throw new Error(`AbilityFish fixed-perspective score flipped after its own best move: ${parentScore} -> ${childScore}`);
+      if (Math.sign(ability.parentScore) !== 0 && Math.sign(ability.childScore) !== 0 && Math.sign(ability.parentScore) !== Math.sign(ability.childScore)) {
+        throw new Error(`AbilityFish fixed-perspective score flipped after its own best move: ${ability.parentScore} -> ${ability.childScore}; plain=${JSON.stringify(plain)}`);
       }
-      if (delta > 40) {
-        throw new Error(`AbilityFish best-move score changed by ${delta} cp between depth 5 root and depth 4 child`);
+      if (ability.delta > 40) {
+        throw new Error(`AbilityFish best-move score changed by ${ability.delta} cp between depth 5 root and depth 4 child; plain=${JSON.stringify(plain)}`);
       }
     }
 
