@@ -27,9 +27,6 @@ worker = wrapper_path.read_text(encoding="utf-8")
 wasm_b64 = base64.b64encode(engine_wasm_path.read_bytes()).decode("ascii")
 engine_js_b64 = base64.b64encode(engine_js.encode("utf-8")).decode("ascii")
 
-# The external wrapper imports stockfish.js and asks Emscripten to locate the
-# wasm file. For the embedded version, stockfish.js is prepended to the blob
-# worker and the wasm bytes are supplied directly to Stockfish().
 old_boot = """const ENGINE_JS = './abilityfish-stockfish.js';
 const ENGINE_WASM = './abilityfish-stockfish.wasm';
 const ENGINE_WORKER = './abilityfish-stockfish.worker.js';
@@ -58,10 +55,6 @@ new_engine = "Stockfish({ wasmBinary: embeddedEngineWasm() })"
 if old_engine not in worker:
     raise SystemExit("AbilityFish wrapper Stockfish() anchor changed")
 worker = worker.replace(old_engine, new_engine, 1)
-
-# locateEngineFile remains in the source but is dead code in the embedded
-# runtime. Define the old names so even aggressive parsing/minification cannot
-# trip over an unresolved identifier if that helper is inspected.
 worker = worker.replace(
     "function locateEngineFile(path) {",
     "const ENGINE_WASM=''; const ENGINE_WORKER='';\nfunction locateEngineFile(path) {",
@@ -92,7 +85,6 @@ embedded = f"""// ANALYSIS_ABILITYFISH_EMBEDDED_V1
   }}"""
 
 if "ANALYSIS_ABILITYFISH_EMBEDDED_V1" in html:
-    # Regeneration: replace the previous embedded block as a whole.
     start = html.index("// ANALYSIS_ABILITYFISH_EMBEDDED_V1")
     end_marker = "  const ANALYSIS_ABILITY_NAMES="
     end = html.index(end_marker, start)
@@ -109,7 +101,18 @@ if old_ctor in html:
 elif new_ctor not in html:
     raise SystemExit("Analysis Worker constructor anchor changed")
 
-if "ANALYSIS_ABILITYFISH_EMBEDDED_V1" not in html or new_ctor not in html:
+hook = "  window.__ABILITYFISH_ANALYSIS_TEST__=(state,options={})=>requestAbilityFishAnalysis(state,options);\n"
+if "window.__ABILITYFISH_ANALYSIS_TEST__" not in html:
+    marker = "  async function runAnalysisEngine(){"
+    if marker not in html:
+        raise SystemExit("runAnalysisEngine anchor changed")
+    html = html.replace(marker, hook + marker, 1)
+
+if (
+    "ANALYSIS_ABILITYFISH_EMBEDDED_V1" not in html
+    or new_ctor not in html
+    or "window.__ABILITYFISH_ANALYSIS_TEST__" not in html
+):
     raise SystemExit("embedded Analysis runtime did not install")
 
 index_path.write_text(html, encoding="utf-8", newline="")
