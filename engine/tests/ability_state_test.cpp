@@ -49,4 +49,22 @@ int main() {
   s.finish_board_move();
   assert(s.turn == Side::Black && s.boardMovesRemaining == 1 && !s.doubleMoveActive);
   assert(!s.side[0].frozenEnemy.active);
+
+  // A portal created by White is usable on the creation turn and White's next
+  // two turns. It ages only when a new White turn begins, not on Black turns.
+  s = AbilityState{};
+  s.turn = Side::White;
+  s.portals[0] = {Square{8}, Square{35}, Side::White, 3, true};
+  s.begin_turn(Side::Black,false);
+  assert(s.portals[0].active && s.portals[0].ownerTurnsRemaining==3);
+  s.begin_turn(Side::White,false);
+  assert(s.portals[0].active && s.portals[0].ownerTurnsRemaining==2);
+  s.begin_turn(Side::Black,false);
+  assert(s.portals[0].ownerTurnsRemaining==2);
+  s.begin_turn(Side::White,false);
+  assert(s.portals[0].active && s.portals[0].ownerTurnsRemaining==1);
+  s.begin_turn(Side::Black,false);
+  assert(s.portals[0].ownerTurnsRemaining==1);
+  s.begin_turn(Side::White,false);
+  assert(!s.portals[0].active);
 }
