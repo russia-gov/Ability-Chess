@@ -50,15 +50,21 @@ if "VPATH = syzygy:nnue:nnue/features:abilityfish" not in ns:
     ns = ns.replace(vpath, "VPATH = syzygy:nnue:nnue/features:abilityfish\n", 1)
 mk_native.write_text(ns)
 
-# The pinned Fairy revision contains a harmless blank line between `var = v;`
-# and the FEN stream setup. Normalize that exact formatting difference so the
-# guarded Position hook can keep using a single unambiguous anchor.
+# The pinned Fairy revision has a couple of harmless blank-line differences
+# around otherwise stable Position anchors. Normalize only those exact forms so
+# the hook scripts can keep strict one-anchor safety checks.
 position_cpp = src / "position.cpp"
 pos_text = position_cpp.read_text()
-pos_old = "  var = v;\n\n  ss >> std::noskipws;\n"
-pos_normalized = "  var = v;\n  ss >> std::noskipws;\n"
-if pos_old in pos_text and pos_normalized not in pos_text:
-    position_cpp.write_text(pos_text.replace(pos_old, pos_normalized, 1))
+normalizations = (
+    ("  var = v;\n\n  ss >> std::noskipws;\n",
+     "  var = v;\n  ss >> std::noskipws;\n"),
+    ("  sideToMove = ~sideToMove;\n\n  if (counting_rule())\n",
+     "  sideToMove = ~sideToMove;\n  if (counting_rule())\n"),
+)
+for old, new in normalizations:
+    if old in pos_text and new not in pos_text:
+        pos_text = pos_text.replace(old, new, 1)
+position_cpp.write_text(pos_text)
 
 (dest / "UPSTREAM_INTEGRATION_STATUS.txt").write_text(
     "AbilityFish kernel installed; Position, recursive search, root transport, and UCI smoke hooks applied.\n"
