@@ -9,18 +9,6 @@ uint64_t mix(uint64_t x) {
   x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
   return x ^ (x >> 31);
 }
-int bit_count(uint16_t x) {
-#if defined(__GNUC__) || defined(__clang__)
-  return __builtin_popcount(static_cast<unsigned>(x));
-#else
-  int count = 0;
-  while (x) {
-    x &= static_cast<uint16_t>(x - 1);
-    ++count;
-  }
-  return count;
-#endif
-}
 void age(TimedSquare& x) {
   if (!x.active) return;
   if (x.ownerTurnsRemaining > 0) --x.ownerTurnsRemaining;
@@ -42,14 +30,33 @@ bool AbilityState::can_afford(Side s, Ability a) const {
 bool AbilityState::can_afford(Side s, Upgrade u) const {
   return upgradesEnabled && side[side_index(s)].points >= upgrade_cost(u);
 }
-int AbilityState::upgrades_on(Square sq) const {
-  if (!sq.valid()) return 0;
-  return bit_count(squareUpgrades[sq.index]);
+std::optional<Upgrade> AbilityState::upgrade_for(Side s, uint8_t pieceTypeIndex) const {
+  if (pieceTypeIndex >= 6) return std::nullopt;
+  const uint8_t encoded = typeUpgrades[side_index(s)][pieceTypeIndex];
+  if (!encoded || encoded > uint8_t(Upgrade::Count)) return std::nullopt;
+  return Upgrade(encoded - 1);
 }
-bool AbilityState::can_buy_upgrade(Side s, Square sq, Upgrade u) const {
-  if (!sq.valid() || !can_afford(s,u)) return false;
-  const uint16_t bit = uint16_t(1u << static_cast<unsigned>(u));
-  return !(squareUpgrades[sq.index] & bit) && upgrades_on(sq) < upgradeLimit;
+int AbilityState::owned_upgrade_types(Side s) const {
+  int count = 0;
+  for (uint8_t encoded : typeUpgrades[side_index(s)]) if (encoded) ++count;
+  return count;
+}
+bool AbilityState::can_buy_upgrade(Side s, uint8_t pieceTypeIndex, Upgrade u) const {
+  if (pieceTypeIndex >= 6 || !can_afford(s,u)) return false;
+  const auto current = upgrade_for(s,pieceTypeIndex);
+  if (current && *current == u) return false;
+  if (!current && owned_upgrade_types(s) >= upgradeLimit) return false;
+  return true;
+}
+void AbilityState::set_upgrade(Side s, uint8_t pieceTypeIndex, Upgrade u) {
+  if (pieceTypeIndex >= 6) return;
+  typeUpgrades[side_index(s)][pieceTypeIndex] = uint8_t(u) + 1;
+  recompute_key();
+}
+void AbilityState::clear_upgrade(Side s, uint8_t pieceTypeIndex) {
+  if (pieceTypeIndex >= 6) return;
+  typeUpgrades[side_index(s)][pieceTypeIndex] = 0;
+  recompute_key();
 }
 
 void AbilityState::begin_turn(Side owner, bool inCheck) {
@@ -92,8 +99,6 @@ void AbilityState::finish_board_move() {
 
 void AbilityState::move_piece_state(Square from, Square to) {
   if (!from.valid() || !to.valid()) return;
-  squareUpgrades[to.index] = squareUpgrades[from.index];
-  squareUpgrades[from.index] = 0;
   for (auto& ss : side) {
     if (ss.shield.active && ss.shield.square.index == from.index)
       ss.shield = {};
@@ -105,7 +110,6 @@ void AbilityState::move_piece_state(Square from, Square to) {
 
 void AbilityState::remove_piece_state(Square q) {
   if (!q.valid()) return;
-  squareUpgrades[q.index] = 0;
   for (auto& ss : side) {
     if (ss.shield.active && ss.shield.square.index == q.index) ss.shield = {};
     if (ss.frozenEnemy.active && ss.frozenEnemy.square.index == q.index) ss.frozenEnemy = {};
@@ -131,9 +135,10 @@ void AbilityState::recompute_key() {
     }
     if (x.lastMove.valid) k ^= mix(0x60000000ULL | (s<<8) | x.lastMove.from.index | (uint64_t(x.lastMove.to.index)<<8) | (uint64_t(x.lastMove.pieceCode)<<16));
     if (x.pending.kind != PendingKind::None) k ^= mix(0x70000000ULL | (s<<8) | uint64_t(x.pending.kind) | (uint64_t(x.pending.first.index)<<16));
+    for (size_t pt=0; pt<6; ++pt)
+      if (typeUpgrades[s][pt])
+        k ^= mix(0x80000000ULL ^ (uint64_t(s)<<28) ^ (uint64_t(pt)<<16) ^ typeUpgrades[s][pt]);
   }
-  for(size_t sq=0;sq<64;sq++) if(squareUpgrades[sq])
-    k ^= mix(0x80000000ULL ^ (uint64_t(sq)<<16) ^ squareUpgrades[sq]);
   for(size_t i=0;i<portals.size();i++) if(portals[i].active)
     k ^= mix(0x50000000ULL | (i<<8) | portals[i].a.index | (uint64_t(portals[i].b.index)<<8) | (uint64_t(portals[i].ownerTurnsRemaining)<<20) | (uint64_t(portals[i].owner)<<28));
   k ^= mix(uint64_t(upgradeLimit) << 48 | uint64_t(abilitiesEnabled) << 56 | uint64_t(upgradesEnabled) << 57);
