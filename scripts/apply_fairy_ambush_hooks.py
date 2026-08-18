@@ -43,6 +43,22 @@ if "ABILITYFISH_AMBUSH_CPP_V1" not in cs:
         "ambush cpp marker",
     )
 
+    # StateInfo fields below offsetof(StateInfo, key) are not copied from the
+    # parent position, so initialize Ambush bookkeeping for every move node.
+    move_init_anchor = """  newSt.previous = st;
+  st = &newSt;
+  st->move = m;
+"""
+    move_init_repl = """  newSt.previous = st;
+  st = &newSt;
+  st->move = m;
+  st->abilityfishAmbushTriggered = false;
+  st->abilityfishAmbushCapturer = NO_PIECE;
+  st->abilityfishAmbushUnpromotedCapturer = NO_PIECE;
+  st->abilityfishAmbushCapturerPromoted = false;
+"""
+    cs = replace_once(cs, move_init_anchor, move_init_repl, "ambush move-state initialization")
+
     # A king may not capture an ambushed piece because Ambush destroys the capturer.
     legal_anchor = """      if (!abilityfish::normal_move_allowed(st->abilityState, af_side(us), ability_sq(from_sq(m)), abilityCapture))
           return false;
