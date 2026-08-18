@@ -33,12 +33,13 @@ jobs:
           ASAN_OPTIONS: abort_on_error=1:detect_leaks=0:print_stacktrace=1
           UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
         run: |
-          set -o pipefail
-          printf '%s\n' \
-            'uci' \
-            'position fen 4k3/8/8/3q4/4B3/8/8/4K3 w - - 0 1' \
-            'abilityfish on' \
-            'abilitypoints 0 0' \
-            'abilitytimed ambush b 35 1 1' \
-            'go depth 3 searchmoves e4d5' \
-            'quit' | vendor/Fairy-Stockfish/src/stockfish 2>&1 | tee sanitizer.log
+          set -euo pipefail
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/3q4/4B3/8/8/4K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilitytimed ambush b 35 1 1' \
+            --command 'go depth 3 searchmoves e4d5' \
+            2>&1 | tee sanitizer.log
