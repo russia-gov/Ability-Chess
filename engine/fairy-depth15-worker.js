@@ -1,11 +1,17 @@
-/* AbilityFish depth-15 Fairy-Stockfish adapter.
- * Uses the official fairy-stockfish-nnue.wasm npm build from jsDelivr.
- * GPL-3.0: https://github.com/fairy-stockfish/fairy-stockfish.wasm
+/* AbilityFish depth-15 browser worker backed by the custom interactive
+ * Fairy-Stockfish WASM build produced by build-abilityfish.yml.
  */
-const CDN_BASE = 'https://cdn.jsdelivr.net/npm/fairy-stockfish-nnue.wasm@1.1.11/';
+const ENGINE_JS = './abilityfish-stockfish.js';
+const ENGINE_WASM = './abilityfish-stockfish.wasm';
+const ENGINE_WORKER = './abilityfish-stockfish.worker.js';
+
 self.Module = self.Module || {};
-self.Module.locateFile = (path) => CDN_BASE + path;
-importScripts(CDN_BASE + 'stockfish.js');
+self.Module.locateFile = (path) => {
+  if (path.endsWith('.wasm')) return ENGINE_WASM;
+  if (path.endsWith('.worker.js')) return ENGINE_WORKER;
+  return path;
+};
+importScripts(ENGINE_JS);
 
 let enginePromise = null;
 let active = null;
@@ -14,8 +20,14 @@ function getEngine() {
   if (!enginePromise) {
     enginePromise = Promise.resolve(
       typeof Stockfish === 'function'
-        ? Stockfish({ locateFile: (path) => CDN_BASE + path })
-        : Promise.reject(new Error('Fairy-Stockfish module did not load'))
+        ? Stockfish({
+            locateFile: (path) => {
+              if (path.endsWith('.wasm')) return ENGINE_WASM;
+              if (path.endsWith('.worker.js')) return ENGINE_WORKER;
+              return path;
+            }
+          })
+        : Promise.reject(new Error('Custom AbilityFish WASM module did not load'))
     ).then((engine) => {
       engine.postMessage('uci');
       return engine;
@@ -45,6 +57,16 @@ function decodeAbilityAction(packed) {
     aux: (v >>> 19) & 0x3f,
     flags: (v >>> 25) & 0x7f
   };
+}
+
+function abilityCommands(job) {
+  const state = job.abilityState || {};
+  const whitePoints = Number(state.whitePoints ?? state.points?.w ?? 0) || 0;
+  const blackPoints = Number(state.blackPoints ?? state.points?.b ?? 0) || 0;
+  return [
+    'abilityfish on',
+    `abilitypoints ${Math.max(0, whitePoints)} ${Math.max(0, blackPoints)}`
+  ];
 }
 
 async function analyze(job) {
@@ -100,6 +122,7 @@ async function analyze(job) {
       engine.postMessage(`setoption name MultiPV value ${multiPV}`);
       engine.postMessage('isready');
       engine.postMessage(job.fen === 'startpos' ? 'position startpos' : `position fen ${job.fen}`);
+      for (const command of abilityCommands(job)) engine.postMessage(command);
       engine.postMessage(`go depth ${requestedDepth}`);
     } catch (err) {
       cleanup(); reject(err);
