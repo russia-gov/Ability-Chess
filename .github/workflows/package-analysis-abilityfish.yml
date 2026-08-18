@@ -8,7 +8,8 @@ on:
       - 'scripts/sync_main_aug18_site_patch.py'
       - 'scripts/patch_analysis_wasm_runtime.py'
       - 'scripts/patch_analysis_coi_runtime.py'
-      - 'abilityfish-coi-serviceworker.js'
+      - 'scripts/apply_fairy_single_thread_wasm.py'
+      - 'scripts/run_wasm_uci_smoke.js'
       - '.github/workflows/package-analysis-abilityfish.yml'
   pull_request:
     branches: [ main ]
@@ -16,7 +17,8 @@ on:
       - 'scripts/sync_main_aug18_site_patch.py'
       - 'scripts/patch_analysis_wasm_runtime.py'
       - 'scripts/patch_analysis_coi_runtime.py'
-      - 'abilityfish-coi-serviceworker.js'
+      - 'scripts/apply_fairy_single_thread_wasm.py'
+      - 'scripts/run_wasm_uci_smoke.js'
       - '.github/workflows/package-analysis-abilityfish.yml'
 
 permissions:
@@ -57,19 +59,23 @@ jobs:
       - name: Apply AbilityFish integration
         run: python3 scripts/prepare_fairy.py vendor/Fairy-Wasm
 
+      - name: Apply portable single-thread runtime
+        run: python3 scripts/apply_fairy_single_thread_wasm.py vendor/Fairy-Wasm
+
       - uses: actions/cache@v5
         with:
           path: ${{ env.EM_CACHE_FOLDER }}
-          key: abilityfish-analysis-emsdk-${{ env.EM_VERSION }}-${{ runner.os }}
+          key: abilityfish-analysis-single-v2-emsdk-${{ env.EM_VERSION }}-${{ runner.os }}
 
       - uses: mymindstorm/setup-emsdk@v16
         with:
           version: ${{ env.EM_VERSION }}
           actions-cache-folder: ${{ env.EM_CACHE_FOLDER }}
 
-      - name: Build interactive AbilityFish WASM
+      - name: Build portable AbilityFish WASM
         run: |
           make -C vendor/Fairy-Wasm/src emscripten_build ARCH=wasm \
+            ABILITYFISH_SINGLE_THREAD=yes \
             nnue=no embedded_nnue=no wasm_simd=no largeboards=no all=no
 
       - name: Provision modern Node for runtime validation
@@ -87,18 +93,20 @@ jobs:
           mkdir -p analysis-engine
           cp vendor/Fairy-Wasm/src/emscripten/public/stockfish.js analysis-engine/abilityfish-stockfish.js
           cp vendor/Fairy-Wasm/src/emscripten/public/stockfish.wasm analysis-engine/abilityfish-stockfish.wasm
-          cp vendor/Fairy-Wasm/src/emscripten/public/stockfish.worker.js analysis-engine/abilityfish-stockfish.worker.js
           cp engine/fairy-depth15-worker.js analysis-engine/abilityfish-worker.js
           cp engine/abilityfish-bridge.js analysis-engine/abilityfish-bridge.js
+          rm -f analysis-engine/abilityfish-stockfish.worker.js
+          rm -f abilityfish-coi-serviceworker.js
 
-      - name: Verify combined production + Analysis integration
+      - name: Verify combined production + portable Analysis integration
         run: |
           grep -q 'Double Move canceled. Points refunded.' index.html
           grep -q "cancelAbilityBtn.textContent=pendingDouble?'Cancel Double Move':'Cancel ability'" index.html
           grep -q 'p_after_id:-1' index.html
           grep -q 'ANALYSIS_ABILITYFISH_WORKER' index.html
           grep -q '15 — full' index.html
-          grep -q 'ABILITYFISH_ANALYSIS_COI_V1' index.html
+          ! grep -q 'ABILITYFISH_ANALYSIS_COI_V1' index.html
+          ! grep -q 'if(!window.crossOriginIsolated)' index.html
           grep -q "return rootTurn==='b'?rootValue:-rootValue;" index.html
           grep -q "piece\[1\]==='k'?63" index.html
           grep -q 'frozen:analysisFrozenCasterMap(state.frozen)' index.html
@@ -106,19 +114,22 @@ jobs:
           grep -q "./analysis-engine/abilityfish-worker.js" index.html
           test -s analysis-engine/abilityfish-stockfish.js
           test -s analysis-engine/abilityfish-stockfish.wasm
-          test -s analysis-engine/abilityfish-stockfish.worker.js
           test -s analysis-engine/abilityfish-worker.js
-          grep -q 'SharedArrayBuffer' analysis-engine/abilityfish-stockfish.js
+          test ! -e analysis-engine/abilityfish-stockfish.worker.js
+          test ! -e abilityfish-coi-serviceworker.js
+          ! grep -q 'SharedArrayBuffer' analysis-engine/abilityfish-stockfish.js
+          ! grep -q 'PThread' analysis-engine/abilityfish-stockfish.js
 
       - name: Commit combined runtime to development branch
         if: github.event_name == 'push'
         run: |
           git config user.name 'abilityfish-ci'
           git config user.email 'abilityfish-ci@users.noreply.github.com'
-          git add index.html analysis-engine/ abilityfish-coi-serviceworker.js
+          git add index.html analysis-engine/
+          git add -u analysis-engine/ abilityfish-coi-serviceworker.js
           if git diff --cached --quiet; then
-            echo 'Combined AbilityFish site already up to date.'
+            echo 'Portable AbilityFish site already up to date.'
             exit 0
           fi
-          git commit -m 'Sync production site and AbilityFish Analysis [skip ci]'
+          git commit -m 'Use portable AbilityFish Analysis WASM [skip ci]'
           git push origin HEAD:abilityfish

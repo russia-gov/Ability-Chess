@@ -9,8 +9,9 @@ const depth = Number(process.argv[3] || 15);
 const jsPath = path.join(runtimeDir, 'stockfish.js');
 const wasmPath = path.join(runtimeDir, 'stockfish.wasm');
 const workerPath = path.join(runtimeDir, 'stockfish.worker.js');
+const hasWorker = fs.existsSync(workerPath);
 
-if (!fs.existsSync(jsPath) || !fs.existsSync(wasmPath) || !fs.existsSync(workerPath)) {
+if (!fs.existsSync(jsPath) || !fs.existsSync(wasmPath)) {
   console.error(`Missing interactive Fairy runtime files in ${runtimeDir}`);
   process.exit(2);
 }
@@ -18,7 +19,6 @@ if (!fs.existsSync(jsPath) || !fs.existsSync(wasmPath) || !fs.existsSync(workerP
 const Stockfish = require(jsPath);
 let maxDepth = 0;
 let sawAbilityFish = false;
-let sawBestmove = false;
 let settled = false;
 
 function fail(message, error) {
@@ -32,10 +32,12 @@ function fail(message, error) {
 
 const timer = setTimeout(() => fail(`WASM UCI search timed out at reported depth ${maxDepth}`), 60000);
 
-Promise.resolve(Stockfish({
-  wasmBinary: fs.readFileSync(wasmPath),
-  locateFile: (file) => file.endsWith('stockfish.worker.js') ? workerPath : file
-})).then((engine) => {
+const options = { wasmBinary: fs.readFileSync(wasmPath) };
+if (hasWorker) {
+  options.locateFile = (file) => file.endsWith('stockfish.worker.js') ? workerPath : file;
+}
+
+Promise.resolve(Stockfish(options)).then((engine) => {
   engine.addMessageListener((line) => {
     if (typeof line !== 'string') return;
     console.log(line);
@@ -53,7 +55,6 @@ Promise.resolve(Stockfish({
     if (match) maxDepth = Math.max(maxDepth, Number(match[1]));
 
     if (line.startsWith('bestmove ')) {
-      sawBestmove = true;
       if (!sawAbilityFish) return fail('WASM runtime never acknowledged AbilityFish mode');
       if (maxDepth < depth) return fail(`WASM runtime stopped at depth ${maxDepth}; expected ${depth}`);
       settled = true;
