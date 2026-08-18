@@ -34,14 +34,15 @@ int main(){
   AbilityState s; s.turn=Side::White; s.side[0].points=20; s.recompute_key();
 
   auto acts=generate_meta_actions(s,b);
-  bool sawFreeze=false,sawShield=false,sawDouble=false,sawUpgrade=false;
+  bool sawFreeze=false,sawShield=false,sawDouble=false,sawPawnUpgrade=false,sawRookUpgrade=false;
   for(auto a:acts){
     sawFreeze |= a.kind==ActionKind::Freeze && a.from==10;
     sawShield |= a.kind==ActionKind::Shield && a.from==12;
     sawDouble |= a.kind==ActionKind::DoubleMove;
-    sawUpgrade |= a.kind==ActionKind::Upgrade && a.from==12;
+    sawPawnUpgrade |= a.kind==ActionKind::Upgrade && a.from==uint8_t(PieceType::Pawn) && a.aux==uint8_t(Upgrade::Vanguard);
+    sawRookUpgrade |= a.kind==ActionKind::Upgrade && a.from==uint8_t(PieceType::Rook) && a.aux==uint8_t(Upgrade::Chancellor);
   }
-  assert(sawFreeze&&sawShield&&sawDouble&&sawUpgrade);
+  assert(sawFreeze&&sawShield&&sawDouble&&sawPawnUpgrade&&sawRookUpgrade);
 
   assert(upgrade_compatible(PieceType::Pawn, Upgrade::Vanguard));
   assert(!upgrade_compatible(PieceType::Pawn, Upgrade::Chancellor));
@@ -92,25 +93,28 @@ int main(){
   assert(r.ok&&r.sideChanged&&r.consumeDepth&&s.turn==Side::Black&&b.p[20].type==PieceType::Knight);
 
   s.begin_turn(Side::White,false); s.side[0].points=20;
-  b.p[12]=W(PieceType::Pawn,3);
-  r=apply_action(s,b,{ActionKind::Upgrade,12,64,uint8_t(Upgrade::Chancellor),0});
+  r=apply_action(s,b,{ActionKind::Upgrade,uint8_t(PieceType::Pawn),64,uint8_t(Upgrade::Chancellor),0});
   assert(!r.ok);
-  r=apply_action(s,b,{ActionKind::Upgrade,12,64,uint8_t(Upgrade::Vanguard),0});
+  r=apply_action(s,b,{ActionKind::Upgrade,uint8_t(PieceType::Pawn),64,uint8_t(Upgrade::Vanguard),0});
   assert(r.ok&&r.sideChanged&&r.consumeDepth&&s.turn==Side::Black&&s.side[0].points==16);
-  assert(s.squareUpgrades[12]&(1u<<unsigned(Upgrade::Vanguard)));
+  assert(s.upgrade_for(Side::White,0)&&*s.upgrade_for(Side::White,0)==Upgrade::Vanguard);
 
+  // Type-wide ownership survives conversion of an individual pawn and applies
+  // independently to the resulting bishop/knight type.
   s.begin_turn(Side::White,false); s.side[0].points=20; b.p[36]=W(PieceType::Pawn,9);
-  s.squareUpgrades[36]=uint16_t(1u<<unsigned(Upgrade::Vanguard));
   r=apply_action(s,b,{ActionKind::Reinforce,36,64,uint8_t(PieceType::Bishop),0});
-  assert(r.ok&&b.p[36].type==PieceType::Bishop&&s.side[0].points==15&&s.squareUpgrades[36]==0);
+  assert(r.ok&&b.p[36].type==PieceType::Bishop&&s.side[0].points==15);
+  assert(s.upgrade_for(Side::White,0)&&*s.upgrade_for(Side::White,0)==Upgrade::Vanguard);
 
+  // Destroying all current pieces never erases a type upgrade.
   s.begin_turn(Side::White,false); s.side[0].points=20;
+  s.set_upgrade(Side::Black,3,Upgrade::Bastion);
   b.p[27]=W(PieceType::Knight,7); b.p[28]=B(PieceType::Rook,8);
-  s.squareUpgrades[28]=uint16_t(1u<<unsigned(Upgrade::Bastion));
   s.side[1].shield={Square{28},1,true};
   s.side[0].frozenEnemy={Square{28},1,true};
   s.side[1].ambush={Square{28},1,true};
   r=apply_action(s,b,{ActionKind::Bomb,27,64,0,0});
   assert(r.ok&&!b.p[28].present());
-  assert(s.squareUpgrades[28]==0&&!s.side[1].shield.active&&!s.side[0].frozenEnemy.active&&!s.side[1].ambush.active);
+  assert(s.upgrade_for(Side::Black,3)&&*s.upgrade_for(Side::Black,3)==Upgrade::Bastion);
+  assert(!s.side[1].shield.active&&!s.side[0].frozenEnemy.active&&!s.side[1].ambush.active);
 }
