@@ -32,9 +32,9 @@ jobs:
         run: |
           set -euo pipefail
           # Queen b4 can check with Qb5, but Black King a6 can capture it unless
-          # it is Ambushed. Knight c8 covers a7. The queen itself covers a5,
-          # b6 and b7 after Qb5. There should be no ordinary M1.
-          fen='2N5/8/k7/8/1Q6/8/8/7K w - - 0 1'
+          # it is Ambushed. Knight c6 covers a7 without protecting b5 or b6.
+          # The queen itself covers a5, b6 and b7 after Qb5.
+          fen='8/8/k1N5/8/1Q6/8/8/7K w - - 0 1'
           baseline=$(mktemp)
           abilities=$(mktemp)
 
