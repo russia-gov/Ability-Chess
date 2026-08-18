@@ -76,6 +76,7 @@ for script in (
     "apply_fairy_ambush_hooks.py",
     "apply_fairy_portal_hooks.py",
     "apply_fairy_upgrade_move_hooks.py",
+    "apply_fairy_ability_fastpath_hooks.py",
     "apply_fairy_search_hooks.py",
     "apply_fairy_root_hooks.py",
     "apply_fairy_protocol_hooks.py",
