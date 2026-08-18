@@ -45,21 +45,26 @@ if "ABILITYFISH_ROOT_THREAD_COPY_V2" not in s:
         '''      th->rootMoves = rootMoves;\n      th->rootPos.set(pos.variant(), pos.fen(), pos.is_chess960(), &th->rootState, th);\n      th->rootState = setupStates->back();\n''',
         '''      th->rootMoves = rootMoves;\n      th->rootAbility.clear();\n      th->rootPos.set(pos.variant(), pos.fen(), pos.is_chess960(), &th->rootState, th);\n      th->rootState = setupStates->back();\n      // ABILITYFISH_ROOT_THREAD_COPY_V2\n      // UCI ability commands mutate the live Position state after the FEN/setup\n      // state was created. Copy that live AbilityState explicitly; otherwise root\n      // search threads silently lose points, timed effects, portals and upgrades.\n      th->rootPos.set_abilityfish_active(pos.abilityfish_active());\n      if (pos.abilityfish_active())\n          th->rootPos.ability_state() = pos.ability_state();\n''',
         "thread root copy")
-    # Upgrade already-patched V1 trees when this script is applied incrementally.
     s = s.replace(
         '''      // ABILITYFISH_ROOT_THREAD_COPY_V1\n      th->rootPos.set_abilityfish_active(pos.abilityfish_active());\n''',
         '''      // ABILITYFISH_ROOT_THREAD_COPY_V2\n      // UCI ability commands mutate the live Position state after the FEN/setup\n      // state was created. Copy that live AbilityState explicitly; otherwise root\n      // search threads silently lose points, timed effects, portals and upgrades.\n      th->rootPos.set_abilityfish_active(pos.abilityfish_active());\n      if (pos.abilityfish_active())\n          th->rootPos.ability_state() = pos.ability_state();\n''', 1)
     thread_cpp.write_text(s)
 
 s = search_cpp.read_text()
-if "ABILITYFISH_ROOT_SEARCH_V1" not in s:
-    s = replace_once(s,
-        '''  trend = SCORE_ZERO;\n\n  int searchAgainCounter = 0;\n''',
-        '''  trend = SCORE_ZERO;\n  rootAbility.clear();\n\n  int searchAgainCounter = 0;\n''',
-        "root ability clear")
+if "ABILITYFISH_ROOT_SEARCH_V2" not in s:
+    if "ABILITYFISH_ROOT_SEARCH_V1" in s:
+        s = s.replace("ABILITYFISH_ROOT_SEARCH_V1", "ABILITYFISH_ROOT_SEARCH_V2", 1)
+        old = '''              Value abilityValue = sideChanged\n                  ? -Stockfish::search<PV>(rootPos, ss+1, -VALUE_INFINITE, VALUE_INFINITE, childDepth, false)\n                  :  Stockfish::search<PV>(rootPos, ss+1, -VALUE_INFINITE, VALUE_INFINITE, childDepth, false);\n\n              rootPos.undo_ability_action(abilityUndo);\n'''
+        new = '''              Value abilityValue = sideChanged\n                  ? -Stockfish::search<PV>(rootPos, ss+1, -VALUE_INFINITE, VALUE_INFINITE, childDepth, false)\n                  :  Stockfish::search<PV>(rootPos, ss+1, -VALUE_INFINITE, VALUE_INFINITE, childDepth, false);\n\n              // Same-player meta abilities do not consume a board move. The\n              // recursive SearchStack slot is bookkeeping only and must not make\n              // an immediate Ambush -> mating move appear one ply farther away.\n              if (!sideChanged && !abilityAction.consumes_board_move())\n              {\n                  if (abilityValue >= VALUE_MATE_IN_MAX_PLY)\n                      abilityValue = Value(abilityValue + 1);\n                  else if (abilityValue <= VALUE_MATED_IN_MAX_PLY)\n                      abilityValue = Value(abilityValue - 1);\n              }\n\n              rootPos.undo_ability_action(abilityUndo);\n'''
+        s = replace_once(s, old, new, "root mate-distance correction")
+    else:
+        s = replace_once(s,
+            '''  trend = SCORE_ZERO;\n\n  int searchAgainCounter = 0;\n''',
+            '''  trend = SCORE_ZERO;\n  rootAbility.clear();\n\n  int searchAgainCounter = 0;\n''',
+            "root ability clear")
 
-    anchor = '''      if (!Threads.stop)\n          completedDepth = rootDepth;\n'''
-    hook = r'''      // ABILITYFISH_ROOT_SEARCH_V1
+        anchor = '''      if (!Threads.stop)\n          completedDepth = rootDepth;\n'''
+        hook = r'''      // ABILITYFISH_ROOT_SEARCH_V2
       if (!Threads.stop && rootPos.abilityfish_active())
       {
           Search::AbilityRootResult iterationAbility;
@@ -85,6 +90,14 @@ if "ABILITYFISH_ROOT_SEARCH_V1" not in s:
               Value abilityValue = sideChanged
                   ? -Stockfish::search<PV>(rootPos, ss+1, -VALUE_INFINITE, VALUE_INFINITE, childDepth, false)
                   :  Stockfish::search<PV>(rootPos, ss+1, -VALUE_INFINITE, VALUE_INFINITE, childDepth, false);
+
+              if (!sideChanged && !abilityAction.consumes_board_move())
+              {
+                  if (abilityValue >= VALUE_MATE_IN_MAX_PLY)
+                      abilityValue = Value(abilityValue + 1);
+                  else if (abilityValue <= VALUE_MATED_IN_MAX_PLY)
+                      abilityValue = Value(abilityValue - 1);
+              }
 
               rootPos.undo_ability_action(abilityUndo);
 
@@ -120,17 +133,17 @@ if "ABILITYFISH_ROOT_SEARCH_V1" not in s:
       if (!Threads.stop)
           completedDepth = rootDepth;
 '''
-    s = replace_once(s, anchor, hook, "root search insertion")
+        s = replace_once(s, anchor, hook, "root search insertion")
 
-    s = replace_once(s,
-        '''      && rootMoves[0].pv[0] != MOVE_NONE)\n      bestThread = Threads.get_best_thread();\n\n  bestPreviousScore = bestThread->rootMoves[0].score;\n''',
-        '''      && rootMoves[0].pv[0] != MOVE_NONE\n      && !rootPos.abilityfish_active())\n      bestThread = Threads.get_best_thread();\n\n  const bool abilityBest = bestThread->rootPos.abilityfish_active()\n                        && bestThread->rootAbility.valid\n                        && (bestThread->rootMoves.empty()\n                            || bestThread->rootAbility.score > bestThread->rootMoves[0].score);\n\n  bestPreviousScore = abilityBest ? bestThread->rootAbility.score\n                                  : bestThread->rootMoves[0].score;\n''',
-        "best-thread ability selection")
+        s = replace_once(s,
+            '''      && rootMoves[0].pv[0] != MOVE_NONE)\n      bestThread = Threads.get_best_thread();\n\n  bestPreviousScore = bestThread->rootMoves[0].score;\n''',
+            '''      && rootMoves[0].pv[0] != MOVE_NONE\n      && !rootPos.abilityfish_active())\n      bestThread = Threads.get_best_thread();\n\n  const bool abilityBest = bestThread->rootPos.abilityfish_active()\n                        && bestThread->rootAbility.valid\n                        && (bestThread->rootMoves.empty()\n                            || bestThread->rootAbility.score > bestThread->rootMoves[0].score);\n\n  bestPreviousScore = abilityBest ? bestThread->rootAbility.score\n                                  : bestThread->rootMoves[0].score;\n''',
+            "best-thread ability selection")
 
-    s = replace_once(s,
-        '''  sync_cout << "bestmove " << UCI::move(rootPos, bestThread->rootMoves[0].pv[0]);\n\n  if (bestThread->rootMoves[0].pv.size() > 1 || bestThread->rootMoves[0].extract_ponder_from_tt(rootPos))\n      std::cout << " ponder " << UCI::move(rootPos, bestThread->rootMoves[0].pv[1]);\n\n  std::cout << sync_endl;\n''',
-        '''  if (abilityBest)\n  {\n      sync_cout << "info string abilityaction "\n                << abilityfish::encode_action(bestThread->rootAbility.action)\n                << " score " << UCI::value(bestThread->rootAbility.score)\n                << " depth " << bestThread->completedDepth << sync_endl;\n      sync_cout << "bestmove 0000" << sync_endl;\n      return;\n  }\n\n  sync_cout << "bestmove " << UCI::move(rootPos, bestThread->rootMoves[0].pv[0]);\n\n  if (bestThread->rootMoves[0].pv.size() > 1 || bestThread->rootMoves[0].extract_ponder_from_tt(rootPos))\n      std::cout << " ponder " << UCI::move(rootPos, bestThread->rootMoves[0].pv[1]);\n\n  std::cout << sync_endl;\n''',
-        "bestmove ability output")
+        s = replace_once(s,
+            '''  sync_cout << "bestmove " << UCI::move(rootPos, bestThread->rootMoves[0].pv[0]);\n\n  if (bestThread->rootMoves[0].pv.size() > 1 || bestThread->rootMoves[0].extract_ponder_from_tt(rootPos))\n      std::cout << " ponder " << UCI::move(rootPos, bestThread->rootMoves[0].pv[1]);\n\n  std::cout << sync_endl;\n''',
+            '''  if (abilityBest)\n  {\n      sync_cout << "info string abilityaction "\n                << abilityfish::encode_action(bestThread->rootAbility.action)\n                << " score " << UCI::value(bestThread->rootAbility.score)\n                << " depth " << bestThread->completedDepth << sync_endl;\n      sync_cout << "bestmove 0000" << sync_endl;\n      return;\n  }\n\n  sync_cout << "bestmove " << UCI::move(rootPos, bestThread->rootMoves[0].pv[0]);\n\n  if (bestThread->rootMoves[0].pv.size() > 1 || bestThread->rootMoves[0].extract_ponder_from_tt(rootPos))\n      std::cout << " ponder " << UCI::move(rootPos, bestThread->rootMoves[0].pv[1]);\n\n  std::cout << sync_endl;\n''',
+            "bestmove ability output")
 
     search_cpp.write_text(s)
 
