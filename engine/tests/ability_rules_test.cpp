@@ -43,9 +43,21 @@ int main(){
   }
   assert(sawFreeze&&sawShield&&sawDouble&&sawUpgrade);
 
+  assert(upgrade_compatible(PieceType::Pawn, Upgrade::Vanguard));
+  assert(!upgrade_compatible(PieceType::Pawn, Upgrade::Chancellor));
+  assert(upgrade_compatible(PieceType::Rook, Upgrade::Chancellor));
+
   auto r=apply_action(s,b,{ActionKind::Freeze,10,64,0,0});
   assert(r.ok&&!r.sideChanged&&!r.consumeDepth);
   assert(s.side[0].points==17 && s.side[1].frozenEnemy.active);
+
+  // Frozen pieces cannot make ordinary moves, and shielded enemy pieces cannot be captured.
+  AbilityState ordinary;
+  ordinary.side[0].frozenEnemy={Square{12},1,true};
+  ordinary.side[1].shield={Square{10},1,true};
+  assert(!normal_move_allowed(ordinary,Side::White,Square{12},Square{}));
+  assert(!normal_move_allowed(ordinary,Side::White,Square{20},Square{10}));
+  assert(normal_move_allowed(ordinary,Side::White,Square{20},Square{11}));
 
   s.begin_turn(Side::White,false); s.side[0].points=20;
   r=apply_action(s,b,{ActionKind::DoubleMove,64,64,0,0});
@@ -66,7 +78,26 @@ int main(){
   r=apply_action(s,b,{ActionKind::Teleport,12,20,0,0});
   assert(r.ok&&r.sideChanged&&r.consumeDepth&&s.turn==Side::Black&&b.p[20].type==PieceType::Knight);
 
+  // Direct application must reject upgrades that generation would never offer.
+  s.begin_turn(Side::White,false); s.side[0].points=20;
+  b.p[12]=W(PieceType::Pawn,3);
+  r=apply_action(s,b,{ActionKind::Upgrade,12,64,uint8_t(Upgrade::Chancellor),0});
+  assert(!r.ok);
+
+  // Reinforce changes the piece class, so pawn-only upgrades cannot survive the transformation.
   s.begin_turn(Side::White,false); s.side[0].points=20; b.p[36]=W(PieceType::Pawn,9);
+  s.squareUpgrades[36]=uint16_t(1u<<unsigned(Upgrade::Vanguard));
   r=apply_action(s,b,{ActionKind::Reinforce,36,64,uint8_t(PieceType::Bishop),0});
-  assert(r.ok&&b.p[36].type==PieceType::Bishop&&s.side[0].points==15);
+  assert(r.ok&&b.p[36].type==PieceType::Bishop&&s.side[0].points==15&&s.squareUpgrades[36]==0);
+
+  // Destructive abilities must not leave ghost state on removed pieces.
+  s.begin_turn(Side::White,false); s.side[0].points=20;
+  b.p[27]=W(PieceType::Knight,7); b.p[28]=B(PieceType::Rook,8);
+  s.squareUpgrades[28]=uint16_t(1u<<unsigned(Upgrade::Bastion));
+  s.side[1].shield={Square{28},1,true};
+  s.side[0].frozenEnemy={Square{28},1,true};
+  s.side[1].ambush={Square{28},1,true};
+  r=apply_action(s,b,{ActionKind::Bomb,27,64,0,0});
+  assert(r.ok&&!b.p[28].present());
+  assert(s.squareUpgrades[28]==0&&!s.side[1].shield.active&&!s.side[0].frozenEnemy.active&&!s.side[1].ambush.active);
 }
