@@ -130,6 +130,7 @@ function upgradeCommands(value) {
 }
 
 function abilityCommands(job) {
+  if (job.abilityFishEnabled === false) return ['abilityfish off'];
   const state = job.abilityState || {};
   const commands = ['abilityfish on'];
   commands.push(`abilitypoints ${Math.max(0, int(state.whitePoints ?? state.points?.w ?? 0))} ${Math.max(0, int(state.blackPoints ?? state.points?.b ?? 0))}`);
@@ -182,12 +183,8 @@ async function analyze(job) {
     const lines = new Map();
     let bestAbilityAction = null;
     const requestedDepth = Math.max(1, Math.min(40, Number(job.depth || 15)));
-    // Three lines are useful for the quick pass, but MultiPV makes deep browser
-    // searches dramatically more expensive. Refine only the best line above d5.
     const defaultMultiPV = requestedDepth > 5 ? 1 : 3;
     const multiPV = Math.max(1, Math.min(8, Number(job.multiPV ?? defaultMultiPV)));
-    // Browser refinement is a responsiveness feature, not a benchmark. Put a
-    // ceiling on deep searches and report the depth actually completed.
     const defaultTimeMs = requestedDepth >= 15 ? 9000 : requestedDepth >= 10 ? 4000 : 0;
     const maxTimeMs = Math.max(0, Math.min(30000, Number(job.maxTimeMs ?? defaultTimeMs)));
     const listener = (line) => {
@@ -223,6 +220,7 @@ async function analyze(job) {
           depth: achievedDepth,
           requestedDepth,
           capped: maxTimeMs > 0 && achievedDepth < requestedDepth,
+          abilityFishEnabled: job.abilityFishEnabled !== false,
           lines: ordered
         });
       }
