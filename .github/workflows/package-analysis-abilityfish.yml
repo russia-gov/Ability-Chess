@@ -139,7 +139,7 @@ jobs:
           git config user.name 'abilityfish-ci'
           git config user.email 'abilityfish-ci@users.noreply.github.com'
           git add index.html analysis-engine/
-          git add -u analysis-engine/ abilityfish-coi-serviceworker.js
+          git add -u analysis-engine/
           if git diff --cached --quiet; then
             echo 'Embedded AbilityFish site already up to date.'
             exit 0
