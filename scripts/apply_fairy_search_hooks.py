@@ -11,7 +11,7 @@ if not p.exists():
     raise SystemExit(f"not a Fairy-Stockfish checkout: {root}")
 
 s = p.read_text()
-if "ABILITYFISH_SEARCH_HOOKS_V5" in s:
+if "ABILITYFISH_SEARCH_HOOKS_V6" in s:
     print("AbilityFish search hooks already applied")
     raise SystemExit(0)
 
@@ -23,7 +23,7 @@ hook = r'''    value = bestValue;
     singularQuietLMR = moveCountPruning = false;
     bool doubleExtension = false;
 
-    // ABILITYFISH_SEARCH_HOOKS_V5
+    // ABILITYFISH_SEARCH_HOOKS_V6
     if (!rootNode && pos.abilityfish_active())
     {
         auto abilityActions = pos.ability_actions();
@@ -40,6 +40,18 @@ hook = r'''    value = bestValue;
             const bool sideChanged = pos.side_to_move() != abilityUs;
             const bool consumesMove = abilityAction.consumes_board_move();
             Value abilityValue = -VALUE_INFINITE;
+            auto prepareSyntheticChild = [&](Stack* child, Move current, Move* pv) {
+                child->currentMove = current;
+                child->continuationHistory = &thisThread->continuationHistory[0][0][NO_PIECE][0];
+                child->pv = pv;
+                // MovePicker reads continuation-history context from 1, 2, 4 and
+                // 6 plies back. Synthetic meta branches can skip the ordinary move
+                // setup that populates one of those slots, so fill only null entries
+                // in the complete look-back window with Fairy's neutral history.
+                for (int back = 0; back <= 6; ++back)
+                    if (!(child-back)->continuationHistory)
+                        (child-back)->continuationHistory = &thisThread->continuationHistory[0][0][NO_PIECE][0];
+            };
 
             if (!sideChanged && !consumesMove)
             {
@@ -55,11 +67,7 @@ hook = r'''    value = bestValue;
 
                     Move childPv[MAX_PLY + 1];
                     childPv[0] = MOVE_NONE;
-                    (ss+1)->currentMove = boardMove;
-                    (ss+1)->continuationHistory = &thisThread->continuationHistory[0][0][NO_PIECE][0];
-                    // PV search writes the child principal variation through this
-                    // pointer; NonPV search intentionally carries no PV buffer.
-                    (ss+1)->pv = PvNode ? childPv : nullptr;
+                    prepareSyntheticChild(ss+1, boardMove, PvNode ? childPv : nullptr);
 
                     const Depth childDepth = std::max(Depth(0), depth - 1);
                     Value boardValue;
@@ -95,9 +103,7 @@ hook = r'''    value = bestValue;
                 const Depth abilityDepth = std::max(Depth(0), depth - (consumesMove ? 1 : 0));
                 Move abilityPv[MAX_PLY + 1];
                 abilityPv[0] = MOVE_NONE;
-                (ss+1)->currentMove = MOVE_NONE;
-                (ss+1)->continuationHistory = &thisThread->continuationHistory[0][0][NO_PIECE][0];
-                (ss+1)->pv = PvNode ? abilityPv : nullptr;
+                prepareSyntheticChild(ss+1, MOVE_NONE, PvNode ? abilityPv : nullptr);
 
                 if (PvNode)
                     abilityValue = sideChanged
