@@ -47,12 +47,12 @@ jobs:
             --command 'abilityfish on' \
             --command 'abilitypoints 4 0' \
             --command 'go depth 3'
-      - name: Full AbilityFish state transport smoke test
+      - name: Full AbilityFish state command loading smoke test
         run: |
           python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
             --timeout 30 \
             --command uci \
-            --command 'position fen 4k3/8/8/8/4N3/8/8/4K3 w - - 0 1' \
+            --command 'position fen 4k3/8/8/3n4/4N3/8/8/4K3 w - - 0 1' \
             --command 'abilityfish on' \
             --command 'abilitypoints 9 7' \
             --command 'abilityturn w 2 1 0' \
@@ -64,7 +64,19 @@ jobs:
             --command 'abilityfortify w 4 5 12 13 1 1' \
             --command 'abilitylastmove w 6 28 2 1' \
             --command 'abilityportal 0 16 24 w 3 1' \
-            --command 'abilityupgrade 28 3' \
+            --command 'abilityupgrade 28 8' \
+            --command 'abilityfish off' \
+            --command 'go depth 1'
+      - name: Reachable Double Move same-player recursion smoke test
+        run: |
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/8/8/8/8/1N2K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityturn w 2 1 0' \
+            --command 'abilityused 1 0' \
             --command 'go depth 3'
       - name: AbilityFish depth-15 recursion smoke test
         run: |
