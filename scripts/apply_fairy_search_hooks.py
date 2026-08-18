@@ -11,7 +11,7 @@ if not p.exists():
     raise SystemExit(f"not a Fairy-Stockfish checkout: {root}")
 
 s = p.read_text()
-if "ABILITYFISH_SEARCH_HOOKS_V4" in s:
+if "ABILITYFISH_SEARCH_HOOKS_V5" in s:
     print("AbilityFish search hooks already applied")
     raise SystemExit(0)
 
@@ -23,7 +23,7 @@ hook = r'''    value = bestValue;
     singularQuietLMR = moveCountPruning = false;
     bool doubleExtension = false;
 
-    // ABILITYFISH_SEARCH_HOOKS_V4
+    // ABILITYFISH_SEARCH_HOOKS_V5
     if (!rootNode && pos.abilityfish_active())
     {
         auto abilityActions = pos.ability_actions();
@@ -43,9 +43,6 @@ hook = r'''    value = bestValue;
 
             if (!sideChanged && !consumesMove)
             {
-                // Same-turn abilities are followed by a real board move. Search that
-                // move explicitly so meta actions do not recursively re-enter the same
-                // node at unchanged board-move depth.
                 bool foundBoardMove = false;
                 for (const auto& boardMove : MoveList<LEGAL>(pos))
                 {
@@ -56,15 +53,16 @@ hook = r'''    value = bestValue;
                     pos.do_move(boardMove, moveSt, pos.gives_check(boardMove));
                     const bool boardSideChanged = pos.side_to_move() != boardUs;
 
+                    Move childPv[MAX_PLY + 1];
+                    childPv[0] = MOVE_NONE;
                     (ss+1)->currentMove = boardMove;
                     (ss+1)->continuationHistory = &thisThread->continuationHistory[0][0][NO_PIECE][0];
-                    (ss+1)->pv = nullptr;
+                    // PV search writes the child principal variation through this
+                    // pointer; NonPV search intentionally carries no PV buffer.
+                    (ss+1)->pv = PvNode ? childPv : nullptr;
 
                     const Depth childDepth = std::max(Depth(0), depth - 1);
                     Value boardValue;
-                    // Stockfish's NonPV search is a null-window search and asserts
-                    // alpha == beta - 1 in qsearch. A PV parent can have a wide window,
-                    // so preserve the parent's node type instead of forcing NonPV.
                     if (PvNode)
                         boardValue = boardSideChanged
                             ? -search<PV>(pos, ss+1, -beta, -alpha, childDepth, false)
@@ -94,13 +92,12 @@ hook = r'''    value = bestValue;
             }
             else
             {
-                // Turn-consuming actions (upgrades and Teleport) already advance the
-                // game turn; search the resulting child while preserving PV/NonPV
-                // window invariants.
                 const Depth abilityDepth = std::max(Depth(0), depth - (consumesMove ? 1 : 0));
+                Move abilityPv[MAX_PLY + 1];
+                abilityPv[0] = MOVE_NONE;
                 (ss+1)->currentMove = MOVE_NONE;
                 (ss+1)->continuationHistory = &thisThread->continuationHistory[0][0][NO_PIECE][0];
-                (ss+1)->pv = nullptr;
+                (ss+1)->pv = PvNode ? abilityPv : nullptr;
 
                 if (PvNode)
                     abilityValue = sideChanged
