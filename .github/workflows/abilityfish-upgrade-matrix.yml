@@ -98,3 +98,75 @@ jobs:
           # King upgrades
           run_allowed RoyalStep    '4k3/8/8/8/4K3/8/8/8 w - - 0 1' 5 13 e4f6
           run_allowed EscapeRoute  '4k3/8/8/8/4K3/8/8/8 w - - 0 1' 5 14 e4e6
+
+      - name: Exercise Portal direction, blocked exits, and frozen attack removal
+        shell: bash
+        run: |
+          set -euo pipefail
+          engine=vendor/Fairy-Stockfish/src/stockfish
+
+          # Enter d5 and verify the routed bishop's next PV move starts from a2.
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py "$engine" \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/8/4B3/8/8/4K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityportal 0 35 8 w 3 1' \
+            --command 'go depth 3 searchmoves e4d5' | tee "$log"
+          grep -Eq '^info depth 3 .* pv e4d5 [a-h][1-8][a-h][1-8] a2[a-h][1-8]' "$log"
+          rm -f "$log"
+
+          # Reverse direction: enter a2 from b1 and verify the bishop emerges on d5.
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py "$engine" \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/8/8/8/8/1B2K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityportal 0 8 35 w 3 1' \
+            --command 'go depth 3 searchmoves b1a2' | tee "$log"
+          grep -Eq '^info depth 3 .* pv b1a2 [a-h][1-8][a-h][1-8] d5[a-h][1-8]' "$log"
+          rm -f "$log"
+
+          # A Black piece may use a White-owned portal pair.
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py "$engine" \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/4b3/8/8/8/4K3 b - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityportal 0 27 48 w 3 1' \
+            --command 'go depth 3 searchmoves e5d4' | tee "$log"
+          grep -Eq '^info depth 3 .* pv e5d4 [a-h][1-8][a-h][1-8] a7[a-h][1-8]' "$log"
+          rm -f "$log"
+
+          # Occupied exit a2 disables routing, so the bishop remains on d5.
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py "$engine" \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/8/4B3/8/P7/4K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityportal 0 35 8 w 3 1' \
+            --command 'go depth 3 searchmoves e4d5' | tee "$log"
+          grep -Eq '^info depth 3 .* pv e4d5 [a-h][1-8][a-h][1-8] d5[a-h][1-8]' "$log"
+          rm -f "$log"
+
+          # d6 is normally attacked by the white knight on e4. Once frozen, that
+          # knight must not make d6 unsafe for the Black king.
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py "$engine" \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 8/4k3/8/8/4N3/8/8/4K3 b - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilitytimed freeze w 28 1 1' \
+            --command 'go depth 1 searchmoves e7d6' | tee "$log"
+          grep -q '^bestmove e7d6' "$log"
+          rm -f "$log"
