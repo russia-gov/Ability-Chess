@@ -1,0 +1,88 @@
+name: AbilityFish post-effect legality matrix
+on:
+  workflow_dispatch:
+  push:
+    branches: [ abilityfish ]
+    paths:
+      - 'engine/**'
+      - 'scripts/**'
+      - '.github/workflows/abilityfish-post-effect-matrix.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'engine/**'
+      - 'scripts/**'
+      - '.github/workflows/abilityfish-post-effect-matrix.yml'
+
+jobs:
+  post-effect-legality:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Checkout pinned Fairy-Stockfish
+        uses: actions/checkout@v6
+        with:
+          repository: fairy-stockfish/Fairy-Stockfish
+          ref: c19b5f6c66894fdb0e88d0dd100e3885f744760a
+          path: vendor/Fairy-Stockfish
+      - name: Apply AbilityFish integration
+        run: python3 scripts/prepare_fairy.py vendor/Fairy-Stockfish
+      - name: Compile integrated Fairy-Stockfish
+        working-directory: vendor/Fairy-Stockfish/src
+        run: make -j2 build ARCH=x86-64
+      - name: Ambush capture cannot expose own king
+        shell: bash
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen k2r4/8/8/3q4/3KB3/8/8/8 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilitytimed ambush b 35 1 1' \
+            --command 'go depth 1 searchmoves e4d5' | tee "$log"
+          grep -Eq '^bestmove (0000|\(none\))$' "$log"
+      - name: En-passant Ambush uses final-board king safety
+        shell: bash
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen k2r4/8/8/3pP3/3K4/8/8/8 w - d6 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilitytimed ambush b 35 1 1' \
+            --command 'go depth 1 searchmoves e5d6' | tee "$log"
+          grep -Eq '^bestmove (0000|\(none\))$' "$log"
+      - name: En-passant Portal uses final-board king safety
+        shell: bash
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen k2r4/8/8/3pP3/3K4/8/8/8 w - d6 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityportal 0 43 8 w 3 1' \
+            --command 'go depth 1 searchmoves e5d6' | tee "$log"
+          grep -Eq '^bestmove (0000|\(none\))$' "$log"
+      - name: Safe Ambush capture remains legal and reversible
+        shell: bash
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 4k3/8/8/3q4/4B3/8/8/4K3 w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilitytimed ambush b 35 1 1' \
+            --command 'go depth 3 searchmoves e4d5' | tee "$log"
+          grep -q '^bestmove e4d5' "$log"
