@@ -5,11 +5,34 @@ import sys
 path = Path(sys.argv[1] if len(sys.argv) > 1 else 'index.html')
 s = path.read_text(encoding='utf-8').replace('\r\n','\n')
 
-# Correct UCI score orientation: UCI scores are from the root side-to-move's
-# perspective, while the Analysis evaluation bar is white-positive.
+# The existing Analysis UI stores engine scores in a black-positive internal
+# convention and analysisWhiteEval() negates them for the bar/text. UCI scores
+# are root-side-positive, so convert them into that established convention.
 s = s.replace(
-    "return rootTurn==='b'?rootValue:-rootValue;",
     "return rootTurn==='b'?-rootValue:rootValue;",
+    "return rootTurn==='b'?rootValue:-rootValue;",
+    1
+)
+
+# Fairy Piece encoding uses 6 piece-type bits: P/N/B/R/Q = 1..5, KING = 63,
+# and Black adds 64. Recall transport needs the exact code for lastMove.
+old_piece = """  function analysisPieceCode(piece){\n    if(!piece||piece.length<2)return 0;\n    const pt={p:1,n:2,b:3,r:4,q:5,k:6}[piece[1]]||0;\n    return pt+(piece[0]==='b'?8:0);\n  }\n"""
+new_piece = """  function analysisPieceCode(piece){\n    if(!piece||piece.length<2)return 0;\n    const type=piece[1]==='k'?63:({p:1,n:2,b:3,r:4,q:5}[piece[1]]||0);\n    return type+(piece[0]==='b'?64:0);\n  }\n"""
+if old_piece in s:
+    s=s.replace(old_piece,new_piece,1)
+elif new_piece not in s:
+    raise SystemExit('analysis piece-code anchor changed')
+
+# The site keys frozen state by the color of the TARGET piece. AbilityFish keys
+# frozenEnemy by the color of the CASTER. Swap sides at the boundary.
+old_timed = """  function analysisTimedMap(value){\n    const out={w:null,b:null};\n    for(const side of ['w','b']){\n      const v=value?.[side];if(!v)continue;\n      out[side]={...v,square:{r:v.r,c:v.c},turnsRemaining:Number(v.turnsRemaining??1),active:true};\n    }\n    return out;\n  }\n"""
+new_timed = old_timed + """  function analysisFrozenCasterMap(value){\n    const targets=analysisTimedMap(value);\n    return {w:targets.b,b:targets.w};\n  }\n"""
+if old_timed in s and 'function analysisFrozenCasterMap' not in s:
+    s=s.replace(old_timed,new_timed,1)
+
+s=s.replace(
+    "frozen:analysisTimedMap(state.frozen),ambushes:analysisTimedMap(state.ambushed),",
+    "frozen:analysisFrozenCasterMap(state.frozen),ambushes:analysisTimedMap(state.ambushed),",
     1
 )
 
@@ -27,7 +50,7 @@ if marker not in s:
 (()=>{
   if(!('serviceWorker' in navigator))return;
   const key='abilityfish-coi-reload-v1';
-  navigator.serviceWorker.register('./abilityfish-coi-serviceworker.js',{scope:'./'}).then(reg=>{
+  navigator.serviceWorker.register('./abilityfish-coi-serviceworker.js',{scope:'./'}).then(()=>{
     if(window.crossOriginIsolated){sessionStorage.removeItem(key);return;}
     const reload=()=>{
       if(sessionStorage.getItem(key)==='1')return;
@@ -42,7 +65,7 @@ if marker not in s:
 '''
     s = s.replace(anchor, boot, 1)
 
-# Do not try to instantiate the threaded engine until isolation has taken effect.
+# Do not instantiate the threaded engine until isolation has taken effect.
 old = """  function requestAbilityFishAnalysis(state,options={}){\n    return new Promise((resolve,reject)=>{\n      let worker;\n"""
 new = """  function requestAbilityFishAnalysis(state,options={}){\n    return new Promise((resolve,reject)=>{\n      if(!window.crossOriginIsolated){reject(new Error('AbilityFish Analysis is preparing its browser engine. Reload once if it does not start automatically.'));return;}\n      let worker;\n"""
 if old in s:
@@ -50,10 +73,16 @@ if old in s:
 elif "AbilityFish Analysis is preparing its browser engine" not in s:
     raise SystemExit('analysis request isolation anchor changed')
 
-if "return rootTurn==='b'?-rootValue:rootValue;" not in s:
-    raise SystemExit('score orientation correction did not apply')
-if marker not in s:
-    raise SystemExit('COI bootstrap did not apply')
+checks = (
+    "return rootTurn==='b'?rootValue:-rootValue;",
+    "piece[1]==='k'?63",
+    "function analysisFrozenCasterMap",
+    "frozen:analysisFrozenCasterMap(state.frozen)",
+    marker,
+)
+for check in checks:
+    if check not in s:
+        raise SystemExit(f'Analysis adapter correction missing: {check}')
 
 path.write_text(s, encoding='utf-8', newline='')
-print('Added AbilityFish Analysis cross-origin isolation bootstrap')
+print('Added AbilityFish Analysis isolation and corrected state adapter')
