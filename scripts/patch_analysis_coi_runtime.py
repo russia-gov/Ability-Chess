@@ -36,6 +36,15 @@ s=s.replace(
     1
 )
 
+# The page did not previously persist beganTurnInCheck. Before Double Move is
+# active, being currently in check is the information the engine needs to reject
+# activation; once Double Move is active it necessarily began from a legal state.
+s=s.replace(
+    "beganTurnInCheck:!!state.beganTurnInCheck,abilitiesEnabled:state.abilitiesEnabled!==false,",
+    "beganTurnInCheck:state.beganTurnInCheck??(!state.doubleMoveActive&&inCheck(state,turn)),abilitiesEnabled:state.abilitiesEnabled!==false,",
+    1
+)
+
 marker = "ABILITYFISH_ANALYSIS_COI_V1"
 if marker not in s:
     anchor = '<head>\n'
@@ -78,6 +87,7 @@ checks = (
     "piece[1]==='k'?63",
     "function analysisFrozenCasterMap",
     "frozen:analysisFrozenCasterMap(state.frozen)",
+    "beganTurnInCheck:state.beganTurnInCheck??(!state.doubleMoveActive&&inCheck(state,turn))",
     marker,
 )
 for check in checks:
