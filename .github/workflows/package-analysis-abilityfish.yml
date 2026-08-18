@@ -84,7 +84,9 @@ jobs:
           grep -q 'ANALYSIS_ABILITYFISH_WORKER' index.html
           grep -q '15 — full' index.html
           grep -q 'ABILITYFISH_ANALYSIS_COI_V1' index.html
-          grep -q "return rootTurn==='b'?-rootValue:rootValue;" index.html
+          grep -q "return rootTurn==='b'?rootValue:-rootValue;" index.html
+          grep -q "piece\[1\]==='k'?63" index.html
+          grep -q 'frozen:analysisFrozenCasterMap(state.frozen)' index.html
           grep -q "./analysis-engine/abilityfish-worker.js" index.html
           test -s analysis-engine/abilityfish-stockfish.js
           test -s analysis-engine/abilityfish-stockfish.wasm
