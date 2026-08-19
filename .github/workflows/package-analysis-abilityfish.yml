@@ -5,27 +5,37 @@ on:
   push:
     branches: [ abilityfish ]
     paths:
+      - 'engine/fairy-depth15-worker.js'
       - 'scripts/patch_analysis_wasm_runtime.py'
       - 'scripts/patch_analysis_coi_runtime.py'
       - 'scripts/patch_analysis_interactions.py'
+      - 'scripts/patch_analysis_session_cache_upgrades.py'
+      - 'scripts/patch_analysis_session_cache_hardening.py'
+      - 'scripts/patch_analysis_worker_hardening.py'
       - 'scripts/patch_analysis_test_bridge.py'
       - 'scripts/apply_fairy_single_thread_wasm.py'
       - 'scripts/embed_analysis_wasm_runtime.py'
       - 'scripts/run_wasm_uci_smoke.js'
       - 'scripts/run_analysis_browser_smoke.js'
+      - 'scripts/run_analysis_upgrade_movement_smoke.js'
       - 'scripts/apply_fairy_position_hooks.py'
       - '.github/workflows/package-analysis-abilityfish.yml'
   pull_request:
     branches: [ main ]
     paths:
+      - 'engine/fairy-depth15-worker.js'
       - 'scripts/patch_analysis_wasm_runtime.py'
       - 'scripts/patch_analysis_coi_runtime.py'
       - 'scripts/patch_analysis_interactions.py'
+      - 'scripts/patch_analysis_session_cache_upgrades.py'
+      - 'scripts/patch_analysis_session_cache_hardening.py'
+      - 'scripts/patch_analysis_worker_hardening.py'
       - 'scripts/patch_analysis_test_bridge.py'
       - 'scripts/apply_fairy_single_thread_wasm.py'
       - 'scripts/embed_analysis_wasm_runtime.py'
       - 'scripts/run_wasm_uci_smoke.js'
       - 'scripts/run_analysis_browser_smoke.js'
+      - 'scripts/run_analysis_upgrade_movement_smoke.js'
       - 'scripts/apply_fairy_position_hooks.py'
       - '.github/workflows/package-analysis-abilityfish.yml'
 
@@ -67,6 +77,9 @@ jobs:
       - name: Apply portable single-thread runtime
         run: python3 scripts/apply_fairy_single_thread_wasm.py vendor/Fairy-Wasm
 
+      - name: Harden persistent Analysis worker
+        run: python3 scripts/patch_analysis_worker_hardening.py engine/fairy-depth15-worker.js
+
       - uses: actions/cache@v5
         with:
           path: ${{ env.EM_CACHE_FOLDER }}
@@ -96,6 +109,8 @@ jobs:
           python3 scripts/patch_analysis_wasm_runtime.py index.html
           python3 scripts/patch_analysis_coi_runtime.py index.html
           python3 scripts/patch_analysis_interactions.py index.html
+          python3 scripts/patch_analysis_session_cache_upgrades.py index.html
+          python3 scripts/patch_analysis_session_cache_hardening.py index.html
           python3 scripts/patch_analysis_test_bridge.py index.html
           python3 scripts/embed_analysis_wasm_runtime.py \
             index.html \
@@ -116,8 +131,11 @@ jobs:
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
 
-      - name: Prove embedded Analysis engine and interactions in Chromium
-        run: node scripts/run_analysis_browser_smoke.js index.html 5
+      - name: Prove full depth, session cache, upgrades, and interactions in Chromium
+        run: node scripts/run_analysis_browser_smoke.js index.html 15
+
+      - name: Prove permanent-upgrade movement on Analysis board
+        run: node scripts/run_analysis_upgrade_movement_smoke.js index.html
 
       - name: Verify combined production + embedded Analysis integration
         run: |
@@ -128,6 +146,11 @@ jobs:
           grep -q 'ensureEmbeddedAnalysisAbilityFishWorkerUrl' index.html
           grep -q '15 — full' index.html
           grep -q 'ANALYSIS_ABILITY_INTERACTIONS_V1' index.html
+          grep -q 'ANALYSIS_SESSION_CACHE_UPGRADES_V2' index.html
+          grep -q 'ANALYSIS_SESSION_CACHE_HARDENING_V1' index.html
+          grep -q 'analysisSessionCache' index.html
+          grep -q 'data-analysis-upgrade="archbishop"' index.html
+          grep -q 'data-analysis-upgrade="escape_route"' index.html
           grep -q 'ANALYSIS_BROWSER_TEST_BRIDGE_V1' index.html
           grep -q 'data-analysis-ability="ambush"' index.html
           grep -q 'analysis-pv-move' index.html
@@ -142,6 +165,7 @@ jobs:
           test -s analysis-engine/abilityfish-stockfish.js
           test -s analysis-engine/abilityfish-stockfish.wasm
           test -s analysis-engine/abilityfish-worker.js
+          grep -q 'ANALYSIS_WORKER_HARDENING_V1' analysis-engine/abilityfish-worker.js
           test ! -e analysis-engine/abilityfish-stockfish.worker.js
           test ! -e abilityfish-coi-serviceworker.js
           ! grep -q 'SharedArrayBuffer' analysis-engine/abilityfish-stockfish.js
