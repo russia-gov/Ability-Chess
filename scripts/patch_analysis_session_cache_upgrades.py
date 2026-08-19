@@ -120,8 +120,8 @@ new_request = r'''  const analysisSessionCache=new Map();
 needle = '  function requestAbilityFishAnalysis(state,options={}){'
 start = s.find(needle)
 if start < 0: raise SystemExit('persistent Analysis worker request function missing')
-brace_start = s.find('{', start)
-if brace_start < 0: raise SystemExit('request function opening brace missing')
+brace_start = start + len(needle) - 1
+if brace_start < 0 or s[brace_start] != '{': raise SystemExit('request function opening brace missing')
 
 def find_function_end(text, pos):
     depth=0; quote=None; escaped=False; line_comment=False; block_comment=False; i=pos
