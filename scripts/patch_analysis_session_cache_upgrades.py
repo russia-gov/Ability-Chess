@@ -10,7 +10,6 @@ if 'ANALYSIS_SESSION_CACHE_UPGRADES_V2' in s:
 if 'ANALYSIS_ABILITY_INTERACTIONS_V1' not in s or 'ANALYSIS_ABILITYFISH_WORKER' not in s:
     raise SystemExit('Analysis V1/runtime patches must be applied first')
 
-# Upgrade controls.
 css_anchor = '</style>'
 css = r'''
 /* ANALYSIS_SESSION_CACHE_UPGRADES_V2 */
@@ -25,7 +24,9 @@ html_repl = '''            <button class="analysis-ability-btn" data-analysis-ab
 if html_anchor not in s: raise SystemExit('upgrade HTML anchor missing')
 s = s.replace(html_anchor, html_repl, 1)
 
-js_anchor = "  const ANALYSIS_ABILITY_INSTRUCTIONS={shield:'Choose one of your pieces to shield.',freeze:'Choose an enemy non-king piece to freeze.',ambush:'Choose one of your non-king pieces to trap.',teleport:'Choose one of your non-king pieces, then an empty destination.',reinforce:'Choose one of your pawns beyond halfway.',portal:'Choose two empty portal squares.',fortify:'Choose a square in the 2×2 area containing your king.',double:'Two normal moves this turn.'};\n"
+js_anchor = "  const ANALYSIS_ABILITY_INSTRUCTIONS={shield:'Choose one of your pieces to shield.',freeze:'Choose an enemy non-king piece to freeze.',ambush:'Choose one of your non-king piece to trap.',teleport:'Choose one of your non-king pieces, then an empty destination.',reinforce:'Choose one of your pawns beyond halfway.',portal:'Choose two empty portal squares.',fortify:'Choose a square in the 2×2 area containing your king.',double:'Two normal moves this turn.'};\n"
+if js_anchor not in s:
+    js_anchor = "  const ANALYSIS_ABILITY_INSTRUCTIONS={shield:'Choose one of your pieces to shield.',freeze:'Choose an enemy non-king piece to freeze.',ambush:'Choose one of your non-king pieces to trap.',teleport:'Choose one of your non-king pieces, then an empty destination.',reinforce:'Choose one of your pawns beyond halfway.',portal:'Choose two empty portal squares.',fortify:'Choose a square in the 2×2 area containing your king.',double:'Two normal moves this turn.'};\n"
 js_add = r'''  const ANALYSIS_UPGRADES={
     vanguard:{piece:'p',cost:4,label:'Vanguard'},reverse_gear:{piece:'p',cost:4,label:'Reverse Gear'},veteran:{piece:'p',cost:6,label:'Veteran'},
     lancer:{piece:'n',cost:5,label:'Lancer'},charger:{piece:'n',cost:6,label:'Charger'},
@@ -59,17 +60,21 @@ render_repl = '''    if(cancel)cancel.hidden=!analysisAbilityMode;\n    if(help)
 if render_anchor not in s: raise SystemExit('upgrade render anchor missing')
 s = s.replace(render_anchor, render_repl, 1)
 
-bridge_anchor = "window.__ABILITYFISH_ANALYSIS_INTERACTIONS_TEST__={analysisMoveFromUci,analysisEvalText,startAbility:analysisStartAbility,targetAbility:analysisAbilityTargetClick};"
-bridge_repl = "window.__ABILITYFISH_ANALYSIS_INTERACTIONS_TEST__={analysisMoveFromUci,analysisEvalText,startAbility:analysisStartAbility,targetAbility:analysisAbilityTargetClick,purchaseUpgrade:analysisPurchaseUpgrade};"
-if bridge_anchor not in s: raise SystemExit('interaction test bridge anchor missing')
-s = s.replace(bridge_anchor, bridge_repl, 1)
+raw_bridge = "window.__ABILITYFISH_ANALYSIS_INTERACTIONS_TEST__={analysisMoveFromUci,analysisEvalText,startAbility:analysisStartAbility,targetAbility:analysisAbilityTargetClick};"
+if raw_bridge in s:
+    s=s.replace(raw_bridge,"window.__ABILITYFISH_ANALYSIS_INTERACTIONS_TEST__={analysisMoveFromUci,analysisEvalText,startAbility:analysisStartAbility,targetAbility:analysisAbilityTargetClick,purchaseUpgrade:analysisPurchaseUpgrade};",1)
+elif 'ANALYSIS_BROWSER_TEST_BRIDGE_V1' in s:
+    bridge_member='    startAbility:analysisStartAbility,targetAbility:analysisAbilityTargetClick,'
+    if bridge_member not in s: raise SystemExit('existing browser-test bridge member anchor missing')
+    s=s.replace(bridge_member,bridge_member+'\n    purchaseUpgrade:analysisPurchaseUpgrade,',1)
+else:
+    raise SystemExit('interaction test bridge anchor missing')
 
 wiring_anchor = "    const ability=event.target.closest?.('[data-analysis-ability]');if(ability){analysisStartAbility(ability.dataset.analysisAbility);return;}\n    if(event.target.closest?.('#analysisAbilityCancel'))analysisCancelAbilityMode();"
 wiring_repl = "    const ability=event.target.closest?.('[data-analysis-ability]');if(ability){analysisStartAbility(ability.dataset.analysisAbility);return;}\n    const upgrade=event.target.closest?.('[data-analysis-upgrade]');if(upgrade){analysisPurchaseUpgrade(upgrade.dataset.analysisUpgrade);return;}\n    if(event.target.closest?.('#analysisAbilityCancel'))analysisCancelAbilityMode();"
 if wiring_anchor not in s: raise SystemExit('Analysis event wiring anchor missing')
 s = s.replace(wiring_anchor, wiring_repl, 1)
 
-# Replace per-request workers with one persistent session worker and an LRU position cache.
 old_request = r'''  function requestAbilityFishAnalysis(state,options={}){
     return new Promise((resolve,reject)=>{
       let worker;
@@ -99,13 +104,10 @@ new_request = r'''  const analysisSessionCache=new Map();
     if(Array.isArray(value))return value.map(analysisStableValue);if(!value||typeof value!=='object')return value;
     const out={};for(const key of Object.keys(value).sort())out[key]=analysisStableValue(value[key]);return out;
   }
-  function analysisSessionCacheKey(state,multiPV,abilityFishEnabled){
-    return JSON.stringify([analysisStateFen(state),analysisStableValue(analysisAbilityPayload(state)),Number(multiPV),abilityFishEnabled!==false]);
-  }
+  function analysisSessionCacheKey(state,multiPV,abilityFishEnabled){return JSON.stringify([analysisStateFen(state),analysisStableValue(analysisAbilityPayload(state)),Number(multiPV),abilityFishEnabled!==false]);}
   function analysisRememberResult(key,result){
     const prior=analysisSessionCache.get(key);if(prior&&Number(prior.depth||0)>Number(result.depth||0))return;
-    analysisSessionCache.delete(key);analysisSessionCache.set(key,result);
-    while(analysisSessionCache.size>ANALYSIS_SESSION_CACHE_LIMIT)analysisSessionCache.delete(analysisSessionCache.keys().next().value);
+    analysisSessionCache.delete(key);analysisSessionCache.set(key,result);while(analysisSessionCache.size>ANALYSIS_SESSION_CACHE_LIMIT)analysisSessionCache.delete(analysisSessionCache.keys().next().value);
   }
   function analysisResetSessionWorker(error){
     const worker=analysisSessionWorker;analysisSessionWorker=null;if(worker){analysisWorkers.delete(worker);try{worker.terminate();}catch{}}
@@ -115,14 +117,12 @@ new_request = r'''  const analysisSessionCache=new Map();
     if(analysisSessionWorker)return analysisSessionWorker;
     const worker=new Worker(ANALYSIS_ABILITYFISH_WORKER);analysisSessionWorker=worker;analysisWorkers.add(worker);
     worker.addEventListener('message',e=>{
-      const id=e.data?.id,pending=analysisSessionPending.get(id);if(!pending)return;
-      if(e.data?.type==='info'||e.data?.type==='abilityinfo')return;
+      const id=e.data?.id,pending=analysisSessionPending.get(id);if(!pending)return;if(e.data?.type==='info'||e.data?.type==='abilityinfo')return;
       clearTimeout(pending.timeout);analysisSessionPending.delete(id);
       if(e.data?.type==='error'||e.data?.error){pending.reject(new Error(e.data?.error||'AbilityFish worker failed'));return;}
       if(e.data?.type==='result'||e.data?.result){const result=convertWasmAnalysisResult(pending.state,e.data.result);analysisRememberResult(pending.cacheKey,result);pending.resolve(result);}
     });
-    worker.addEventListener('error',e=>analysisResetSessionWorker(new Error(e.message||'AbilityFish WASM worker failed')));
-    return worker;
+    worker.addEventListener('error',e=>analysisResetSessionWorker(new Error(e.message||'AbilityFish WASM worker failed')));return worker;
   }
   function requestAbilityFishAnalysis(state,options={}){
     const depth=Math.max(1,Math.min(15,Number(options.depth||15))),multiPV=Math.max(1,Math.min(3,Number(options.multiPV??(depth>5?1:3)))),abilityFishEnabled=options.abilityFishEnabled!==false;
@@ -130,8 +130,7 @@ new_request = r'''  const analysisSessionCache=new Map();
     if(cached&&Number(cached.depth||0)>=depth)return Promise.resolve({...cached,cached:true,requestedDepth:depth});
     return new Promise((resolve,reject)=>{
       let worker;try{worker=ensureAnalysisSessionWorker();}catch(e){reject(e);return;}
-      const id=`analysis-${++analysisWorkerRequestSeq}-${Date.now()}`;
-      const timeoutMs=depth>=15?90000:45000;
+      const id=`analysis-${++analysisWorkerRequestSeq}-${Date.now()}`,timeoutMs=depth>=15?90000:45000;
       const timeout=setTimeout(()=>{const pending=analysisSessionPending.get(id);if(!pending)return;analysisSessionPending.delete(id);analysisResetSessionWorker(new Error(`AbilityFish depth ${depth} search timed out`));},timeoutMs);
       analysisSessionPending.set(id,{state:normalizeAnalysisState(state),cacheKey,resolve,reject,timeout});
       worker.postMessage({id,fen:analysisStateFen(state),depth,multiPV,maxTimeMs:options.maxTimeMs,abilityFishEnabled,abilityState:analysisAbilityPayload(state)});
@@ -141,10 +140,8 @@ new_request = r'''  const analysisSessionCache=new Map();
 if old_request not in s: raise SystemExit('persistent Analysis worker request anchor missing')
 s = s.replace(old_request, new_request, 1)
 
-# Make cache hits visible in the existing engine metadata.
 meta_anchor = "meta.textContent=`${refined?'Refined':'Quick'} AbilityFish${result?.wasm?' WASM':''} · depth ${result?.depth??1}${result?.capped&&result?.requestedDepth?`/${result.requestedDepth}`:''} · ${nodes} nodes${note?` · ${note}`:''}`;"
 meta_repl = "meta.textContent=`${refined?'Refined':'Quick'} AbilityFish${result?.wasm?' WASM':''}${result?.cached?' · session cache':''} · depth ${result?.depth??1}${result?.capped&&result?.requestedDepth?`/${result.requestedDepth}`:''} · ${nodes} nodes${note?` · ${note}`:''}`;"
-if meta_anchor in s: s = s.replace(meta_anchor, meta_repl, 1)
-
-path.write_text(s, encoding='utf-8')
+if meta_anchor in s:s=s.replace(meta_anchor,meta_repl,1)
+path.write_text(s,encoding='utf-8')
 print('Patched Analysis with persistent session engine/cache and permanent upgrades')
