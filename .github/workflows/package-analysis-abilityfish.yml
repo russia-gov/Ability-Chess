@@ -17,6 +17,7 @@ on:
       - 'scripts/embed_analysis_wasm_runtime.py'
       - 'scripts/run_wasm_uci_smoke.js'
       - 'scripts/run_analysis_browser_smoke.js'
+      - 'scripts/run_analysis_upgrade_movement_smoke.js'
       - 'scripts/apply_fairy_position_hooks.py'
       - '.github/workflows/package-analysis-abilityfish.yml'
   pull_request:
@@ -34,6 +35,7 @@ on:
       - 'scripts/embed_analysis_wasm_runtime.py'
       - 'scripts/run_wasm_uci_smoke.js'
       - 'scripts/run_analysis_browser_smoke.js'
+      - 'scripts/run_analysis_upgrade_movement_smoke.js'
       - 'scripts/apply_fairy_position_hooks.py'
       - '.github/workflows/package-analysis-abilityfish.yml'
 
@@ -131,6 +133,9 @@ jobs:
 
       - name: Prove full depth, session cache, upgrades, and interactions in Chromium
         run: node scripts/run_analysis_browser_smoke.js index.html 15
+
+      - name: Prove permanent-upgrade movement on Analysis board
+        run: node scripts/run_analysis_upgrade_movement_smoke.js index.html
 
       - name: Verify combined production + embedded Analysis integration
         run: |
