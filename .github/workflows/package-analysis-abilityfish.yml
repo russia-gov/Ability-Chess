@@ -5,6 +5,7 @@ on:
   push:
     branches: [ abilityfish ]
     paths:
+      - 'engine/fairy-depth15-worker.js'
       - 'scripts/patch_analysis_wasm_runtime.py'
       - 'scripts/patch_analysis_coi_runtime.py'
       - 'scripts/patch_analysis_interactions.py'
@@ -19,6 +20,7 @@ on:
   pull_request:
     branches: [ main ]
     paths:
+      - 'engine/fairy-depth15-worker.js'
       - 'scripts/patch_analysis_wasm_runtime.py'
       - 'scripts/patch_analysis_coi_runtime.py'
       - 'scripts/patch_analysis_interactions.py'
@@ -119,8 +121,8 @@ jobs:
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
 
-      - name: Prove embedded Analysis engine and interactions in Chromium
-        run: node scripts/run_analysis_browser_smoke.js index.html 5
+      - name: Prove full depth, session cache, upgrades, and interactions in Chromium
+        run: node scripts/run_analysis_browser_smoke.js index.html 15
 
       - name: Verify combined production + embedded Analysis integration
         run: |
