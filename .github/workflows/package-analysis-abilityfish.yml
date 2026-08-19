@@ -8,6 +8,7 @@ on:
       - 'scripts/patch_analysis_wasm_runtime.py'
       - 'scripts/patch_analysis_coi_runtime.py'
       - 'scripts/patch_analysis_interactions.py'
+      - 'scripts/patch_analysis_session_cache_upgrades.py'
       - 'scripts/patch_analysis_test_bridge.py'
       - 'scripts/apply_fairy_single_thread_wasm.py'
       - 'scripts/embed_analysis_wasm_runtime.py'
@@ -21,6 +22,7 @@ on:
       - 'scripts/patch_analysis_wasm_runtime.py'
       - 'scripts/patch_analysis_coi_runtime.py'
       - 'scripts/patch_analysis_interactions.py'
+      - 'scripts/patch_analysis_session_cache_upgrades.py'
       - 'scripts/patch_analysis_test_bridge.py'
       - 'scripts/apply_fairy_single_thread_wasm.py'
       - 'scripts/embed_analysis_wasm_runtime.py'
@@ -96,6 +98,7 @@ jobs:
           python3 scripts/patch_analysis_wasm_runtime.py index.html
           python3 scripts/patch_analysis_coi_runtime.py index.html
           python3 scripts/patch_analysis_interactions.py index.html
+          python3 scripts/patch_analysis_session_cache_upgrades.py index.html
           python3 scripts/patch_analysis_test_bridge.py index.html
           python3 scripts/embed_analysis_wasm_runtime.py \
             index.html \
@@ -128,6 +131,10 @@ jobs:
           grep -q 'ensureEmbeddedAnalysisAbilityFishWorkerUrl' index.html
           grep -q '15 — full' index.html
           grep -q 'ANALYSIS_ABILITY_INTERACTIONS_V1' index.html
+          grep -q 'ANALYSIS_SESSION_CACHE_UPGRADES_V2' index.html
+          grep -q 'analysisSessionCache' index.html
+          grep -q 'data-analysis-upgrade="archbishop"' index.html
+          grep -q 'data-analysis-upgrade="escape_route"' index.html
           grep -q 'ANALYSIS_BROWSER_TEST_BRIDGE_V1' index.html
           grep -q 'data-analysis-ability="ambush"' index.html
           grep -q 'analysis-pv-move' index.html
