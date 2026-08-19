@@ -86,3 +86,42 @@ jobs:
             --command 'abilitytimed ambush b 35 1 1' \
             --command 'go depth 3 searchmoves e4d5' | tee "$log"
           grep -q '^bestmove e4d5' "$log"
+      - name: Ambush explosion rebuilds checker cache
+        shell: bash
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 \
+            --command uci \
+            --command 'position fen 6nk/p6q/6p1/8/8/8/2B5/4K2R w - - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilitytimed ambush b 55 1 1' \
+            --command 'go depth 2 searchmoves h1h7' | tee "$log"
+          grep -Eq ' pv h1h7 [a-h][1-8][a-h][1-8]' "$log"
+          grep -q '^bestmove h1h7' "$log"
+      - name: Ambushed queen makes Qb5 mate
+        shell: bash
+        run: |
+          set -euo pipefail
+          fen='3N4/8/k7/2B5/1Q6/2B5/8/7K w - - 0 1'
+          baseline=$(mktemp)
+          with_ambush=$(mktemp)
+          # Force the exact continuation. Qb5+ is not mate normally because Kxb5
+          # is legal. When the queen is Ambushed, Kxb5 would destroy the king and
+          # must be illegal, so the identical Qb5 move must score mate in one.
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 --command uci --command "position fen $fen" \
+            --command 'abilityfish on' --command 'abilitypoints 0 0' \
+            --command 'go depth 1 searchmoves b4b5' | tee "$baseline"
+          grep -q '^bestmove b4b5' "$baseline"
+          ! grep -Eq 'score mate 1' "$baseline"
+
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 30 --command uci --command "position fen $fen" \
+            --command 'abilityfish on' --command 'abilitypoints 0 0' \
+            --command 'abilitytimed ambush w 25 1 1' \
+            --command 'go depth 1 searchmoves b4b5' | tee "$with_ambush"
+          grep -q '^bestmove b4b5' "$with_ambush"
+          grep -Eq 'score mate 1' "$with_ambush"
