@@ -1,5 +1,9 @@
 /* AbilityFish depth-15 browser worker backed by the custom interactive
  * Fairy-Stockfish WASM build produced by build-abilityfish.yml.
+ *
+ * The browser owns one long-lived instance of this worker per Analysis session.
+ * That deliberately preserves Fairy-Stockfish's transposition table across
+ * nearby/revisited positions instead of paying cold-start cost every move.
  */
 const ENGINE_JS = './abilityfish-stockfish.js';
 const ENGINE_WASM = './abilityfish-stockfish.wasm';
@@ -26,6 +30,10 @@ function getEngine() {
         : Promise.reject(new Error('Custom AbilityFish WASM module did not load'))
     ).then((engine) => {
       engine.postMessage('uci');
+      // Keep a useful session-sized TT alive. 64 MB is large enough to make
+      // backtracking through an Analysis line much cheaper without being
+      // excessive for desktop/mobile browsers.
+      engine.postMessage('setoption name Hash value 64');
       return engine;
     });
   }
@@ -182,11 +190,12 @@ async function analyze(job) {
   return new Promise((resolve, reject) => {
     const lines = new Map();
     let bestAbilityAction = null;
-    const requestedDepth = Math.max(1, Math.min(40, Number(job.depth || 15)));
+    const requestedDepth = Math.max(1, Math.min(15, Number(job.depth || 15)));
     const defaultMultiPV = requestedDepth > 5 ? 1 : 3;
     const multiPV = Math.max(1, Math.min(8, Number(job.multiPV ?? defaultMultiPV)));
-    const defaultTimeMs = requestedDepth >= 15 ? 9000 : requestedDepth >= 10 ? 4000 : 0;
-    const maxTimeMs = Math.max(0, Math.min(30000, Number(job.maxTimeMs ?? defaultTimeMs)));
+    // Full depth is a depth target, not a time target. A caller can still pass
+    // maxTimeMs explicitly for special tests, but normal Analysis never does.
+    const maxTimeMs = Math.max(0, Math.min(60000, Number(job.maxTimeMs ?? 0)));
     const listener = (line) => {
       if (typeof line !== 'string') return;
       if (line.startsWith('info string abilityaction ')) {
