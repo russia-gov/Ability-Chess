@@ -75,27 +75,6 @@ wiring_repl = "    const ability=event.target.closest?.('[data-analysis-ability]
 if wiring_anchor not in s: raise SystemExit('Analysis event wiring anchor missing')
 s = s.replace(wiring_anchor, wiring_repl, 1)
 
-old_request = r'''  function requestAbilityFishAnalysis(state,options={}){
-    return new Promise((resolve,reject)=>{
-      let worker;
-      try{worker=new Worker(ANALYSIS_ABILITYFISH_WORKER);analysisWorkers.add(worker);}catch(e){reject(e);return;}
-      const id=`analysis-${++analysisWorkerRequestSeq}-${Date.now()}`;let settled=false;
-      const cleanup=()=>{clearTimeout(timeout);analysisWorkers.delete(worker);try{worker.terminate();}catch{}};
-      const timeout=setTimeout(()=>{if(settled)return;settled=true;cleanup();reject(new Error('AbilityFish depth search timed out'));},30000);
-      const onMessage=e=>{
-        if(e.data?.id!==id||settled)return;
-        if(e.data?.type==='info'||e.data?.type==='abilityinfo')return;
-        if(e.data?.type==='error'||e.data?.error){settled=true;cleanup();reject(new Error(e.data?.error||'AbilityFish worker failed'));return;}
-        if(e.data?.type==='result'||e.data?.result){settled=true;cleanup();resolve(convertWasmAnalysisResult(state,e.data.result));}
-      };
-      worker.addEventListener('message',onMessage);
-      worker.addEventListener('error',e=>{if(settled)return;settled=true;cleanup();reject(new Error(e.message||'AbilityFish WASM worker failed'));},{once:true});
-      const depth=Math.max(1,Math.min(15,Number(options.depth||15)));
-      const multiPV=Math.max(1,Math.min(3,Number(options.multiPV??(depth>5?1:3))));
-      worker.postMessage({id,fen:analysisStateFen(state),depth,multiPV,maxTimeMs:options.maxTimeMs,abilityFishEnabled:options.abilityFishEnabled!==false,abilityState:analysisAbilityPayload(state)});
-    });
-  }
-'''
 new_request = r'''  const analysisSessionCache=new Map();
   const analysisSessionPending=new Map();
   let analysisSessionWorker=null;
@@ -137,8 +116,41 @@ new_request = r'''  const analysisSessionCache=new Map();
     });
   }
 '''
-if old_request not in s: raise SystemExit('persistent Analysis worker request anchor missing')
-s = s.replace(old_request, new_request, 1)
+
+needle = '  function requestAbilityFishAnalysis(state,options={}){'
+start = s.find(needle)
+if start < 0: raise SystemExit('persistent Analysis worker request function missing')
+brace_start = s.find('{', start)
+if brace_start < 0: raise SystemExit('request function opening brace missing')
+
+def find_function_end(text, pos):
+    depth=0; quote=None; escaped=False; line_comment=False; block_comment=False; i=pos
+    while i < len(text):
+        ch=text[i]; nxt=text[i+1] if i+1<len(text) else ''
+        if line_comment:
+            if ch=='\n': line_comment=False
+            i+=1; continue
+        if block_comment:
+            if ch=='*' and nxt=='/': block_comment=False; i+=2; continue
+            i+=1; continue
+        if quote:
+            if escaped: escaped=False; i+=1; continue
+            if ch=='\\': escaped=True; i+=1; continue
+            if ch==quote: quote=None
+            i+=1; continue
+        if ch=='/' and nxt=='/': line_comment=True; i+=2; continue
+        if ch=='/' and nxt=='*': block_comment=True; i+=2; continue
+        if ch in ('\"', "'", '`'): quote=ch; i+=1; continue
+        if ch=='{': depth+=1
+        elif ch=='}':
+            depth-=1
+            if depth==0: return i+1
+        i+=1
+    return -1
+
+end=find_function_end(s,brace_start)
+if end < 0: raise SystemExit('request function closing brace missing')
+s = s[:start] + new_request + s[end:]
 
 meta_anchor = "meta.textContent=`${refined?'Refined':'Quick'} AbilityFish${result?.wasm?' WASM':''} · depth ${result?.depth??1}${result?.capped&&result?.requestedDepth?`/${result.requestedDepth}`:''} · ${nodes} nodes${note?` · ${note}`:''}`;"
 meta_repl = "meta.textContent=`${refined?'Refined':'Quick'} AbilityFish${result?.wasm?' WASM':''}${result?.cached?' · session cache':''} · depth ${result?.depth??1}${result?.capped&&result?.requestedDepth?`/${result.requestedDepth}`:''} · ${nodes} nodes${note?` · ${note}`:''}`;"
