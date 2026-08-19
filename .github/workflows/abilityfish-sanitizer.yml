@@ -46,7 +46,11 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq gdb
       - name: Capture depth-8 side-mismatch backtrace
         shell: bash
+        env:
+          ASAN_OPTIONS: abort_on_error=1:detect_leaks=0:print_stacktrace=1
+          UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
         run: |
+          set -euo pipefail
           cat > /tmp/abilityfish-commands.txt <<'EOF'
           uci
           position fen rnbqkbnr/ppp1pppp/8/3p4/8/2N5/PPPPPPPP/R1BQKBNR w KQkq - 0 1
@@ -59,13 +63,19 @@ jobs:
           abilitylastmove b 51 35 65 1
           go depth 8
           EOF
+          rm -f /tmp/abilityfish-input
+          mkfifo /tmp/abilityfish-input
+          { cat /tmp/abilityfish-commands.txt; sleep 30; } > /tmp/abilityfish-input &
+          writer=$!
           set +e
           gdb -q -batch \
             -ex 'set pagination off' \
-            -ex 'run < /tmp/abilityfish-commands.txt' \
+            -ex 'handle SIGABRT stop print nopass' \
+            -ex 'run < /tmp/abilityfish-input' \
             -ex 'thread apply all bt full' \
             --args vendor/Fairy-Stockfish/src/stockfish 2>&1 | tee /tmp/abilityfish-gdb.log
           rc=${PIPESTATUS[0]}
           set -e
+          kill "$writer" 2>/dev/null || true
           grep -q 'Position::gives_check' /tmp/abilityfish-gdb.log
           exit 1
