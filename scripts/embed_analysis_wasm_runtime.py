@@ -94,11 +94,26 @@ elif old in html:
 else:
     raise SystemExit("Analysis worker constant anchor changed")
 
-old_ctor = "worker=new Worker(ANALYSIS_ABILITYFISH_WORKER);analysisWorkers.add(worker);"
-new_ctor = "worker=new Worker(ensureEmbeddedAnalysisAbilityFishWorkerUrl());analysisWorkers.add(worker);"
-if old_ctor in html:
-    html = html.replace(old_ctor, new_ctor, 1)
-elif new_ctor not in html:
+ctor_candidates = [
+    (
+        "worker=new Worker(ANALYSIS_ABILITYFISH_WORKER);analysisWorkers.add(worker);",
+        "worker=new Worker(ensureEmbeddedAnalysisAbilityFishWorkerUrl());analysisWorkers.add(worker);",
+    ),
+    (
+        "const worker=new Worker(ANALYSIS_ABILITYFISH_WORKER);analysisSessionWorker=worker;analysisWorkers.add(worker);",
+        "const worker=new Worker(ensureEmbeddedAnalysisAbilityFishWorkerUrl());analysisSessionWorker=worker;analysisWorkers.add(worker);",
+    ),
+]
+installed_ctor = None
+for old_ctor, new_ctor in ctor_candidates:
+    if old_ctor in html:
+        html = html.replace(old_ctor, new_ctor, 1)
+        installed_ctor = new_ctor
+        break
+    if new_ctor in html:
+        installed_ctor = new_ctor
+        break
+if installed_ctor is None:
     raise SystemExit("Analysis Worker constructor anchor changed")
 
 hook = "  window.__ABILITYFISH_ANALYSIS_TEST__=(state,options={})=>requestAbilityFishAnalysis(state,options);\n"
@@ -110,7 +125,7 @@ if "window.__ABILITYFISH_ANALYSIS_TEST__" not in html:
 
 if (
     "ANALYSIS_ABILITYFISH_EMBEDDED_V1" not in html
-    or new_ctor not in html
+    or installed_ctor not in html
     or "window.__ABILITYFISH_ANALYSIS_TEST__" not in html
 ):
     raise SystemExit("embedded Analysis runtime did not install")
