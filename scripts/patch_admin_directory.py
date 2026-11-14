@@ -6,6 +6,9 @@ import sys
 path=Path(sys.argv[1] if len(sys.argv)>1 else 'index.html')
 s=path.read_text(encoding='utf-8')
 marker='ABILITY_CHESS_ADMIN_DIRECTORY_NAV_V1'
+if 'ABILITY_CHESS_ADMIN_MANAGEMENT_STATIC_V2' in s:
+    print('Member directory is already provided inside the modular Admin screen')
+    raise SystemExit(0)
 if marker in s:
     print('Admin directory navigation already installed')
     raise SystemExit(0)
@@ -35,3 +38,4 @@ extra=r'''  // ABILITY_CHESS_ADMIN_DIRECTORY_NAV_V1
 s=s.replace(anchor,extra+anchor,1)
 path.write_text(s,encoding='utf-8')
 print('Installed administrator member-directory navigation')
+

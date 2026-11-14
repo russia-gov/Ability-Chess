@@ -1,0 +1,6 @@
+#adminManagementPanel{margin:18px 0}
+#adminManagementPanel>p{margin:0 0 12px}
+#adminManagementPanel .admin-management-actions{display:flex;gap:8px;flex-wrap:wrap}
+#adminManagementFrame{display:block;width:100%;height:min(75vh,850px);min-height:540px;margin-top:12px;border:1px solid #465363;border-radius:10px;background:#11171d}
+#adminManagementFrame[hidden]{display:none}
+
