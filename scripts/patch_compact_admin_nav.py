@@ -52,6 +52,7 @@ extras=r'''  // ABILITY_CHESS_COMPACT_ADMIN_NAV_V1
     const card=document.createElement('section');
     card.className='admin-card';
     card.id='compactAdminTools';
+    card.style.gridColumn='1 / -1';
     const heading=document.createElement('h2');
     heading.textContent='Member management';
     const intro=document.createElement('p');
