@@ -1,0 +1,23 @@
+name: Ability and upgrade rule regressions
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'engine/src/**'
+      - 'engine/tests/**'
+      - '.github/workflows/ability-rule-regressions.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'engine/src/**'
+      - 'engine/tests/**'
+      - '.github/workflows/ability-rule-regressions.yml'
+
+jobs:
+  native-rules:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run ability state, actions, and upgrade regressions
+        run: bash engine/tests/run-native-tests.sh

@@ -8,8 +8,10 @@ $CXX $FLAGS src/ability_action.cpp tests/ability_action_test.cpp -o .test-bin/ac
 $CXX $FLAGS src/ability_action.cpp src/ability_state.cpp tests/ability_state_test.cpp -o .test-bin/state
 $CXX $FLAGS tests/search_semantics_test.cpp -o .test-bin/search
 $CXX $FLAGS src/ability_action.cpp src/ability_state.cpp src/ability_rules.cpp tests/ability_rules_test.cpp -o .test-bin/rules
+$CXX $FLAGS src/ability_action.cpp src/ability_state.cpp src/ability_rules.cpp tests/ability_regression_test.cpp -o .test-bin/regressions
 .test-bin/action
 .test-bin/state
 .test-bin/search
 .test-bin/rules
+.test-bin/regressions
 echo "AbilityFish native rule/search tests: PASS"
