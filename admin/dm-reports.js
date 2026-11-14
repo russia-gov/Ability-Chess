@@ -16,8 +16,9 @@ async function boot(){
     userId=data.user.id;
     const isAdmin=await rpc('ability_chess_is_admin',{p_user_id:userId});
     if(isAdmin){role=await rpc('ability_chess_is_owner',{p_user_id:userId})?'owner':'staff';$('adminArea').hidden=false;}
-    $('memberArea').hidden=false;
-    await loadMine();
+    const adminFrame=location.hash==='#reports'&&isAdmin;
+    $('memberArea').hidden=!!adminFrame;
+    if(!adminFrame)await loadMine();
     if(isAdmin)await loadReports();
   }catch(e){status(e.message,true);}
 }
