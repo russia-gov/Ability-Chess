@@ -104,7 +104,10 @@ async function makeTestMove(page) {
     const before=Number(onlineSession.version);
     const from=String.fromCharCode(97+m.from.c)+(8-m.from.r);
     const to=String.fromCharCode(97+m.to.c)+(8-m.to.r);
-    makeMove({...m,promotion:m.promotion||'q'},{animate:false,source:'testbot'});
+    const piece=pieceAt(game.board,m.from.r,m.from.c);
+    const played=piece?.[1]==='p' && isPromotionRank(piece[0],m.to.r)
+      ? {...m,promotion:m.promotion||'q'} : m;
+    makeMove(played,{animate:false,source:'testbot'});
     return {moved:true,move:from+to,beforeVersion:before};
   });
 }
