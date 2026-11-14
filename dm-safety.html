@@ -11,10 +11,10 @@ section{background:#172231;border:1px solid #39516a;padding:18px;border-radius:1
 button,select{font:inherit;background:#273b50;color:inherit;border:1px solid #647e98;border-radius:7px;padding:9px 12px;cursor:pointer;margin:4px 7px 4px 0}
 button:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #a9e6ff;outline-offset:2px}.error{color:#ff9e9e}
 [hidden]{display:none!important}.info{border-left:3px solid #80a8c5;padding:12px;margin:13px 0;background:#1b2c3d}
-</style>
+body.embedded main{width:100%;margin:0 auto 20px} body.embedded main>a,body.embedded main>h1,body.embedded main>.info{display:none}body.embedded{background:#121b25}</style>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.90.1/dist/umd/supabase.min.js"></script>
 <script defer src="./admin/dm-reports.js"></script></head>
-<body><main>
+<body><script>if(new URLSearchParams(location.search).has('embedded'))document.body.classList.add('embedded');</script><main>
 <a href="./">Return to Ability-Chess</a>
 <h1>Private message safety</h1>
 <p class="info">Direct messages are private from other members. When a participant reports a message, authorized moderators may review that message and limited surrounding context. The owner may investigate a broader portion of the reported conversation with a recorded justification. Every administrator review is logged.</p>
