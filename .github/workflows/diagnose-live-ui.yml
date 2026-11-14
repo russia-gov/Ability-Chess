@@ -29,6 +29,11 @@ jobs:
                 await page.waitForTimeout(6000);
                 console.log('URL',page.url(),'HTTP',r.status(),'TITLE',await page.title());
                 console.log('DOM',await page.evaluate(()=>({scripts:document.scripts.length,account:document.querySelectorAll('[class*=sidebar-account]').length,login:document.querySelectorAll('[id*=member],[id*=Member]').length,admin:!!document.getElementById('adminScreen'),supabase:!!window.supabase,body:document.body?.textContent?.slice(0,240)})));
+                console.log('ACCOUNT BUTTONS',await page.evaluate(()=>Array.from(document.querySelectorAll('button')).filter(x=>/sign in|profile and account|account/i.test(x.textContent)).slice(0,12).map(x=>({text:x.textContent.trim().slice(0,100),class:x.className,hidden:x.hidden}))));
+                const button=page.getByRole('button',{name:/Sign in/i}).first();
+                if(await button.count()){await button.click();await page.waitForTimeout(2500);
+                  console.log('AFTER CLICK',await page.evaluate(()=>({dialogs:Array.from(document.querySelectorAll('[role=dialog],dialog,.member-modal')).map(x=>({class:x.className,hidden:x.hidden,text:x.textContent.slice(0,600)})),body:document.body.innerText.slice(-800)})));
+                }
               }catch(e){console.log('NAV FAILED',e.stack)}
             }
             console.log('ERRORS',JSON.stringify(errors.slice(0,40),null,2));
