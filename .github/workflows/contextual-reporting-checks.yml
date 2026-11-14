@@ -2,6 +2,10 @@ name: Contextual reporting integration checks
 on:
   pull_request:
     branches: [main]
+    paths:
+      - 'scripts/patch_contextual_reporting.py'
+      - 'database/contextual_chat_reports.sql'
+      - '.github/workflows/contextual-reporting-checks.yml'
   push:
     branches: [feature/admin-message-context-reporting]
 jobs:
