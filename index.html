@@ -1264,6 +1264,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   let memberChallengeInboxKey=localStorage.getItem('abilityChessChallengeInboxKey')||null;
   let pendingChallengeTarget=null, visibleOutgoingMemberChallenge=null;
   const notifiedChallengeStatuses=new Set();
+  let adminUi=null;
   try{ memberSession=JSON.parse(localStorage.getItem('abilityChessMemberSession')||'null'); }catch{}
   const {authHeaders,authRequest,appRedirectUrl,clearAuthRedirectArtifacts,importAuthRedirectSession}=
     window.AbilityChessAccountAuth.createAccountAuth({
@@ -5753,14 +5754,16 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   }
   function installNotificationButtons(){ rebuildCanonicalSidebars(); }
 
-  const adminUi=window.AbilityChessAdmin.createAdminUi({
-    getMemberProfile:()=>memberProfile,
-    currentRoute,
-    showScreen,
-    updateNotificationBadge,
-    openNotifications:openNotificationsFromSidebar
-  });
-  function rebuildCanonicalSidebars(){adminUi.rebuildCanonicalSidebars();}
+  function rebuildCanonicalSidebars(){
+    adminUi??=window.AbilityChessAdmin.createAdminUi({
+      getMemberProfile:()=>memberProfile,
+      currentRoute,
+      showScreen,
+      updateNotificationBadge,
+      openNotifications:openNotificationsFromSidebar
+    });
+    adminUi.rebuildCanonicalSidebars();
+  }
   function installSpecialNav(){rebuildCanonicalSidebars();}
   document.querySelectorAll('.tournaments-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('tournaments')));
   document.querySelectorAll('.admin-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('admin')));

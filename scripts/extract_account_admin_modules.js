@@ -63,10 +63,16 @@ replaceRange(
   'account auth helpers'
 );
 
+replaceOnce(
+  '  const notifiedChallengeStatuses=new Set();\n',
+  '  const notifiedChallengeStatuses=new Set();\n  let adminUi=null;\n',
+  'admin module state'
+);
+
 replaceRange(
   '  function rebuildCanonicalSidebars(){',
   '  const originalUpdateSidebarAccounts=updateSidebarAccounts;updateSidebarAccounts=function(){originalUpdateSidebarAccounts();document.querySelectorAll(\'.sidebar-avatar\').forEach(a=>{if(memberProfile?.avatar_url)a.innerHTML=`<img src="${escapeHtml(memberProfile.avatar_url)}" alt="">`;});installSpecialNav();};',
-  `  const adminUi=window.AbilityChessAdmin.createAdminUi({\n    getMemberProfile:()=>memberProfile,\n    currentRoute,\n    showScreen,\n    updateNotificationBadge,\n    openNotifications:openNotificationsFromSidebar\n  });\n  function rebuildCanonicalSidebars(){adminUi.rebuildCanonicalSidebars();}\n  function installSpecialNav(){rebuildCanonicalSidebars();}\n  document.querySelectorAll('.tournaments-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('tournaments')));\n  document.querySelectorAll('.admin-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('admin')));\n  installSpecialNav();\n  // ABILITY_CHESS_ADMIN_MANAGEMENT_STATIC_V2\n  adminUi.installManagementPanel();\n  updateSidebarAccounts=adminUi.wrapUpdateSidebarAccounts(updateSidebarAccounts);`,
+  `  function rebuildCanonicalSidebars(){\n    adminUi??=window.AbilityChessAdmin.createAdminUi({\n      getMemberProfile:()=>memberProfile,\n      currentRoute,\n      showScreen,\n      updateNotificationBadge,\n      openNotifications:openNotificationsFromSidebar\n    });\n    adminUi.rebuildCanonicalSidebars();\n  }\n  function installSpecialNav(){rebuildCanonicalSidebars();}\n  document.querySelectorAll('.tournaments-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('tournaments')));\n  document.querySelectorAll('.admin-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('admin')));\n  installSpecialNav();\n  // ABILITY_CHESS_ADMIN_MANAGEMENT_STATIC_V2\n  adminUi.installManagementPanel();\n  updateSidebarAccounts=adminUi.wrapUpdateSidebarAccounts(updateSidebarAccounts);`,
   'admin controller'
 );
 
