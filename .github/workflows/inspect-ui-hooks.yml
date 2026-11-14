@@ -1,0 +1,26 @@
+name: Inspect UI hooks (temporary)
+on:
+  push:
+    branches: [feature/admin-message-context-reporting]
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Find message and admin UI code
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text()
+          lines=s.splitlines()
+          terms=['adminScreen','admin-nav-btn','adminPanel','adminReports','screen-admin','id="admin','message-item','chat-message','dm-message','direct-message','renderDirect','loadDirect','messageRow','chatMessages','reportMessage','sendDirectMessage','adminTab','showAdmin']
+          found=[]
+          for i,line in enumerate(lines):
+            if any(t.lower() in line.lower() for t in terms):
+              found.append(i)
+          print('Total lines',len(lines),'matches',len(found))
+          for i in found[:90]:
+            print('==== line',i+1,'====')
+            for n in range(max(0,i-2),min(len(lines),i+3)):
+              print(str(n+1)+': '+lines[n][:1100])
+          PY
