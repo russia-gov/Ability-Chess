@@ -1,0 +1,45 @@
+name: Compact admin sidebar checks
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [fix/compact-admin-sidebar]
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply sidebar patches and inspect generated page
+        run: |
+          python3 -m py_compile scripts/patch_compact_admin_nav.py
+          python3 scripts/patch_admin_directory.py index.html
+          python3 scripts/patch_dm_safety_nav.py index.html
+          python3 scripts/patch_compact_admin_nav.py index.html
+          grep -q 'ABILITY_CHESS_COMPACT_ADMIN_NAV_V1' index.html
+          ! grep -q 'ABILITY_CHESS_DM_SAFETY_NAV_V1' index.html
+          ! grep -q 'ABILITY_CHESS_ADMIN_DIRECTORY_NAV_V1' index.html
+          grep -q "ensureCompactAdminTools();" index.html
+          grep -q "DM reports" index.html
+          grep -q "Member directory" index.html
+          python3 scripts/patch_compact_admin_nav.py index.html
+      - name: Check inline JavaScript parses
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from html.parser import HTMLParser
+          import subprocess
+          class Scripts(HTMLParser):
+              def __init__(self):super().__init__();self.active=False;self.items=[]
+              def handle_starttag(self,name,attrs):
+                  if name=='script' and not dict(attrs).get('src'):
+                      self.active=True;self.items.append('')
+              def handle_endtag(self,name):
+                  if name=='script':self.active=False
+              def handle_data(self,data):
+                  if self.active:self.items[-1]+=data
+          p=Scripts();p.feed(Path('index.html').read_text())
+          for i,script in enumerate(p.items):
+              path=Path('/tmp/ability-inline-'+str(i)+'.js');path.write_text(script)
+              subprocess.run(['node','--check',str(path)],check=True)
+          print('All inline scripts parse')
+          PY
