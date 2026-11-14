@@ -13,14 +13,9 @@ jobs:
           from pathlib import Path
           s=Path('index.html').read_text()
           lines=s.splitlines()
-          terms=['adminScreen','admin-nav-btn','adminPanel','adminReports','screen-admin','id="admin','message-item','chat-message','dm-message','direct-message','renderDirect','loadDirect','messageRow','chatMessages','reportMessage','sendDirectMessage','adminTab','showAdmin']
-          found=[]
-          for i,line in enumerate(lines):
-            if any(t.lower() in line.lower() for t in terms):
-              found.append(i)
-          print('Total lines',len(lines),'matches',len(found))
-          for i in found[:90]:
-            print('==== line',i+1,'====')
-            for n in range(max(0,i-2),min(len(lines),i+3)):
-              print(str(n+1)+': '+lines[n][:1100])
+          chunks=[(220,257),(570,620),(5400,5460),(5600,5638),(5640,5710),(5710,5745),(5760,5835)]
+          for a,b in chunks:
+            print('====',a,'-',b,'====')
+            for n in range(a-1,min(len(lines),b)):
+              print(str(n+1)+': '+lines[n][:2500])
           PY
