@@ -5798,6 +5798,25 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   document.querySelectorAll('.tournaments-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('tournaments')));
   document.querySelectorAll('.admin-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('admin')));
   installSpecialNav();
+  // ABILITY_CHESS_ADMIN_DIRECTORY_NAV_V1
+  // memberProfile comes from the existing authenticated member flow.
+  // The directory itself additionally requires a server-verified admin account.
+  const baseInstallSpecialNav=installSpecialNav;
+  installSpecialNav=function(){
+    baseInstallSpecialNav();
+    if(!memberProfile||(memberProfile.is_owner!==true&&memberProfile.is_staff!==true))return;
+    document.querySelectorAll('.home-nav').forEach(nav=>{
+      if(nav.querySelector('.admin-directory-nav-btn'))return;
+      const link=document.createElement('a');
+      link.className='home-nav-item admin-directory-nav-btn';
+      link.href='admin-directory.html';
+      link.textContent='Member directory';
+      link.setAttribute('aria-label','Open administrator member directory');
+      const adminLink=nav.querySelector('.admin-nav-btn');
+      if(adminLink)adminLink.insertAdjacentElement('afterend',link);
+      else nav.appendChild(link);
+    });
+  };
   const originalUpdateSidebarAccounts=updateSidebarAccounts;updateSidebarAccounts=function(){originalUpdateSidebarAccounts();document.querySelectorAll('.sidebar-avatar').forEach(a=>{if(memberProfile?.avatar_url)a.innerHTML=`<img src="${escapeHtml(memberProfile.avatar_url)}" alt="">`;});installSpecialNav();};
 
 
@@ -6518,6 +6537,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
       worker.postMessage({id,fen,depth,multiPV,maxTimeMs:options.maxTimeMs,abilityFishEnabled:options.abilityFishEnabled!==false,abilityState});
     });
   }
+
 
 
 
