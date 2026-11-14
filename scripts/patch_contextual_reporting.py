@@ -32,16 +32,12 @@ swap('ensureAdminFoundationCards();loadModerationFoundation();}',
 # A report is attached to the original message ID, never a conversation-wide menu.
 swap('thread.appendChild(bubble);',
      "if(m.id && String(m.sender_id)!==String(memberProfile?.id))bubble.appendChild(makeMessageReportButton('dm',m.id));thread.appendChild(bubble);")
-swap("  async function refreshTournamentChat(){",
+swap("  }\n  async function refreshTournamentChat(){",
      """    if(m.id && String(m.username||'').toLowerCase()!==String(memberProfile?.username||'').toLowerCase()){
       messages.lastElementChild?.appendChild(makeMessageReportButton('tournament',m.id));
     }
   }
   async function refreshTournamentChat(){""")
-# Previous substitution inserts an extra closing brace into the original function.
-swap('  function appendTournamentChatMessage(messages,m){\n', '  function appendTournamentChatMessage(messages,m){\n')
-# Restore one, rather than two, closing braces before refreshTournamentChat.
-swap('    }\n  }\n  async function refreshTournamentChat(){','    }\n  async function refreshTournamentChat(){')
 swap('gameChatLastId=Math.max(gameChatLastId,Number(m.id)||0);',
      """if(m.id && String(m.username||'').toLowerCase()!==String(memberProfile?.username||'').toLowerCase()){
         box.lastElementChild?.appendChild(makeMessageReportButton('game',m.id));
