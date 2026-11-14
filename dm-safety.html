@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>Report private messages · Ability Chess</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#0e1520;color:#edf2f8}
+*{box-sizing:border-box}body{margin:0}main{width:min(970px,96vw);margin:25px auto 70px;line-height:1.5}
+a{color:#addaff}h1{margin:0 0 6px;font-size:clamp(24px,4vw,36px)}h2{margin:0 0 12px}p{overflow-wrap:anywhere}
+section{background:#172231;border:1px solid #39516a;padding:18px;border-radius:12px;margin:18px 0}
+.record{border:1px solid #4a5d72;background:#1e2d3f;border-radius:9px;padding:14px;margin:9px 0}
+.reported{border-color:#e4ae66}.body{white-space:pre-wrap}.meta{font-size:13px;color:#b5c5d6}
+button,select{font:inherit;background:#273b50;color:inherit;border:1px solid #647e98;border-radius:7px;padding:9px 12px;cursor:pointer;margin:4px 7px 4px 0}
+button:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #a9e6ff;outline-offset:2px}.error{color:#ff9e9e}
+[hidden]{display:none!important}.info{border-left:3px solid #80a8c5;padding:12px;margin:13px 0;background:#1b2c3d}
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.90.1/dist/umd/supabase.min.js"></script>
+<script defer src="./admin/dm-reports.js"></script></head>
+<body><main>
+<a href="./">Return to Ability-Chess</a>
+<h1>Private message safety</h1>
+<p class="info">Direct messages are private from other members. When a participant reports a message, authorized moderators may review that message and limited surrounding context. The owner may investigate a broader portion of the reported conversation with a recorded justification. Every administrator review is logged.</p>
+<p id="status" role="status" aria-live="polite">Checking your session…</p>
+<section id="memberArea" hidden>
+<h2>Report a private message</h2><p>Select a message you sent or received, then explain what happened. Reporting sends the message to the moderation queue.</p>
+<button id="refreshMessages" type="button">Refresh messages</button>
+<div id="messages"></div>
+</section>
+<section id="adminArea" hidden>
+<h2>Reported messages · Admin</h2>
+<label for="statusFilter">Report status</label>
+<select id="statusFilter"><option value="open">Open reports</option><option value="resolved">Resolved</option><option value="dismissed">Dismissed</option><option value="all">All</option></select>
+<button id="refreshReports" type="button">Refresh reports</button>
+<div id="reports"></div>
+</section>
+<section id="reviewArea" hidden>
+<h2 id="reviewTitle">Review context</h2>
+<p class="meta">Access to the messages below has been recorded in the moderation audit log.</p>
+<div id="context"></div>
+<button id="expand" type="button" hidden>Request expanded owner review</button>
+<button id="resolve" type="button">Mark resolved</button>
+<button id="dismiss" type="button">Dismiss report</button>
+<button id="audit" type="button" hidden>View access log for this report</button>
+<div id="auditEntries"></div>
+</section>
+</main></body></html>
