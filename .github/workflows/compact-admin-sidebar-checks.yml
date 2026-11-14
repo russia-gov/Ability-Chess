@@ -3,7 +3,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [fix/compact-admin-sidebar]
+    branches: [fix/compact-admin-sidebar, fix/admin-directory-visible]
 jobs:
   verify:
     runs-on: ubuntu-24.04
@@ -15,10 +15,12 @@ jobs:
           python3 scripts/patch_admin_directory.py index.html
           python3 scripts/patch_dm_safety_nav.py index.html
           python3 scripts/patch_compact_admin_nav.py index.html
-          grep -q 'ABILITY_CHESS_COMPACT_ADMIN_NAV_V1' index.html
+          grep -q 'ABILITY_CHESS_ADMIN_MANAGEMENT_STATIC_V2' index.html
+          grep -q 'id="adminManagementPanel"' index.html
+          grep -q 'data-admin-management="directory"' index.html
           ! grep -q 'ABILITY_CHESS_DM_SAFETY_NAV_V1' index.html
           ! grep -q 'ABILITY_CHESS_ADMIN_DIRECTORY_NAV_V1' index.html
-          grep -q "ensureCompactAdminTools();" index.html
+          ! grep -q "ensureCompactAdminTools();" index.html
           grep -q "DM reports" index.html
           grep -q "Member directory" index.html
           python3 scripts/patch_compact_admin_nav.py index.html

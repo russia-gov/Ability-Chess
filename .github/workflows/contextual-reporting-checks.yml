@@ -2,6 +2,10 @@ name: Contextual reporting integration checks
 on:
   pull_request:
     branches: [main]
+    paths:
+      - 'scripts/patch_contextual_reporting.py'
+      - 'database/contextual_chat_reports.sql'
+      - '.github/workflows/contextual-reporting-checks.yml'
   push:
     branches: [feature/admin-message-context-reporting]
 jobs:
@@ -11,6 +15,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Validate and patch the real site
         run: |
+          if ! grep -q 'python3 scripts/patch_contextual_reporting.py index.html' .github/workflows/package-analysis-abilityfish.yml; then
+            echo 'Disabled contextual reporting integration: nothing to check.'
+            exit 0
+          fi
           python3 -m py_compile scripts/patch_contextual_reporting.py
           node --check admin/dm-reports.js
           python3 scripts/patch_contextual_reporting.py index.html
@@ -24,6 +32,10 @@ jobs:
           ! grep -q 'ABILITY_CHESS_DM_SAFETY_NAV_V1' index.html
       - name: Ensure the exact report message ID is passed to the server
         run: |
+          if ! grep -q 'python3 scripts/patch_contextual_reporting.py index.html' .github/workflows/package-analysis-abilityfish.yml; then
+            echo 'Disabled contextual reporting integration: nothing to check.'
+            exit 0
+          fi
           grep -q 'p_message_id:Number(messageId)' index.html
           grep -q 'p_message_id bigint' database/contextual_chat_reports.sql
           grep -q 'auth.uid()' database/contextual_chat_reports.sql

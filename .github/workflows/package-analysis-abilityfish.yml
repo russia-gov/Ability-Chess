@@ -148,7 +148,9 @@ jobs:
           grep -q 'ANALYSIS_ABILITY_INTERACTIONS_V1' index.html
           test -s dm-safety.html
           test -s admin/dm-reports.js
-          grep -q 'ABILITY_CHESS_COMPACT_ADMIN_NAV_V1' index.html
+          grep -q 'ABILITY_CHESS_ADMIN_MANAGEMENT_STATIC_V2' index.html
+          grep -q 'id="adminManagementPanel"' index.html
+          grep -q 'data-admin-management="directory"' index.html
           ! grep -q 'ABILITY_CHESS_DM_SAFETY_NAV_V1' index.html
           ! grep -q 'ABILITY_CHESS_ADMIN_DIRECTORY_NAV_V1' index.html
           test -s admin-directory.html
