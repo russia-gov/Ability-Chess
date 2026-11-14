@@ -587,7 +587,17 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
 </div>
 
 <div id="tournamentsScreen" class="tournaments-screen screen"><aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item tournaments-nav-btn active" type="button"><span class="home-nav-icon">♜</span>Tournaments</button></nav></aside><main class="tournaments-main"><div class="tournament-layout"><section class="tournament-content"><h1 class="page-title">Tournaments</h1><p class="page-lead">Join an event, find games, follow standings, watch live boards, and chat with tournament members.</p><section id="tournamentSpectator" class="spectator-card"><div class="history-actions"><button id="closeSpectatorBtn" type="button">Back to tournaments</button></div><h2 id="spectatorTitle">Live game</h2><div id="spectatorMeta" class="spectator-meta"></div><div id="spectatorBoard" class="spectator-board"></div></section><div id="tournamentList" class="tournament-list"></div></section><aside id="tournamentHub" class="tournament-hub" hidden><div class="tournament-hub-head"><strong id="tournamentHubTitle">Tournament</strong><div id="tournamentHubSummary" class="history-meta"></div></div><div class="tournament-hub-tabs"><button class="tournament-hub-tab active" data-tab="standings" type="button">Standings</button><button class="tournament-hub-tab" data-tab="games" type="button">Games</button><button class="tournament-hub-tab" data-tab="chat" type="button">Chat</button></div><div id="tournamentHubBody" class="tournament-hub-body"></div></aside></div></main></div>
-<div id="adminScreen" class="admin-screen screen"><aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item admin-nav-btn active" type="button"><span class="home-nav-icon">⚑</span>Admin</button></nav></aside><main class="admin-main"><h1 class="page-title">Admin</h1><p class="page-lead">Create awards, grant awards, and—if you are the owner—create tournaments.</p><div class="admin-grid"><section class="admin-card"><h2>Create award</h2><input id="awardNameInput" placeholder="Award name"><textarea id="awardDescriptionInput" placeholder="Description"></textarea><input id="awardImageInput" placeholder="Image URL"><button id="createAwardBtn" type="button">Create award</button><div id="awardAdminStatus"></div></section><section class="admin-card"><h2>Give award</h2><input id="awardMemberSearch" placeholder="Search member"><div id="awardMemberResults"></div><select id="awardSelect"></select><button id="giveAwardBtn" type="button">Give award</button><div id="giveAwardStatus"></div></section><section id="tournamentAdminCard" class="admin-card"><h2>Create tournament</h2><p class="tournament-create-help">Choose the basic format and when it starts. The normal game settings are ready to use unless you want to change them.</p><div class="tournament-form tournament-create-simple"><label class="full tournament-field-label">Tournament name<input id="tournamentName" placeholder="e.g. Saturday Ability Swiss"></label><label class="tournament-field-label">Format<select id="tournamentFormat"><option value="swiss">Swiss</option><option value="arena">Arena</option></select></label><label id="tournamentRoundsWrap" class="tournament-field-label">Rounds<input id="tournamentRounds" type="number" min="1" value="5"></label><label id="tournamentLengthWrap" class="tournament-field-label" hidden>Length<select id="tournamentLength"><option value="30">30 minutes</option><option value="45">45 minutes</option><option value="60" selected>1 hour</option><option value="90">90 minutes</option><option value="120">2 hours</option></select></label><label class="full tournament-field-label">Start<select id="tournamentStartMode"><option value="now">Start immediately</option><option value="10">In 10 minutes</option><option value="30" selected>In 30 minutes</option><option value="60">In 1 hour</option><option value="120">In 2 hours</option><option value="custom">Choose date and time…</option></select></label><label id="tournamentCustomStartWrap" class="full tournament-field-label" hidden>Date and time<input id="tournamentStarts" type="datetime-local"></label><div id="tournamentScheduleSummary" class="full tournament-schedule-summary"></div><details class="full tournament-advanced"><summary>Advanced game settings</summary><div class="tournament-advanced-grid"><label class="full tournament-field-label">Picture URL <span>(optional)</span><input id="tournamentPicture" placeholder="https://…"></label><label class="tournament-field-label">Base time<input id="tournamentBase" type="number" min="1" value="10"></label><label class="tournament-field-label">Increment<input id="tournamentIncrement" type="number" min="0" value="0"></label><label class="tournament-field-label">Starting points<input id="tournamentPoints" type="number" min="0" value="0"></label><label class="tournament-field-label">Max upgrades<input id="tournamentUpgrades" type="number" min="0" value="3"></label><label><input id="tournamentAbilities" type="checkbox" checked> Abilities</label><label><input id="tournamentUpgradeRules" type="checkbox" checked> Upgrades</label><label><input id="tournamentRated" type="checkbox"> Rated</label></div></details><button id="createTournamentBtn" class="full primary-button" type="button">Create tournament</button></div><div id="tournamentAdminStatus"></div></section></div></main></div>
+<div id="adminScreen" class="admin-screen screen"><aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item admin-nav-btn active" type="button"><span class="home-nav-icon">⚑</span>Admin</button></nav></aside><main class="admin-main"><h1 class="page-title">Admin</h1><p class="page-lead">Create awards, grant awards, and—if you are the owner—create tournaments.</p><section id="adminManagementPanel" class="admin-card" style="margin:18px 0">
+      <h2>Member management</h2>
+      <p class="history-meta">Manage member accounts and review reported private messages.</p>
+      <div class="history-actions">
+        <button type="button" data-admin-management="directory">Member directory</button>
+        <button type="button" data-admin-management="reports">DM reports</button>
+        <button type="button" id="adminManagementClose" hidden>Close</button>
+      </div>
+      <iframe id="adminManagementFrame" title="Admin management" loading="lazy"
+        style="display:none;width:100%;height:min(75vh,850px);min-height:540px;margin-top:12px;border:1px solid #465363;border-radius:10px;background:#11171d"></iframe>
+    </section><div class="admin-grid"><section class="admin-card"><h2>Create award</h2><input id="awardNameInput" placeholder="Award name"><textarea id="awardDescriptionInput" placeholder="Description"></textarea><input id="awardImageInput" placeholder="Image URL"><button id="createAwardBtn" type="button">Create award</button><div id="awardAdminStatus"></div></section><section class="admin-card"><h2>Give award</h2><input id="awardMemberSearch" placeholder="Search member"><div id="awardMemberResults"></div><select id="awardSelect"></select><button id="giveAwardBtn" type="button">Give award</button><div id="giveAwardStatus"></div></section><section id="tournamentAdminCard" class="admin-card"><h2>Create tournament</h2><p class="tournament-create-help">Choose the basic format and when it starts. The normal game settings are ready to use unless you want to change them.</p><div class="tournament-form tournament-create-simple"><label class="full tournament-field-label">Tournament name<input id="tournamentName" placeholder="e.g. Saturday Ability Swiss"></label><label class="tournament-field-label">Format<select id="tournamentFormat"><option value="swiss">Swiss</option><option value="arena">Arena</option></select></label><label id="tournamentRoundsWrap" class="tournament-field-label">Rounds<input id="tournamentRounds" type="number" min="1" value="5"></label><label id="tournamentLengthWrap" class="tournament-field-label" hidden>Length<select id="tournamentLength"><option value="30">30 minutes</option><option value="45">45 minutes</option><option value="60" selected>1 hour</option><option value="90">90 minutes</option><option value="120">2 hours</option></select></label><label class="full tournament-field-label">Start<select id="tournamentStartMode"><option value="now">Start immediately</option><option value="10">In 10 minutes</option><option value="30" selected>In 30 minutes</option><option value="60">In 1 hour</option><option value="120">In 2 hours</option><option value="custom">Choose date and time…</option></select></label><label id="tournamentCustomStartWrap" class="full tournament-field-label" hidden>Date and time<input id="tournamentStarts" type="datetime-local"></label><div id="tournamentScheduleSummary" class="full tournament-schedule-summary"></div><details class="full tournament-advanced"><summary>Advanced game settings</summary><div class="tournament-advanced-grid"><label class="full tournament-field-label">Picture URL <span>(optional)</span><input id="tournamentPicture" placeholder="https://…"></label><label class="tournament-field-label">Base time<input id="tournamentBase" type="number" min="1" value="10"></label><label class="tournament-field-label">Increment<input id="tournamentIncrement" type="number" min="0" value="0"></label><label class="tournament-field-label">Starting points<input id="tournamentPoints" type="number" min="0" value="0"></label><label class="tournament-field-label">Max upgrades<input id="tournamentUpgrades" type="number" min="0" value="3"></label><label><input id="tournamentAbilities" type="checkbox" checked> Abilities</label><label><input id="tournamentUpgradeRules" type="checkbox" checked> Upgrades</label><label><input id="tournamentRated" type="checkbox"> Rated</label></div></details><button id="createTournamentBtn" class="full primary-button" type="button">Create tournament</button></div><div id="tournamentAdminStatus"></div></section></div></main></div>
 <div id="onlineModal" class="online-modal" hidden>
   <section class="online-card" role="dialog" aria-modal="true" aria-labelledby="onlineTitle">
     <h2 id="onlineTitle">Online multiplayer</h2>
@@ -5634,7 +5644,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   document.getElementById('gameChatInput')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendGameChat();}});
   setInterval(()=>{if(document.getElementById('gameScreen')?.classList.contains('active'))pollGameChat();else resetGameChatForRoom();},2000);
 
-  async function loadAdminPanel(){const screen=document.getElementById('adminScreen');if(!screen)return;if(!memberProfile||(memberProfile.is_owner||memberProfile.is_staff)!==true){showScreen('home');return;}document.getElementById('tournamentAdminCard').hidden=!memberProfile.is_owner;try{const awards=await memberRpc('ability_chess_admin_list_awards');document.getElementById('awardSelect').innerHTML=(awards||[]).map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');}catch(e){document.getElementById('awardAdminStatus').textContent=e.message;}ensureAdminFoundationCards();loadModerationFoundation();ensureCompactAdminTools();}
+  async function loadAdminPanel(){const screen=document.getElementById('adminScreen');if(!screen)return;if(!memberProfile||(memberProfile.is_owner||memberProfile.is_staff)!==true){showScreen('home');return;}document.getElementById('tournamentAdminCard').hidden=!memberProfile.is_owner;try{const awards=await memberRpc('ability_chess_admin_list_awards');document.getElementById('awardSelect').innerHTML=(awards||[]).map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');}catch(e){document.getElementById('awardAdminStatus').textContent=e.message;}ensureAdminFoundationCards();loadModerationFoundation();}
   document.getElementById('createAwardBtn')?.addEventListener('click',async()=>{try{await memberRpc('ability_chess_admin_create_award',{p_name:awardNameInput.value,p_description:awardDescriptionInput.value,p_image_url:awardImageInput.value});awardAdminStatus.textContent='Award created.';loadAdminPanel();}catch(e){awardAdminStatus.textContent=e.message;}});
   let awardSearchTimer;document.getElementById('awardMemberSearch')?.addEventListener('input',()=>{clearTimeout(awardSearchTimer);awardSearchTimer=setTimeout(async()=>{const box=document.getElementById('awardMemberResults');try{const rows=await memberRpc('ability_chess_list_members_v2',{p_search:awardMemberSearch.value});box.replaceChildren();for(const m of rows||[]){const b=document.createElement('button');b.textContent=`${m.display_name} (@${m.username})`;b.addEventListener('click',()=>{selectedAwardMember=m;box.innerHTML=`Selected ${escapeHtml(m.display_name)}`;});box.appendChild(b);}}catch(e){box.textContent=e.message;}},200);});
   document.getElementById('giveAwardBtn')?.addEventListener('click',async()=>{try{if(!selectedAwardMember)throw new Error('Select a member.');await memberRpc('ability_chess_admin_give_award',{p_user_id:selectedAwardMember.id,p_award_id:awardSelect.value});giveAwardStatus.textContent='Award given.';}catch(e){giveAwardStatus.textContent=e.message;}});
@@ -5798,55 +5808,30 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   document.querySelectorAll('.tournaments-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('tournaments')));
   document.querySelectorAll('.admin-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('admin')));
   installSpecialNav();
-  // ABILITY_CHESS_COMPACT_ADMIN_NAV_V1
-  function ensureCompactAdminTools(){
-    const root=document.getElementById('adminScreen');
-    const grid=root?.querySelector('.admin-grid');
-    if(!grid || !memberProfile || !(memberProfile.is_owner || memberProfile.is_staff)) return;
-    if(root.querySelector('#compactAdminTools'))return;
-    const card=document.createElement('section');
-    card.className='admin-card';
-    card.id='compactAdminTools';
-    card.style.gridColumn='1 / -1';
-    const heading=document.createElement('h2');
-    heading.textContent='Member management';
-    const intro=document.createElement('p');
-    intro.textContent='Directory and reported private messages';
-    const controls=document.createElement('div');
-    controls.className='history-actions';
-    const frame=document.createElement('iframe');
-    frame.title='Admin management tool';
-    frame.style.cssText='display:none;width:100%;min-height:540px;height:70vh;border:1px solid #465363;border-radius:10px;background:#11171d;margin-top:12px';
-    const close=document.createElement('button');
-    close.type='button';
-    close.textContent='Close tool';
-    close.hidden=true;
-    close.addEventListener('click',()=>{
+  // ABILITY_CHESS_ADMIN_MANAGEMENT_STATIC_V2
+  document.addEventListener('click',event=>{
+    const select=event.target.closest?.('[data-admin-management]');
+    const close=event.target.closest?.('#adminManagementClose');
+    if(!select&&!close)return;
+    const panel=document.getElementById('adminManagementPanel');
+    const frame=panel?.querySelector('#adminManagementFrame');
+    const closeButton=panel?.querySelector('#adminManagementClose');
+    if(!frame||!closeButton)return;
+    if(close){
       frame.removeAttribute('src');
       frame.style.display='none';
-      close.hidden=true;
-    });
-    const tools=[
-      ['Member directory','admin-directory.html?embedded=1'],
-      ['DM reports','dm-safety.html?embedded=1#reports']
-    ];
-    for(const [label,url] of tools){
-      const b=document.createElement('button');
-      b.type='button';
-      b.textContent=label;
-      b.addEventListener('click',()=>{
-        frame.src=url;
-        frame.title=label;
-        frame.style.display='block';
-        close.hidden=false;
-      });
-      controls.appendChild(b);
+      closeButton.hidden=true;
+      return;
     }
-    card.append(heading,intro,controls,close,frame);
-    grid.appendChild(card);
-    // Display the whole management frame without a cramped grid column.
-    frame.style.maxWidth='100%';
-  }
+    const kind=select.getAttribute('data-admin-management');
+    if(kind!=='directory'&&kind!=='reports')return;
+    frame.src=kind==='directory'
+      ? 'admin-directory.html?embedded=1'
+      : 'dm-safety.html?embedded=1#reports';
+    frame.title=kind==='directory'?'Member directory':'Reported direct messages';
+    frame.style.display='block';
+    closeButton.hidden=false;
+  });
   const originalUpdateSidebarAccounts=updateSidebarAccounts;updateSidebarAccounts=function(){originalUpdateSidebarAccounts();document.querySelectorAll('.sidebar-avatar').forEach(a=>{if(memberProfile?.avatar_url)a.innerHTML=`<img src="${escapeHtml(memberProfile.avatar_url)}" alt="">`;});installSpecialNav();};
 
 
@@ -6567,6 +6552,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
       worker.postMessage({id,fen,depth,multiPV,maxTimeMs:options.maxTimeMs,abilityFishEnabled:options.abilityFishEnabled!==false,abilityState});
     });
   }
+
 
 
 
