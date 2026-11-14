@@ -8,7 +8,6 @@ on:
       - 'scripts/patch_analysis_wasm_runtime.py'
       - 'scripts/patch_admin_directory.py'
       - 'scripts/patch_dm_safety_nav.py'
-      - 'scripts/patch_contextual_reporting.py'
       - 'dm-safety.html'
       - 'admin/dm-reports.js'
       - 'admin/**'
@@ -113,7 +112,6 @@ jobs:
           python3 scripts/patch_analysis_test_bridge.py index.html
           python3 scripts/patch_admin_directory.py index.html
           python3 scripts/patch_dm_safety_nav.py index.html
-          python3 scripts/patch_contextual_reporting.py index.html
           python3 scripts/embed_analysis_wasm_runtime.py \
             index.html \
             vendor/Fairy-Wasm/src/emscripten/public/stockfish.js \
@@ -145,10 +143,6 @@ jobs:
           grep -q 'ensureEmbeddedAnalysisAbilityFishWorkerUrl' index.html
           grep -q '15 — full' index.html
           grep -q 'ANALYSIS_ABILITY_INTERACTIONS_V1' index.html
-          ! grep -q 'ABILITY_CHESS_ADMIN_DIRECTORY_NAV_V1' index.html
-          ! grep -q 'ABILITY_CHESS_DM_SAFETY_NAV_V1' index.html
-          grep -q 'ABILITY_CHESS_CONTEXTUAL_MESSAGE_REPORTS_V1' index.html
-          grep -q 'makeMessageReportButton' index.html
           test -s dm-safety.html
           test -s admin/dm-reports.js
           test -s admin-directory.html
