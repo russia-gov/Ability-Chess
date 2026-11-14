@@ -5,7 +5,7 @@
   const key='sb_publishable_1j0iGD0GxwBdhac9suyPSw_5CPJGvaM';
   const app=window.supabase?.createClient?.(url,key);
   const $=id=>document.getElementById(id);
-  const state={page:0,perPage:25,search:'',status:'all',total:0,items:[],busy:false,me:null};
+  const state={page:0,perPage:25,search:'',status:'all',total:0,items:[],busy:false,me:null,isOwner:false};
   const date=v=>v?new Date(v).toLocaleString():'—';
   const fmt=n=>Number(n||0).toLocaleString();
   function el(tag,cls,value){
@@ -35,6 +35,7 @@
       if(error||!data?.user)throw new Error('Sign in on Ability-Chess first, then return to this page.');
       state.me=data.user.id;
       if(!await rpc('ability_chess_is_admin',{p_user_id:state.me}))throw new Error('This page is restricted to site administrators.');
+      state.isOwner=!!(await rpc('ability_chess_is_owner',{p_user_id:state.me}));
       $('directoryControls').hidden=false;
       $('directoryHeader').hidden=false;
       $('directoryWelcome').hidden=true;
@@ -122,7 +123,7 @@
       }
     }
     controls.append(button('Send notification',()=>notification(m)));
-    controls.append(button('View game history',()=>history(m)));
+    if(state.isOwner)controls.append(button('View game history',()=>history(m)));
     body.append(controls);
     dialog.showModal();
   }
