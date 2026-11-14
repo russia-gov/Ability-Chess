@@ -25,11 +25,11 @@ dialog::backdrop{background:#000b}.dialog-end{display:flex;justify-content:flex-
 .detail-field{display:flex;flex-direction:column;gap:3px}.history-list{display:grid;gap:9px}
 .history-item{padding:10px;border:1px solid #425268;border-radius:8px}
 @media(max-width:640px){.panel{padding:12px}.controls>*{width:100%}.top{align-items:flex-start}}
-</style>
-<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0"></script>
+body:has(iframe){} body.embedded main{width:100%;margin:0 auto 20px} body.embedded .top{display:none} body.embedded{background:#121b25}</style>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.90.1/dist/umd/supabase.min.js"></script>
 <script defer src="./admin/member-directory.js"></script>
 </head>
-<body>
+<body><script>if(new URLSearchParams(location.search).has('embedded'))document.body.classList.add('embedded');</script>
 <main>
   <header class="top"><div><h1>Member directory</h1><p class="muted">Ability Chess · Admin tools</p></div><a href="./">Back to Ability-Chess</a></header>
   <p id="directoryWelcome" class="panel">Checking your administrator session. Please sign in on the main website first.</p>
