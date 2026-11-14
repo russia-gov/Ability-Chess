@@ -1,0 +1,37 @@
+name: Browser diagnose live account UI
+on:
+  push:
+    branches: [hotfix/restore-account-ui]
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: npm install --no-save playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - name: Open live site and collect errors
+        run: |
+          node - <<'JS'
+          const {chromium}=require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage();
+            const errors=[];
+            page.on('pageerror',e=>errors.push('PAGE ERROR '+e.message+'\n'+e.stack));
+            page.on('console',msg=>{if(msg.type()==='error')errors.push('CONSOLE '+msg.text())});
+            page.on('response',r=>{if(r.status()>=400)errors.push('HTTP '+r.status()+' '+r.url())});
+            const urls=['https://russia-gov.github.io/Ability-Chess/'];
+            for(const url of urls) {
+              try{
+                const r=await page.goto(url,{waitUntil:'domcontentloaded',timeout:45000});
+                await page.waitForTimeout(6000);
+                console.log('URL',page.url(),'HTTP',r.status(),'TITLE',await page.title());
+                console.log('DOM',await page.evaluate(()=>({scripts:document.scripts.length,account:document.querySelectorAll('[class*=sidebar-account]').length,login:document.querySelectorAll('[id*=member],[id*=Member]').length,admin:!!document.getElementById('adminScreen'),supabase:!!window.supabase,body:document.body?.textContent?.slice(0,240)})));
+              }catch(e){console.log('NAV FAILED',e.stack)}
+            }
+            console.log('ERRORS',JSON.stringify(errors.slice(0,40),null,2));
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exitCode=1});
+          JS
