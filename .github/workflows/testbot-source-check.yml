@@ -1,0 +1,19 @@
+name: TestBot-01 source check
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/testbot-01.js'
+      - '.github/workflows/testbot-source-check.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/testbot-01.js'
+      - '.github/workflows/testbot-source-check.yml'
+jobs:
+  source-check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check TestBot-01 JavaScript syntax
+        run: node --check scripts/testbot-01.js
