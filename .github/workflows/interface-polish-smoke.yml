@@ -1,0 +1,26 @@
+name: Interface polish smoke checks
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/patch_interface_polish.py'
+      - '.github/workflows/interface-polish-smoke.yml'
+  workflow_dispatch:
+
+jobs:
+  interface:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Apply interface patch and verify it is repeatable
+        run: |
+          python3 -m py_compile scripts/patch_interface_polish.py
+          cp index.html /tmp/abilitychess-interface-test.html
+          python3 scripts/patch_interface_polish.py /tmp/abilitychess-interface-test.html
+          grep -q 'ABILITY_CHESS_INTERFACE_POLISH_V1' /tmp/abilitychess-interface-test.html
+          grep -q 'Experimental Analysis (WIP)' /tmp/abilitychess-interface-test.html
+          grep -q 'Playable preview' /tmp/abilitychess-interface-test.html
+          before=$(sha256sum /tmp/abilitychess-interface-test.html | cut -d' ' -f1)
+          python3 scripts/patch_interface_polish.py /tmp/abilitychess-interface-test.html
+          after=$(sha256sum /tmp/abilitychess-interface-test.html | cut -d' ' -f1)
+          test "$before" = "$after"
