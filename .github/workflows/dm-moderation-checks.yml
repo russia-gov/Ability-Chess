@@ -1,0 +1,34 @@
+name: DM moderation checks
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'admin/dm-reports.js'
+      - 'dm-safety.html'
+      - 'scripts/patch_dm_safety_nav.py'
+      - 'database/dm_reporting_moderation.sql'
+      - '.github/workflows/dm-moderation-checks.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'admin/dm-reports.js'
+      - 'dm-safety.html'
+      - 'scripts/patch_dm_safety_nav.py'
+      - 'database/dm_reporting_moderation.sql'
+      - '.github/workflows/dm-moderation-checks.yml'
+jobs:
+  static:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Validate scripts and schema protections
+        run: |
+          node --check admin/dm-reports.js
+          python3 -m py_compile scripts/patch_dm_safety_nav.py
+          grep -q "admin/dm-reports.js" dm-safety.html
+          grep -q "ability_chess_dm_report_message" database/dm_reporting_moderation.sql
+          grep -q "ability_chess_dm_review_audit" database/dm_reporting_moderation.sql
+          grep -q "not public.ability_chess_is_admin(auth.uid())" database/dm_reporting_moderation.sql
+          grep -q "not public.ability_chess_is_owner(auth.uid())" database/dm_reporting_moderation.sql
+          grep -q "revoke all on public.ability_chess_dm_reports from public, anon, authenticated" database/dm_reporting_moderation.sql
+          grep -q "revoke all on public.ability_chess_dm_review_audit from public, anon, authenticated" database/dm_reporting_moderation.sql
