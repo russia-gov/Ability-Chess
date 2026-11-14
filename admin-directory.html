@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Member directory · Ability Chess Admin</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#0d131b;color:#e9edf3}
+*{box-sizing:border-box}body{margin:0;line-height:1.45}main{width:min(1150px,96vw);margin:28px auto 70px}
+a{color:#a9d4ef}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+h1{font-size:clamp(24px,3vw,34px);margin:0}h2{margin:0 0 10px;font-size:21px}
+.panel{border:1px solid #34465c;background:#151e29;border-radius:14px;padding:20px;margin-bottom:16px}
+.muted{color:#aebdcc}small.muted{display:block}.message{min-height:24px;margin:12px 0}.error{color:#ffadab}
+.controls,.pager,.action-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.controls{margin-bottom:18px}.controls input{min-width:230px;flex:1}
+input,select,button{font:inherit;border:1px solid #596b82;background:#212d3b;color:#f2f4f8;border-radius:8px;padding:10px 12px}
+button{cursor:pointer}button:hover:not(:disabled){background:#304459}button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #a8d0ff;outline-offset:2px}
+button:disabled{opacity:.45;cursor:not-allowed}.danger{border-color:#ae6262}.tag{display:inline-block;font-size:12px;padding:2px 7px;border-radius:5px;background:#344b61;margin:3px 4px 3px 0}.warning{background:#774539}
+.table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:700px}th,td{padding:12px 10px;border-bottom:1px solid #344050;text-align:left}th{font-weight:600;color:#baccdf;font-size:13px}td.numeric{text-align:right;font-variant-numeric:tabular-nums}
+td strong{display:block}td small{margin-top:2px}.pager{justify-content:space-between;margin-top:15px}
+dialog{background:#17222e;border:1px solid #4b6076;border-radius:14px;color:inherit;width:min(650px,96vw);max-height:88vh;overflow-y:auto;padding:24px}
+dialog::backdrop{background:#000b}.dialog-end{display:flex;justify-content:flex-end;margin-top:16px}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:13px;margin:18px 0}
+.detail-field{display:flex;flex-direction:column;gap:3px}.history-list{display:grid;gap:9px}
+.history-item{padding:10px;border:1px solid #425268;border-radius:8px}
+@media(max-width:640px){.panel{padding:12px}.controls>*{width:100%}.top{align-items:flex-start}}
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.90.1/dist/umd/supabase.min.js"></script>
+<script defer src="./admin/member-directory.js"></script>
+</head>
+<body>
+<main>
+  <header class="top"><div><h1>Member directory</h1><p class="muted">Ability Chess · Admin tools</p></div><a href="./">Back to Ability-Chess</a></header>
+  <p id="directoryWelcome" class="panel">Checking your administrator session. Please sign in on the main website first.</p>
+  <section id="directoryHeader" class="panel" hidden>
+    <p>Search members, review account activity, send notifications, and manage temporary restrictions. Admin access is checked on the server for every request.</p>
+  </section>
+  <section id="directoryControls" class="panel" hidden>
+    <div class="controls">
+      <label for="directorySearch">Find member</label>
+      <input id="directorySearch" type="search" placeholder="Username or display name" maxlength="80" autocomplete="off">
+      <label for="directoryFilter">Filter</label>
+      <select id="directoryFilter">
+        <option value="all">All members</option><option value="online">Recently online</option>
+        <option value="staff">Staff</option><option value="owner">Owner</option>
+        <option value="muted">Muted</option><option value="suspended">Suspended</option>
+      </select>
+      <button id="directoryReload" type="button">Refresh</button>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th scope="col">Member</th><th scope="col">Rapid</th><th scope="col">Games</th><th scope="col">Last active</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead>
+      <tbody id="memberTableBody"></tbody>
+    </table></div>
+    <div class="pager"><span id="directoryCount" aria-live="polite"></span><div class="action-row"><button id="directoryPrev" type="button">Previous</button><button id="directoryNext" type="button">Next</button></div></div>
+  </section>
+  <p id="directoryMessage" class="message" role="status" aria-live="polite"></p>
+</main>
+<dialog id="memberDialog" aria-label="Member details"><div id="memberDetail"></div><div class="dialog-end"><button id="closeMemberDialog" type="button">Close</button></div></dialog>
+<dialog id="historyDialog" aria-label="Member game history"><div id="historyContent"></div><div class="dialog-end"><button id="closeHistoryDialog" type="button">Close</button></div></dialog>
+</body></html>
