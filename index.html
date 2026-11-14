@@ -5634,7 +5634,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   document.getElementById('gameChatInput')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendGameChat();}});
   setInterval(()=>{if(document.getElementById('gameScreen')?.classList.contains('active'))pollGameChat();else resetGameChatForRoom();},2000);
 
-  async function loadAdminPanel(){const screen=document.getElementById('adminScreen');if(!screen)return;if(!memberProfile||(memberProfile.is_owner||memberProfile.is_staff)!==true){showScreen('home');return;}document.getElementById('tournamentAdminCard').hidden=!memberProfile.is_owner;try{const awards=await memberRpc('ability_chess_admin_list_awards');document.getElementById('awardSelect').innerHTML=(awards||[]).map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');}catch(e){document.getElementById('awardAdminStatus').textContent=e.message;}ensureAdminFoundationCards();loadModerationFoundation();}
+  async function loadAdminPanel(){const screen=document.getElementById('adminScreen');if(!screen)return;if(!memberProfile||(memberProfile.is_owner||memberProfile.is_staff)!==true){showScreen('home');return;}document.getElementById('tournamentAdminCard').hidden=!memberProfile.is_owner;try{const awards=await memberRpc('ability_chess_admin_list_awards');document.getElementById('awardSelect').innerHTML=(awards||[]).map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');}catch(e){document.getElementById('awardAdminStatus').textContent=e.message;}ensureAdminFoundationCards();loadModerationFoundation();ensureCompactAdminTools();}
   document.getElementById('createAwardBtn')?.addEventListener('click',async()=>{try{await memberRpc('ability_chess_admin_create_award',{p_name:awardNameInput.value,p_description:awardDescriptionInput.value,p_image_url:awardImageInput.value});awardAdminStatus.textContent='Award created.';loadAdminPanel();}catch(e){awardAdminStatus.textContent=e.message;}});
   let awardSearchTimer;document.getElementById('awardMemberSearch')?.addEventListener('input',()=>{clearTimeout(awardSearchTimer);awardSearchTimer=setTimeout(async()=>{const box=document.getElementById('awardMemberResults');try{const rows=await memberRpc('ability_chess_list_members_v2',{p_search:awardMemberSearch.value});box.replaceChildren();for(const m of rows||[]){const b=document.createElement('button');b.textContent=`${m.display_name} (@${m.username})`;b.addEventListener('click',()=>{selectedAwardMember=m;box.innerHTML=`Selected ${escapeHtml(m.display_name)}`;});box.appendChild(b);}}catch(e){box.textContent=e.message;}},200);});
   document.getElementById('giveAwardBtn')?.addEventListener('click',async()=>{try{if(!selectedAwardMember)throw new Error('Select a member.');await memberRpc('ability_chess_admin_give_award',{p_user_id:selectedAwardMember.id,p_award_id:awardSelect.value});giveAwardStatus.textContent='Award given.';}catch(e){giveAwardStatus.textContent=e.message;}});
@@ -5798,46 +5798,55 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   document.querySelectorAll('.tournaments-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('tournaments')));
   document.querySelectorAll('.admin-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('admin')));
   installSpecialNav();
-  // ABILITY_CHESS_ADMIN_DIRECTORY_NAV_V1
-  // memberProfile comes from the existing authenticated member flow.
-  // The directory itself additionally requires a server-verified admin account.
-  const baseInstallSpecialNav=installSpecialNav;
-  installSpecialNav=function(){
-    baseInstallSpecialNav();
-    if(!memberProfile||(memberProfile.is_owner!==true&&memberProfile.is_staff!==true))return;
-    document.querySelectorAll('.home-nav').forEach(nav=>{
-      if(nav.querySelector('.admin-directory-nav-btn'))return;
-      const link=document.createElement('a');
-      link.className='home-nav-item admin-directory-nav-btn';
-      link.href='admin-directory.html';
-      link.textContent='Member directory';
-      link.setAttribute('aria-label','Open administrator member directory');
-      const adminLink=nav.querySelector('.admin-nav-btn');
-      if(adminLink)adminLink.insertAdjacentElement('afterend',link);
-      else nav.appendChild(link);
+  // ABILITY_CHESS_COMPACT_ADMIN_NAV_V1
+  function ensureCompactAdminTools(){
+    const root=document.getElementById('adminScreen');
+    const grid=root?.querySelector('.admin-grid');
+    if(!grid || !memberProfile || !(memberProfile.is_owner || memberProfile.is_staff)) return;
+    if(root.querySelector('#compactAdminTools'))return;
+    const card=document.createElement('section');
+    card.className='admin-card';
+    card.id='compactAdminTools';
+    card.style.gridColumn='1 / -1';
+    const heading=document.createElement('h2');
+    heading.textContent='Member management';
+    const intro=document.createElement('p');
+    intro.textContent='Directory and reported private messages';
+    const controls=document.createElement('div');
+    controls.className='history-actions';
+    const frame=document.createElement('iframe');
+    frame.title='Admin management tool';
+    frame.style.cssText='display:none;width:100%;min-height:540px;height:70vh;border:1px solid #465363;border-radius:10px;background:#11171d;margin-top:12px';
+    const close=document.createElement('button');
+    close.type='button';
+    close.textContent='Close tool';
+    close.hidden=true;
+    close.addEventListener('click',()=>{
+      frame.removeAttribute('src');
+      frame.style.display='none';
+      close.hidden=true;
     });
-  };
-  // ABILITY_CHESS_DM_SAFETY_NAV_V1
-  const baseInstallDmSafetyNav=installSpecialNav;
-  installSpecialNav=function(){
-    baseInstallDmSafetyNav();
-    if(!memberProfile)return;
-    document.querySelectorAll('.home-nav').forEach(nav=>{
-      if(nav.querySelector('.dm-safety-nav-btn'))return;
-      const link=document.createElement('a');
-      link.className='home-nav-item dm-safety-nav-btn';
-      link.href='dm-safety.html';
-      link.textContent='Report a message';
-      nav.appendChild(link);
-      if(memberProfile.is_owner===true||memberProfile.is_staff===true){
-        const admin=document.createElement('a');
-        admin.className='home-nav-item dm-moderation-nav-btn';
-        admin.href='dm-safety.html#reports';
-        admin.textContent='DM reports';
-        nav.appendChild(admin);
-      }
-    });
-  };
+    const tools=[
+      ['Member directory','admin-directory.html?embedded=1'],
+      ['DM reports','dm-safety.html?embedded=1#reports']
+    ];
+    for(const [label,url] of tools){
+      const b=document.createElement('button');
+      b.type='button';
+      b.textContent=label;
+      b.addEventListener('click',()=>{
+        frame.src=url;
+        frame.title=label;
+        frame.style.display='block';
+        close.hidden=false;
+      });
+      controls.appendChild(b);
+    }
+    card.append(heading,intro,controls,close,frame);
+    grid.appendChild(card);
+    // Display the whole management frame without a cramped grid column.
+    frame.style.maxWidth='100%';
+  }
   const originalUpdateSidebarAccounts=updateSidebarAccounts;updateSidebarAccounts=function(){originalUpdateSidebarAccounts();document.querySelectorAll('.sidebar-avatar').forEach(a=>{if(memberProfile?.avatar_url)a.innerHTML=`<img src="${escapeHtml(memberProfile.avatar_url)}" alt="">`;});installSpecialNav();};
 
 
@@ -6558,6 +6567,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
       worker.postMessage({id,fen,depth,multiPV,maxTimeMs:options.maxTimeMs,abilityFishEnabled:options.abilityFishEnabled!==false,abilityState});
     });
   }
+
 
 
 
