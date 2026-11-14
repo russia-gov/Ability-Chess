@@ -143,6 +143,7 @@ style="""<style id="contextual-message-report-style">
 .admin-management-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
 .admin-management-tabs button{padding:10px 13px;border:1px solid #465665;border-radius:9px;background:#242d37;color:#e9eff6}
 .admin-management-tabs button.active{background:#485e36;border-color:#9ab978}
+.admin-main .admin-grid[hidden]{display:none!important}
 .admin-embedded-section{min-width:0}
 .admin-embedded-section[hidden]{display:none!important}
 .admin-embedded-section iframe{display:block;width:100%;height:min(78vh,900px);min-height:540px;border:1px solid #374a61;border-radius:12px;background:#121b25}
