@@ -1,0 +1,30 @@
+name: Contextual reporting integration checks
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [feature/admin-message-context-reporting]
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate and patch the real site
+        run: |
+          python3 -m py_compile scripts/patch_contextual_reporting.py
+          node --check admin/dm-reports.js
+          python3 scripts/patch_contextual_reporting.py index.html
+          grep -q 'ABILITY_CHESS_CONTEXTUAL_MESSAGE_REPORTS_V1' index.html
+          grep -q "makeMessageReportButton('dm',m.id)" index.html
+          grep -q "makeMessageReportButton('game',m.id)" index.html
+          grep -q "makeMessageReportButton('tournament',m.id)" index.html
+          grep -q 'Member directory' index.html
+          grep -q 'DM reports' index.html
+          ! grep -q 'ABILITY_CHESS_ADMIN_DIRECTORY_NAV_V1' index.html
+          ! grep -q 'ABILITY_CHESS_DM_SAFETY_NAV_V1' index.html
+      - name: Ensure the exact report message ID is passed to the server
+        run: |
+          grep -q 'p_message_id:Number(messageId)' index.html
+          grep -q 'p_message_id bigint' database/contextual_chat_reports.sql
+          grep -q 'auth.uid()' database/contextual_chat_reports.sql
+          grep -q 'revoke all on function public.ability_chess_report_chat_message' database/contextual_chat_reports.sql
