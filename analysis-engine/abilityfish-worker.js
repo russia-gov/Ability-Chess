@@ -185,7 +185,8 @@ async function analyze(job) {
     const requestedDepth = Math.max(1, Math.min(40, Number(job.depth || 15)));
     const defaultMultiPV = requestedDepth > 5 ? 1 : 3;
     const multiPV = Math.max(1, Math.min(8, Number(job.multiPV ?? defaultMultiPV)));
-    const defaultTimeMs = requestedDepth >= 15 ? 9000 : requestedDepth >= 10 ? 4000 : 0;
+    // Search until the requested depth; the UI may explicitly supply a time budget.
+    const defaultTimeMs = 0;
     const maxTimeMs = Math.max(0, Math.min(30000, Number(job.maxTimeMs ?? defaultTimeMs)));
     const listener = (line) => {
       if (typeof line !== 'string') return;

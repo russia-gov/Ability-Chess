@@ -16,6 +16,9 @@ elif new_depth not in s:
 old_request = """  function requestAbilityFishAnalysis(state,options={}){\n    return new Promise((resolve,reject)=>{\n      let worker;\n      try{worker=new Worker(ensureAbilityFishWorkerUrl());analysisWorkers.add(worker);}catch(e){reject(e);return;}\n      const id=`analysis-${++analysisWorkerRequestSeq}-${Date.now()}`;let settled=false;\n      const cleanup=()=>{clearTimeout(timeout);analysisWorkers.delete(worker);try{worker.terminate();}catch{}};\n      const timeout=setTimeout(()=>{if(settled)return;settled=true;cleanup();reject(new Error('AbilityFish analysis timed out'));},7000);\n      const onMessage=e=>{if(e.data?.id!==id||settled)return;settled=true;cleanup();if(e.data.error)reject(new Error(e.data.error));else resolve(e.data.result);};\n      worker.addEventListener('message',onMessage);\n      worker.addEventListener('error',e=>{if(settled)return;settled=true;cleanup();reject(new Error(e.message||'AbilityFish worker failed'));},{once:true});\n      worker.postMessage({id,state:normalizeAnalysisState(state),options});\n    });\n  }\n"""
 
 new_request = r'''  const ANALYSIS_ABILITYFISH_WORKER='./analysis-engine/abilityfish-worker.js';
+  // Retain evaluations for visited positions (board, side, rights, bank and abilities).
+  // A different depth target or MultiPV setting has its own cache entry.
+  const analysisEvaluationCache=new Map();
   const ANALYSIS_ABILITYFISH_NAMES=['Move','Shield','Freeze','Bomb','Swap','Swap','Recall','Ambush','Teleport','Reinforce','Portal','Portal','Fortify','Double Move','Upgrade'];
   function analysisSquareName(v){
     if(!v||v.r==null||v.c==null)return '-';
@@ -105,24 +108,86 @@ new_request = r'''  const ANALYSIS_ABILITYFISH_WORKER='./analysis-engine/ability
       :analysisUciScore(primary,state.turn);
     return {score:primaryScore,depth:Number(primary?.depth||result?.depth||1),nodes:Number(primary?.nodes||0),displayLines,wasm:true,requestedDepth:Number(result?.requestedDepth||0),capped:!!result?.capped};
   }
+  function analysisLiveProgress(state,info,targetDepth){
+    if(!info || !Number.isFinite(info.depth) || !info.score || !info.pv?.length || (info.multipv||1)!==1)return;
+    // Ignore progress from a position that the user has navigated away from.
+    if(!analysisState || analysisStateFen(analysisState)!==analysisStateFen(state) ||
+       JSON.stringify(analysisAbilityPayload(analysisState))!==JSON.stringify(analysisAbilityPayload(state)))return;
+    const depthSelect=document.getElementById('analysisDepthSelect');
+    if(!depthSelect)return;
+    let live=document.getElementById('abilityfishLiveProgress');
+    if(!live){
+      live=document.createElement('div');
+      live.id='abilityfishLiveProgress';
+      live.setAttribute('role','status');
+      live.setAttribute('aria-live','off');
+      live.style.cssText='font-size:12px;margin-top:6px;overflow-wrap:anywhere';
+      depthSelect.insertAdjacentElement('afterend',live);
+    }
+    const score=analysisUciScore(info,state.turn);
+    const scoreText=typeof analysisEvalText==='function'?analysisEvalText(score):(score/100).toFixed(2);
+    const pv=info.pv.join(' ');
+    live.textContent='AbilityFish · depth '+info.depth+'/'+targetDepth+' · '+scoreText+' · '+pv;
+    // Keep the existing evaluation display current as each completed depth arrives.
+    const firstScore=document.querySelector('.analysis-line-score');
+    const firstPv=document.querySelector('.analysis-line-pv');
+    if(firstScore)firstScore.textContent=scoreText;
+    if(firstPv)firstPv.textContent=pv;
+  }
   function requestAbilityFishAnalysis(state,options={}){
+    const depth=Math.max(1,Math.min(15,Number(options.depth||15)));
+    const multiPV=Math.max(1,Math.min(3,Number(options.multiPV??(depth>5?1:3))));
+    const fen=analysisStateFen(state),abilityState=analysisAbilityPayload(state);
+    const cacheKey=JSON.stringify([fen,abilityState,depth,multiPV,options.abilityFishEnabled!==false]);
+    const cached=analysisEvaluationCache.get(cacheKey);
+    if(cached){
+      // Navigation through already analyzed positions must not trigger another search.
+      options.onProgress?.(cached);
+      return Promise.resolve(cached);
+    }
     return new Promise((resolve,reject)=>{
       let worker;
       try{worker=new Worker(ANALYSIS_ABILITYFISH_WORKER);analysisWorkers.add(worker);}catch(e){reject(e);return;}
-      const id=`analysis-${++analysisWorkerRequestSeq}-${Date.now()}`;let settled=false;
+      const id=`analysis-${++analysisWorkerRequestSeq}-${Date.now()}`;let settled=false,latestProgress=null;
       const cleanup=()=>{clearTimeout(timeout);analysisWorkers.delete(worker);try{worker.terminate();}catch{}};
-      const timeout=setTimeout(()=>{if(settled)return;settled=true;cleanup();reject(new Error('AbilityFish depth search timed out'));},30000);
+      const timeout=setTimeout(()=>{
+        if(settled)return;
+        settled=true;try{worker.postMessage({type:'stop'});}catch{}
+        cleanup();
+        const partial=analysisEvaluationCache.get(cacheKey);
+        if(partial)resolve({...partial,capped:true,requestedDepth:depth});
+        else reject(new Error('AbilityFish analysis timed out before returning an evaluation'));
+      },120000);
       const onMessage=e=>{
         if(e.data?.id!==id||settled)return;
-        if(e.data?.type==='info'||e.data?.type==='abilityinfo')return;
+        if(e.data?.type==='info'){
+          if(e.data.info?.score && e.data.info?.pv?.length && (e.data.info.multipv||1)===1){
+            if(!latestProgress || e.data.info.depth>=latestProgress.depth){
+              latestProgress=e.data.info;
+              const partial=convertWasmAnalysisResult(state,{lines:[latestProgress],requestedDepth:depth,capped:true});
+              analysisEvaluationCache.set(cacheKey,partial);
+              analysisLiveProgress(state,latestProgress,depth);
+              options.onProgress?.(partial);
+            }
+          }
+          return;
+        }
+        if(e.data?.type==='abilityinfo')return;
         if(e.data?.type==='error'||e.data?.error){settled=true;cleanup();reject(new Error(e.data?.error||'AbilityFish worker failed'));return;}
-        if(e.data?.type==='result'||e.data?.result){settled=true;cleanup();resolve(convertWasmAnalysisResult(state,e.data.result));}
+        if(e.data?.type==='result'||e.data?.result){
+          settled=true;cleanup();
+          const finalResult=convertWasmAnalysisResult(state,e.data.result);
+          const previous=analysisEvaluationCache.get(cacheKey);
+          const selected=previous && previous.depth>finalResult.depth?previous:finalResult;
+          analysisEvaluationCache.set(cacheKey,selected);
+          resolve(selected);
+        }
       };
       worker.addEventListener('message',onMessage);
       worker.addEventListener('error',e=>{if(settled)return;settled=true;cleanup();reject(new Error(e.message||'AbilityFish WASM worker failed'));},{once:true});
-      const depth=Math.max(1,Math.min(15,Number(options.depth||15)));
-      const multiPV=Math.max(1,Math.min(3,Number(options.multiPV??(depth>5?1:3))));
-      worker.postMessage({id,fen:analysisStateFen(state),depth,multiPV,maxTimeMs:options.maxTimeMs,abilityFishEnabled:options.abilityFishEnabled!==false,abilityState:analysisAbilityPayload(state)});
+      const priorProgress=document.getElementById('abilityfishLiveProgress');
+      if(priorProgress)priorProgress.remove();
+      worker.postMessage({id,fen,depth,multiPV,maxTimeMs:options.maxTimeMs,abilityFishEnabled:options.abilityFishEnabled!==false,abilityState});
     });
   }
 '''
@@ -134,6 +199,33 @@ if old_request in normalized:
 elif 'const ANALYSIS_ABILITYFISH_WORKER=' not in normalized:
     raise SystemExit('requestAbilityFishAnalysis anchor changed')
 else:
+    # Replace the already-generated Analysis request implementation too. The
+    # repository ships a patched index.html, so only changing new_request would
+    # otherwise leave the live application running its previous code.
+    header = "  function requestAbilityFishAnalysis(state,options={}){"
+    request_start = normalized.find(header)
+    if request_start < 0:
+        raise SystemExit("existing Analysis request function missing")
+    brace_start = request_start + len(header) - 1
+    nesting = 0
+    request_end = None
+    for i in range(brace_start, len(normalized)):
+        if normalized[i] == "{":
+            nesting += 1
+        elif normalized[i] == "}":
+            nesting -= 1
+            if nesting == 0:
+                request_end = i + 1
+                break
+    if request_end is None:
+        raise SystemExit("existing Analysis request function is unbalanced")
+    marker = "  // ANALYSIS_LIVE_CACHE_V2"
+    existing_marker = normalized.rfind(marker, 0, request_start)
+    if existing_marker >= 0:
+        request_start = existing_marker
+    live_section = new_request[new_request.index("  function analysisLiveProgress"):]
+    new_section = marker + "\n  const analysisEvaluationCache=new Map();\n" + live_section
+    normalized = normalized[:request_start] + new_section + normalized[request_end:]
     # Keep existing already-patched pages aligned with the latest adapter.
     normalized = normalized.replace("multiPV:3,abilityState:analysisAbilityPayload(state)", "multiPV,maxTimeMs:options.maxTimeMs,abilityFishEnabled:options.abilityFishEnabled!==false,abilityState:analysisAbilityPayload(state)")
     normalized = normalized.replace("const depth=Math.max(1,Math.min(15,Number(options.depth||15)));\n      worker.postMessage", "const depth=Math.max(1,Math.min(15,Number(options.depth||15)));\n      const multiPV=Math.max(1,Math.min(3,Number(options.multiPV??(depth>5?1:3))));\n      worker.postMessage")
