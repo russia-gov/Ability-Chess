@@ -199,6 +199,33 @@ if old_request in normalized:
 elif 'const ANALYSIS_ABILITYFISH_WORKER=' not in normalized:
     raise SystemExit('requestAbilityFishAnalysis anchor changed')
 else:
+    # Replace the already-generated Analysis request implementation too. The
+    # repository ships a patched index.html, so only changing new_request would
+    # otherwise leave the live application running its previous code.
+    header = "  function requestAbilityFishAnalysis(state,options={}){"
+    request_start = normalized.find(header)
+    if request_start < 0:
+        raise SystemExit("existing Analysis request function missing")
+    brace_start = request_start + len(header) - 1
+    nesting = 0
+    request_end = None
+    for i in range(brace_start, len(normalized)):
+        if normalized[i] == "{":
+            nesting += 1
+        elif normalized[i] == "}":
+            nesting -= 1
+            if nesting == 0:
+                request_end = i + 1
+                break
+    if request_end is None:
+        raise SystemExit("existing Analysis request function is unbalanced")
+    marker = "  // ANALYSIS_LIVE_CACHE_V2"
+    existing_marker = normalized.rfind(marker, 0, request_start)
+    if existing_marker >= 0:
+        request_start = existing_marker
+    live_section = new_request[new_request.index("  function analysisLiveProgress"):]
+    new_section = marker + "\n  const analysisEvaluationCache=new Map();\n" + live_section
+    normalized = normalized[:request_start] + new_section + normalized[request_end:]
     # Keep existing already-patched pages aligned with the latest adapter.
     normalized = normalized.replace("multiPV:3,abilityState:analysisAbilityPayload(state)", "multiPV,maxTimeMs:options.maxTimeMs,abilityFishEnabled:options.abilityFishEnabled!==false,abilityState:analysisAbilityPayload(state)")
     normalized = normalized.replace("const depth=Math.max(1,Math.min(15,Number(options.depth||15)));\n      worker.postMessage", "const depth=Math.max(1,Math.min(15,Number(options.depth||15)));\n      const multiPV=Math.max(1,Math.min(3,Number(options.multiPV??(depth>5?1:3))));\n      worker.postMessage")
