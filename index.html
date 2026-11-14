@@ -5817,6 +5817,27 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
       else nav.appendChild(link);
     });
   };
+  // ABILITY_CHESS_DM_SAFETY_NAV_V1
+  const baseInstallDmSafetyNav=installSpecialNav;
+  installSpecialNav=function(){
+    baseInstallDmSafetyNav();
+    if(!memberProfile)return;
+    document.querySelectorAll('.home-nav').forEach(nav=>{
+      if(nav.querySelector('.dm-safety-nav-btn'))return;
+      const link=document.createElement('a');
+      link.className='home-nav-item dm-safety-nav-btn';
+      link.href='dm-safety.html';
+      link.textContent='Report a message';
+      nav.appendChild(link);
+      if(memberProfile.is_owner===true||memberProfile.is_staff===true){
+        const admin=document.createElement('a');
+        admin.className='home-nav-item dm-moderation-nav-btn';
+        admin.href='dm-safety.html#reports';
+        admin.textContent='DM reports';
+        nav.appendChild(admin);
+      }
+    });
+  };
   const originalUpdateSidebarAccounts=updateSidebarAccounts;updateSidebarAccounts=function(){originalUpdateSidebarAccounts();document.querySelectorAll('.sidebar-avatar').forEach(a=>{if(memberProfile?.avatar_url)a.innerHTML=`<img src="${escapeHtml(memberProfile.avatar_url)}" alt="">`;});installSpecialNav();};
 
 
@@ -6537,6 +6558,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
       worker.postMessage({id,fen,depth,multiPV,maxTimeMs:options.maxTimeMs,abilityFishEnabled:options.abilityFishEnabled!==false,abilityState});
     });
   }
+
 
 
 
