@@ -6,6 +6,9 @@ on:
     branches: [ main, abilityfish ]
     paths:
       - 'scripts/patch_analysis_wasm_runtime.py'
+      - 'scripts/patch_admin_directory.py'
+      - 'admin/**'
+      - 'admin-directory.html'
       - 'scripts/patch_analysis_coi_runtime.py'
       - 'scripts/patch_analysis_interactions.py'
       - 'scripts/patch_analysis_test_bridge.py'
@@ -19,6 +22,9 @@ on:
     branches: [ main ]
     paths:
       - 'scripts/patch_analysis_wasm_runtime.py'
+      - 'scripts/patch_admin_directory.py'
+      - 'admin/**'
+      - 'admin-directory.html'
       - 'scripts/patch_analysis_coi_runtime.py'
       - 'scripts/patch_analysis_interactions.py'
       - 'scripts/patch_analysis_test_bridge.py'
@@ -97,6 +103,7 @@ jobs:
           python3 scripts/patch_analysis_coi_runtime.py index.html
           python3 scripts/patch_analysis_interactions.py index.html
           python3 scripts/patch_analysis_test_bridge.py index.html
+          python3 scripts/patch_admin_directory.py index.html
           python3 scripts/embed_analysis_wasm_runtime.py \
             index.html \
             vendor/Fairy-Wasm/src/emscripten/public/stockfish.js \
@@ -128,6 +135,9 @@ jobs:
           grep -q 'ensureEmbeddedAnalysisAbilityFishWorkerUrl' index.html
           grep -q '15 — full' index.html
           grep -q 'ANALYSIS_ABILITY_INTERACTIONS_V1' index.html
+          grep -q 'ABILITY_CHESS_ADMIN_DIRECTORY_NAV_V1' index.html
+          test -s admin-directory.html
+          test -s admin/member-directory.js
           grep -q 'ANALYSIS_BROWSER_TEST_BRIDGE_V1' index.html
           grep -q 'data-analysis-ability="ambush"' index.html
           grep -q 'analysis-pv-move' index.html
