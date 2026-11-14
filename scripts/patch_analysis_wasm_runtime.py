@@ -13,7 +13,7 @@ if old_depth in s:
 elif new_depth not in s:
     raise SystemExit('analysis depth selector anchor changed')
 
-old_request = """  function requestAbilityFishAnalysis(state,options={}){\n    return new Promise((resolve,reject)=>{\n      let worker;\n      try{worker=new Worker(ensureAbilityFishWorkerUrl());analysisWorkers.add(worker);}catch(e){reject(e);return;}\n      const id=`analysis-${++analysisWorkerRequestSeq}-${Date.now()}`;let settled=false,latestProgress=null;let latestProgress=null;\n      const cleanup=()=>{clearTimeout(timeout);analysisWorkers.delete(worker);try{worker.terminate();}catch{}};\n      const timeout=setTimeout(()=>{if(settled)return;settled=true;cleanup();reject(new Error('AbilityFish analysis timed out'));},7000);\n      const onMessage=e=>{if(e.data?.id!==id||settled)return;settled=true;cleanup();if(e.data.error)reject(new Error(e.data.error));else resolve(e.data.result);};\n      worker.addEventListener('message',onMessage);\n      worker.addEventListener('error',e=>{if(settled)return;settled=true;cleanup();reject(new Error(e.message||'AbilityFish worker failed'));},{once:true});\n      worker.postMessage({id,state:normalizeAnalysisState(state),options});\n    });\n  }\n"""
+old_request = """  function requestAbilityFishAnalysis(state,options={}){\n    return new Promise((resolve,reject)=>{\n      let worker;\n      try{worker=new Worker(ensureAbilityFishWorkerUrl());analysisWorkers.add(worker);}catch(e){reject(e);return;}\n      const id=`analysis-${++analysisWorkerRequestSeq}-${Date.now()}`;let settled=false;\n      const cleanup=()=>{clearTimeout(timeout);analysisWorkers.delete(worker);try{worker.terminate();}catch{}};\n      const timeout=setTimeout(()=>{if(settled)return;settled=true;cleanup();reject(new Error('AbilityFish analysis timed out'));},7000);\n      const onMessage=e=>{if(e.data?.id!==id||settled)return;settled=true;cleanup();if(e.data.error)reject(new Error(e.data.error));else resolve(e.data.result);};\n      worker.addEventListener('message',onMessage);\n      worker.addEventListener('error',e=>{if(settled)return;settled=true;cleanup();reject(new Error(e.message||'AbilityFish worker failed'));},{once:true});\n      worker.postMessage({id,state:normalizeAnalysisState(state),options});\n    });\n  }\n"""
 
 new_request = r'''  const ANALYSIS_ABILITYFISH_WORKER='./analysis-engine/abilityfish-worker.js';
   // Retain evaluations for visited positions (board, side, rights, bank and abilities).
@@ -148,7 +148,7 @@ new_request = r'''  const ANALYSIS_ABILITYFISH_WORKER='./analysis-engine/ability
     return new Promise((resolve,reject)=>{
       let worker;
       try{worker=new Worker(ANALYSIS_ABILITYFISH_WORKER);analysisWorkers.add(worker);}catch(e){reject(e);return;}
-      const id=`analysis-${++analysisWorkerRequestSeq}-${Date.now()}`;let settled=false;
+      const id=`analysis-${++analysisWorkerRequestSeq}-${Date.now()}`;let settled=false,latestProgress=null;
       const cleanup=()=>{clearTimeout(timeout);analysisWorkers.delete(worker);try{worker.terminate();}catch{}};
       const timeout=setTimeout(()=>{
         if(settled)return;
