@@ -1,0 +1,35 @@
+name: Admin directory checks
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'admin/**'
+      - 'admin-directory.html'
+      - 'database/admin_member_directory.sql'
+      - 'scripts/patch_admin_directory.py'
+      - '.github/workflows/admin-directory-checks.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'admin/**'
+      - 'admin-directory.html'
+      - 'database/admin_member_directory.sql'
+      - 'scripts/patch_admin_directory.py'
+      - '.github/workflows/admin-directory-checks.yml'
+jobs:
+  static:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check JavaScript and Python syntax
+        run: |
+          node --check admin/member-directory.js
+          python3 -m py_compile scripts/patch_admin_directory.py
+      - name: Check admin page and SQL permissions
+        run: |
+          grep -q 'admin/member-directory.js' admin-directory.html
+          grep -q 'ability_chess_admin_member_directory' database/admin_member_directory.sql
+          grep -q "if auth.uid() is null or not public.ability_chess_is_admin(auth.uid())" database/admin_member_directory.sql
+          grep -q "revoke all on function public.ability_chess_admin_member_directory" database/admin_member_directory.sql
+          grep -q "from public.ability_chess_profiles" database/admin_member_directory.sql
+          ! grep -qi 'auth.users' database/admin_member_directory.sql
