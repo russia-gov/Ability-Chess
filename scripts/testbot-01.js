@@ -104,7 +104,7 @@ async function makeTestMove(page) {
     const before=Number(onlineSession.version);
     const from=String.fromCharCode(97+m.from.c)+(8-m.from.r);
     const to=String.fromCharCode(97+m.to.c)+(8-m.to.r);
-    makeMove(m,{animate:false,source:'testbot'});
+    makeMove({...m,promotion:m.promotion||'q'},{animate:false,source:'testbot'});
     return {moved:true,move:from+to,beforeVersion:before};
   });
 }
@@ -120,8 +120,11 @@ async function authoritativeCheck(page) {
     const v=Number(row.room_version);
     const sameBoard=JSON.stringify(row.state?.board)===JSON.stringify(game.board);
     const samePoints=JSON.stringify(row.state?.points)===JSON.stringify(game.points);
+    const localVersion=Number(onlineSession.version);
     return {
-      ok:sameBoard&&samePoints,remoteVersion:v,localVersion:Number(onlineSession.version),
+      ok:v!==localVersion||(sameBoard&&samePoints),
+      deferred:v!==localVersion,
+      remoteVersion:v,localVersion,
       sameBoard,samePoints,
       // These are meaningful only after local pending changes settle.
       dirty:hasUncommittedOnlineMutation()||onlineSyncing
@@ -160,6 +163,7 @@ async function main() {
       if(current.over){report('game_finished',{room:current.room,moves:completed});break;}
       if(current.version!==lastVersion && !current.dirty && !current.syncing){
         const check=await authoritativeCheck(page);
+        if(check.deferred){await pause(750);continue;}
         if(!check.ok&&!check.dirty){
           report('state_mismatch',check);
           throw new Error('Local and authoritative board/points disagree after synchronization');
