@@ -3,7 +3,7 @@ name: Package AbilityFish into Analysis board
 on:
   workflow_dispatch:
   push:
-    branches: [ abilityfish ]
+    branches: [ main, abilityfish ]
     paths:
       - 'scripts/patch_analysis_wasm_runtime.py'
       - 'scripts/patch_analysis_coi_runtime.py'
@@ -45,7 +45,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ github.event_name == 'pull_request' && github.head_ref || 'abilityfish' }}
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
           fetch-depth: 0
 
       - name: Checkout pinned interactive Fairy-Stockfish WASM port
@@ -147,8 +147,8 @@ jobs:
           ! grep -q 'SharedArrayBuffer' analysis-engine/abilityfish-stockfish.js
           ! grep -q 'PThread' analysis-engine/abilityfish-stockfish.js
 
-      - name: Commit combined runtime to development branch
-        if: github.event_name == 'push' && github.ref_name == 'abilityfish'
+      - name: Commit browser-tested runtime to the deploying branch
+        if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'abilityfish')
         run: |
           git config user.name 'abilityfish-ci'
           git config user.email 'abilityfish-ci@users.noreply.github.com'
@@ -159,6 +159,6 @@ jobs:
             exit 0
           fi
           git commit -m 'Embed browser-tested AbilityFish Analysis WASM [skip ci]'
-          git fetch origin abilityfish
-          git rebase origin/abilityfish
-          git push origin HEAD:abilityfish
+          git fetch origin "$GITHUB_REF_NAME"
+          git rebase "origin/$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"
