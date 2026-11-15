@@ -1,0 +1,18 @@
+/* Shared by game and Community navigation. Details/summary remain keyboard accessible. */
+.home-nav .sidebar-nav-group{width:100%;min-width:0}
+.home-nav .sidebar-group-toggle{display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none;list-style:none;width:100%;box-sizing:border-box;border-radius:11px;padding:12px 13px;color:#dce2e8;font-size:13px;font-weight:700}
+.home-nav .sidebar-group-toggle::-webkit-details-marker{display:none}
+.home-nav .sidebar-group-toggle::marker{content:''}
+.home-nav .sidebar-group-toggle:hover,.home-nav .sidebar-nav-group[open]>.sidebar-group-toggle{background:#252d36;color:#eef1f6}
+.home-nav .sidebar-group-toggle:focus-visible{outline:2px solid #b5ce8c;outline-offset:2px}
+.home-nav .sidebar-group-chevron{margin-left:auto;font-size:18px;line-height:1;transition:transform .15s ease}
+.home-nav .sidebar-nav-group[open] .sidebar-group-chevron{transform:rotate(180deg)}
+.home-nav .sidebar-group-items{display:grid;gap:4px;padding:4px 0 3px 15px}
+.home-nav .sidebar-group-items>.home-nav-item{width:100%;box-sizing:border-box}
+@media(max-width:900px){
+  .community-nav.home-nav .sidebar-nav-group{flex:0 0 auto;width:auto;position:relative}
+  .community-nav.home-nav .sidebar-group-toggle{white-space:nowrap;padding:9px 11px}
+  .community-nav.home-nav .sidebar-group-items{position:absolute;left:0;top:100%;z-index:40;min-width:190px;max-height:60vh;overflow-y:auto;padding:7px;background:#181d23;border:1px solid #35414d;border-radius:10px;box-shadow:0 14px 35px rgba(0,0,0,.4)}
+  .community-nav.home-nav .sidebar-group-items>.home-nav-item{white-space:nowrap}
+}
+@media(prefers-reduced-motion:reduce){.home-nav .sidebar-group-chevron{transition:none}}
