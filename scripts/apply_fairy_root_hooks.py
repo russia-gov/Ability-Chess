@@ -46,6 +46,10 @@ if "ABILITYFISH_ROOT_SEARCH_V5" not in s:
       {
           Search::AbilityRootResult iterationAbility;
           auto abilityActions = rootPos.ability_actions();
+          // Diagnostic only: report branching without changing the search tree.
+          if (mainThread)
+              sync_cout << "info string abilityfish rootactions depth " << rootDepth
+                        << " count " << abilityActions.size() << sync_endl;
         // Ordering only: never discard or reduce depth for any legal action.
         std::stable_sort(abilityActions.begin(), abilityActions.end(),
                          [](const auto& a, const auto& b) {
