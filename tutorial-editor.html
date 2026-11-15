@@ -1,22 +1,70 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Ability Chess · Tutorial Editor</title>
-<link rel="stylesheet" href="./assets/community.css"><link rel="stylesheet" href="./assets/learning-pages.css">
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Tutorial Studio · Ability Chess Admin</title>
+<link rel="stylesheet" href="./assets/community.css">
+<link rel="stylesheet" href="./assets/account.css">
+<link rel="stylesheet" href="./assets/learning-pages.css">
+<link rel="stylesheet" href="./assets/tutorial-studio.css">
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.90.1/dist/umd/supabase.min.js"></script>
-<script defer src="./assets/tutorial-board.js"></script><script defer src="./assets/tutorial-editor.js"></script>
-</head><body><script>if(new URLSearchParams(location.search).has('embedded'))document.body.classList.add('embedded');</script>
-<header class="site-head"><a class="brand" href="./">♞ Ability Chess</a><nav class="header-links"><a href="./tutorial.html">View tutorial</a><a href="./">Back to game</a></nav></header>
-<main><section class="hero"><div class="eyebrow">Admin · Learn</div><h1>Edit Tutorial</h1><p>Author lessons using a chess position and a visual arrow. Changes are visible to all players after saving.</p></section>
-<p class="status" id="tutorialEditorStatus" role="status" aria-live="polite">Checking admin access…</p>
-<div id="tutorialEditorApp" class="editor-layout" hidden>
-<aside class="editor-panel"><h2>Lessons</h2><button id="tutorialAdd" class="action primary" type="button">+ New lesson</button>
-<div id="tutorialLessonList" class="post-list" aria-label="Tutorial lessons"></div></aside>
-<section class="editor-panel"><form id="tutorialEditForm"><div class="field"><label for="tutorialOrder">Position in tutorial</label><input id="tutorialOrder" type="number" min="1" max="1000" value="1" required></div>
-<div class="field"><label for="tutorialTitle">Lesson title</label><input id="tutorialTitle" required maxlength="140"></div>
-<div class="field"><label for="tutorialBody">Explanation</label><textarea id="tutorialBody" rows="6" maxlength="3000" required></textarea></div>
-<div class="field"><label for="tutorialFen">Chess position (FEN)</label><input id="tutorialFen" required spellcheck="false" aria-describedby="fenHint"><small id="fenHint">Paste a FEN. The board preview shows White at the bottom.</small></div>
-<div class="form-grid"><div class="field"><label for="tutorialFrom">Arrow from</label><input id="tutorialFrom" maxlength="2" placeholder="e2" pattern="[a-h][1-8]"></div>
-<div class="field"><label for="tutorialTo">Arrow to</label><input id="tutorialTo" maxlength="2" placeholder="e4" pattern="[a-h][1-8]"></div></div>
-<div class="tutorial-editor-preview" id="tutorialEditorBoard"></div><div class="editor-actions">
-<button class="action" type="button" id="tutorialPreview">Preview board</button>
-<button class="action primary" type="submit" id="tutorialSave">Save lesson</button>
-<button class="action" type="button" id="tutorialDelete" hidden>Delete lesson</button></div>
-</form></section></div></main></body></html>
+<script defer src="./assets/tutorial-board.js"></script>
+<script defer src="./assets/admin.js"></script>
+<script defer src="./assets/community-sidebar.js"></script>
+<script defer src="./assets/tutorial-editor.js"></script>
+</head>
+<body class="community-page tutorial-studio-page" data-sidebar-route="admin">
+<div class="community-shell">
+ <aside class="community-rail site-ribbon" aria-label="Ability Chess site navigation"><nav id="communitySidebarNav" class="community-nav home-nav" aria-label="Main navigation"></nav></aside>
+ <div class="community-main">
+ <header class="studio-topbar">
+   <div><div class="eyebrow">ADMIN / LEARN</div><h1>Tutorial Studio</h1><p>Create and arrange lessons with illustrated board positions.</p></div>
+   <div class="studio-top-actions"><a class="action" href="./?communityNav=admin">Back to Admin</a><a class="action" href="./tutorial.html" target="_blank" rel="noopener">View live tutorial ↗</a></div>
+ </header>
+ <main class="studio-main">
+ <p class="studio-status" id="tutorialEditorStatus" role="status" aria-live="polite">Checking administrator access…</p>
+ <div id="tutorialEditorApp" class="studio-layout" hidden>
+   <aside class="studio-lessons" aria-label="Tutorial lesson list">
+     <div class="studio-panel-heading"><div><h2>Lessons</h2><p>Choose a lesson to edit</p></div><button id="tutorialAdd" class="studio-add" type="button" title="Add lesson">+ New</button></div>
+     <div id="tutorialLessonList" class="studio-lesson-list"></div>
+     <p class="studio-hint">Lessons appear in number order. Change the order field to rearrange them.</p>
+   </aside>
+   <section class="studio-editor" aria-label="Lesson editor">
+    <div class="studio-section-heading"><div><div class="eyebrow">CONTENT</div><h2 id="studioEditingTitle">Edit lesson</h2></div><span id="studioUnsaved" class="studio-unsaved" hidden>Unsaved changes</span></div>
+    <form id="tutorialEditForm">
+      <div class="studio-field-row">
+        <div class="studio-field studio-order"><label for="tutorialOrder">Lesson order</label><input id="tutorialOrder" type="number" min="1" max="1000" value="1" required></div>
+        <div class="studio-field"><label for="tutorialTitle">Lesson title</label><input id="tutorialTitle" required maxlength="140" placeholder="e.g. Controlling the center"></div>
+      </div>
+      <div class="studio-field"><label for="tutorialBody">Lesson explanation</label><textarea id="tutorialBody" rows="9" maxlength="3000" required placeholder="What should a player learn from this position?"></textarea><small>Write a clear explanation for the player. The board illustrates the selected position.</small></div>
+      <div class="studio-divider"></div>
+      <div class="studio-section-heading"><div><div class="eyebrow">BOARD SETUP</div><h3>Position &amp; teaching arrow</h3></div><button id="tutorialResetBoard" class="studio-text-btn" type="button">Starting position</button></div>
+      <div class="studio-field"><label for="tutorialFen">FEN position</label><textarea id="tutorialFen" rows="2" required spellcheck="false" aria-describedby="fenHint"></textarea><small id="fenHint">Paste a chess FEN. You can select arrow squares directly on the preview board.</small></div>
+      <div class="studio-field-row">
+        <div class="studio-field"><label for="tutorialFrom">Arrow starts</label><input id="tutorialFrom" maxlength="2" placeholder="e2" pattern="[a-h][1-8]" autocomplete="off"></div>
+        <div class="studio-field"><label for="tutorialTo">Arrow ends</label><input id="tutorialTo" maxlength="2" placeholder="e4" pattern="[a-h][1-8]" autocomplete="off"></div>
+      </div>
+      <div class="studio-bottom-actions">
+        <button id="tutorialDelete" type="button" class="studio-danger" hidden>Delete lesson</button>
+        <button id="tutorialPreview" type="button" class="action">Refresh board</button>
+        <button id="tutorialSave" type="submit" class="action primary">Save lesson</button>
+      </div>
+    </form>
+   </section>
+   <aside class="studio-preview" aria-label="Lesson preview">
+     <div class="studio-preview-heading"><div><div class="eyebrow">LIVE PREVIEW</div><h2>Chessboard</h2></div><span class="studio-live-dot">Preview</span></div>
+     <div id="tutorialEditorBoard" class="studio-board" aria-label="Interactive arrow editor"></div>
+     <div class="studio-preview-controls">
+       <button type="button" class="studio-mode active" id="tutorialPickFrom" aria-pressed="true">1. Choose start</button>
+       <button type="button" class="studio-mode" id="tutorialPickTo" aria-pressed="false">2. Choose end</button>
+       <button type="button" class="studio-mode" id="tutorialClearArrow">Clear arrow</button>
+     </div>
+     <p id="tutorialBoardHelp" class="studio-board-help">Click the starting square on the board, then the destination square.</p>
+     <div class="studio-preview-note"><strong>Player view</strong><p id="studioPreviewText">The saved lesson and highlighted move will appear in the Tutorial.</p></div>
+   </aside>
+ </div>
+ </main>
+ </div>
+</div>
+</body></html>
