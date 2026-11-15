@@ -5,33 +5,13 @@
 <link rel="stylesheet" href="./assets/account.css">
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.90.1/dist/umd/supabase.min.js"></script>
 <script defer src="./assets/community-content.js"></script>
+<script defer src="./assets/admin.js"></script>
 <script defer src="./assets/community-sidebar.js"></script>
 <script defer src="./assets/community-page.js"></script></head>
 <body class="community-page">
 <div class="community-shell">
 <aside class="community-rail site-ribbon" aria-label="Ability Chess site navigation">
-  <a href="./" class="community-rail-brand brand"><span class="brand-mark" aria-hidden="true">♞</span><span class="brand-name">Ability<br>Chess</span></a>
-  <nav id="communitySidebarNav" class="community-nav home-nav" aria-label="Main navigation">
-    <a class="home-nav-item" href="./?communityNav=play"><span class="nav-icon home-nav-icon">▶</span>Play</a>
-    <a class="home-nav-item" href="./?communityNav=abilities"><span class="nav-icon home-nav-icon">★</span>Abilities Guide</a>
-    <a class="home-nav-item" href="./?communityNav=analysis"><span class="nav-icon home-nav-icon">◩</span>Analysis</a>
-    <a class="home-nav-item" href="./?communityNav=settings"><span class="nav-icon home-nav-icon">⚙</span>Settings</a>
-    <a class="home-nav-item" href="./?communityNav=history"><span class="nav-icon home-nav-icon">◫</span>Game history</a>
-    <a class="home-nav-item" href="./?communityNav=tournaments"><span class="nav-icon home-nav-icon">♜</span>Tournaments</a>
-    <a href="./community.html" class="home-nav-item current active" aria-current="page"><span class="nav-icon home-nav-icon">◈</span>Community</a>
-    <a class="home-nav-item" href="./?communityNav=notifications"><span class="nav-icon home-nav-icon">●</span>Notifications</a>
-    <a id="communitySidebarAdmin" class="home-nav-item" href="./?communityNav=admin" hidden><span class="nav-icon home-nav-icon">⚑</span>Admin</a>
-  </nav>
-  <div class="sidebar-account" id="communitySidebarAccount">
-    <form class="sidebar-member-search" id="communityMemberSearchForm" role="search" action="./" method="get">
-      <label class="visually-hidden" for="communityMemberSearch">Search members</label>
-      <input id="communityMemberSearch" name="sidebarSearch" type="search" placeholder="Search members" maxlength="80" autocomplete="off">
-    </form>
-    <button type="button" class="sidebar-profile-link" id="communityProfileLink" aria-label="Open your profile">
-      <span class="sidebar-avatar" id="communityProfileAvatar" aria-hidden="true">♜</span>
-      <span><span class="sidebar-profile-name" id="communityProfileName">My profile</span><span class="sidebar-profile-meta" id="communityProfileMeta">Sign in to view ratings</span></span>
-    </button>
-  </div>
+  <nav id="communitySidebarNav" class="community-nav home-nav" aria-label="Main navigation"></nav>
 </aside>
 <div class="community-main">
 <header class="site-head"><a class="brand" href="./">♞ <span>Ability</span> Chess</a>
