@@ -166,6 +166,13 @@ if s.count(old_depth)!=1:
     raise SystemExit("Expected exactly one old synthetic child depth expression")
 s=s.replace(old_depth,new_depth,1)
 
+# At the root a special action may legally evade check even when there is
+# no ordinary king escape, so adjust Stockfish's move-count assertion as well.
+old_assert="    assert(moveCount || !ss->inCheck || excludedMove || !MoveList<LEGAL>(pos).size());"
+new_assert="    assert(moveCount || (rootNode && thisThread->rootAbility.valid) || !ss->inCheck || excludedMove || !MoveList<LEGAL>(pos).size());"
+if s.count(old_assert)!=1: raise SystemExit("Move-count assertion anchor changed")
+s=s.replace(old_assert,new_assert,1)
+
 # A position with special-only actions must not be marked checkmate/stalemate.
 old="    if (!moveCount)\n        bestValue = excludedMove ? alpha :"
 new="    if (!moveCount && !(rootNode && thisThread->rootAbility.valid))\n        bestValue = excludedMove ? alpha :"
