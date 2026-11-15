@@ -2006,7 +2006,8 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     const addMove=(move)=>{ if(!inBounds(move.to.r,move.to.c)) return; const key=`${move.to.r},${move.to.c}:${move.castle||''}:${move.enPassant?'e':''}`; if(seen.has(key)) return; seen.add(key); if(type==='p' && isPromotionRank(color, move.to.r)) move.promotionRequired=true; moves.push(move); };
     const addStep=(dr,dc,{emptyOnly=false,captureOnly=false,tag=null}={})=>{ const rr=r+dr,cc=c+dc;if(!inBounds(rr,cc))return;const tgt=pieceAt(state.board,rr,cc);if(emptyOnly&&tgt)return;if(captureOnly&&!tgt)return;if(tgt&&colorOf(tgt)===color)return;addMove({from:{r,c},to:{r:rr,c:cc},capture:!!tgt,upgradeMove:tag}); };
     const addSlide=(dirs)=>{ for(const[dr,dc]of dirs){let rr=r+dr,cc=c+dc;while(inBounds(rr,cc)){const tgt=pieceAt(state.board,rr,cc);if(!tgt)addMove({from:{r,c},to:{r:rr,c:cc}});else{if(colorOf(tgt)!==color)addMove({from:{r,c},to:{r:rr,c:cc},capture:true});break;}rr+=dr;cc+=dc;} } };
-    const addFriendlyJumpSlide=(dirs,tag)=>{ for(const[dr,dc]of dirs){let rr=r+dr,cc=c+dc,passed=false;while(inBounds(rr,cc)){const tgt=pieceAt(state.board,rr,cc);if(!passed){if(!tgt){rr+=dr;cc+=dc;continue;}if(colorOf(tgt)!==color)break;passed=true;rr+=dr;cc+=dc;continue;}if(!tgt){addMove({from:{r,c},to:{r:rr,c:cc},upgradeMove:tag,jumpedFriendly:true});rr+=dr;cc+=dc;continue;}if(colorOf(tgt)!==color)addMove({from:{r,c},to:{r:rr,c:cc},capture:true,upgradeMove:tag,jumpedFriendly:true});break;} } };
+    const addFriendlyJumpSlide=(dirs,tag)=>{ for(const[dr,dc]of dirs){let rr=r+dr,cc=c+dc,passed=false;while(inBounds(rr,cc)){const tgt=pieceAt(state.board,rr,cc);if(!passed){if(!tgt){rr+=dr;cc+=dc;continue;}if(colorOf(tgt)!==color)break;passed=true;rr+=dr;cc+=dc;continue;}if(!tgt){addMove({from:{r,c},to:{r:rr,c:cc},upgradeMove:tag,jumpedFriendly:true});rr+=dr;cc+=dc;continue;}// Jump moves cannot capture; an enemy piece blocks further jump destinations.
+        break;} } };
     const knightSteps=[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
     if(type==='p'){
       const attackDirs=up==='veteran'?[dir,-dir]:[dir];
@@ -2126,7 +2127,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
       s.board[move.to.r][rookFromC] = null;
     }
 
-    if (piece[1] === 'p' && isPromotionRank(piece[0], move.to.r)) {
+    if (piece[1] === 'p' && s.board[move.to.r][move.to.c] === piece && isPromotionRank(piece[0], move.to.r)) {
       const promotion = ['q','r','b','n'].includes(move.promotion) ? move.promotion : 'q';
       s.board[move.to.r][move.to.c] = piece[0] + promotion;
     }
@@ -2665,6 +2666,12 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
       const p=state.board[r][c];
       if(p && typeOf(p)!=='k') pieces.push({p,r,c,type:typeOf(p)});
     }
+    // A surviving movement-upgraded king or minor piece may have mating
+    // potential beyond ordinary chess. Captured upgraded types have no effect.
+    if(state.upgradesEnabled!==false){
+      for(const color of ['w','b'])if(upgradeFor(state,color,'k'))return false;
+      if(pieces.some(x=>upgradeFor(state,colorOf(x.p),x.type)))return false;
+    }
     if(pieces.length===0) return true;
     if(pieces.some(x=>['p','r','q'].includes(x.type))) return false;
     if(pieces.length===1 && ['b','n'].includes(pieces[0].type)) return true;
@@ -3199,7 +3206,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   function applyAmbush(r,c){ const p=pieceAt(game.board,r,c); if(!p||colorOf(p)!==game.turn||typeOf(p)==='k'){game.lastMessage='Choose one of your non-king pieces.';return;} game.ambushed[game.turn]={r,c}; completeAbility('ambush',4,'Ambush set. Now make your normal move.'); }
   function applySwap(r,c){ const p=pieceAt(game.board,r,c); if(!game.abilitySelection){if(!p||colorOf(p)!==game.turn||typeOf(p)==='k'){game.lastMessage='Choose one of your non-king pieces.';return;} game.abilitySelection={r,c};game.lastMessage='Swap: choose the second non-king piece.';return;} const a=game.abilitySelection; if(!p||colorOf(p)!==game.turn||typeOf(p)==='k'||sameSquare(a,{r,c})){game.lastMessage='Choose a different non-king piece.';return;} const next=cloneState(game); [next.board[a.r][a.c],next.board[r][c]]=[next.board[r][c],next.board[a.r][a.c]]; if(inCheck(next,game.turn)){playFailureSound();game.lastMessage='That swap would leave your king under attack.';return;} game.board=next.board; if(game.shielded[game.turn]&&(sameSquare(game.shielded[game.turn],a)||sameSquare(game.shielded[game.turn],{r,c})))game.shielded[game.turn]=null; if(game.ambushed[game.turn]&&sameSquare(game.ambushed[game.turn],a))game.ambushed[game.turn]={r,c};else if(game.ambushed[game.turn]&&sameSquare(game.ambushed[game.turn],{r,c}))game.ambushed[game.turn]=a; completeAbility('swap',4,'Pieces swapped. Now make your normal move.'); }
   function applyRecall(){ const m=game.lastMoveByColor?.[game.turn]; if(!m||typeOf(m.piece)==='k'){game.lastMessage='No eligible piece can be recalled.';game.activeAbility=null;game.awaitingAbilityTarget=false;render();return;} const current=pieceAt(game.board,m.to.r,m.to.c); if(current!==m.resultPiece||pieceAt(game.board,m.from.r,m.from.c)){game.lastMessage='The recalled piece or its previous square is unavailable.';game.activeAbility=null;game.awaitingAbilityTarget=false;render();return;} const next=cloneState(game); next.board[m.from.r][m.from.c]=current; next.board[m.to.r][m.to.c]=null; if(inCheck(next,game.turn)){playFailureSound();game.lastMessage='Recall would leave your king under attack.';game.activeAbility=null;game.awaitingAbilityTarget=false;render();return;} game.board=next.board; if(game.shielded[game.turn]&&sameSquare(game.shielded[game.turn],m.to))game.shielded[game.turn]=null; completeAbility('recall',4,`Recalled ${current.toUpperCase()} to ${algebraic(m.from.r,m.from.c)}. Now make your normal move.`); }
-  function applyReinforce(r,c){ const p=pieceAt(game.board,r,c); const crossed=p&&typeOf(p)==='p'&&colorOf(p)===game.turn&&((game.turn==='w'&&r<=3)||(game.turn==='b'&&r>=4)); if(!crossed){game.lastMessage='Choose one of your pawns that has crossed the halfway line.';return;} const ans=window.prompt('Reinforce to knight or bishop? Enter N or B.','N'); const t=String(ans||'N').trim().toLowerCase()[0]; game.board[r][c]=game.turn+(t==='b'?'b':'n'); completeAbility('reinforce',5,`Pawn reinforced as a ${t==='b'?'bishop':'knight'}. Now make your normal move.`); }
+  function applyReinforce(r,c){ const p=pieceAt(game.board,r,c); const crossed=p&&typeOf(p)==='p'&&colorOf(p)===game.turn&&((game.turn==='w'&&r<=3)||(game.turn==='b'&&r>=4)); if(!crossed){game.lastMessage='Choose one of your pawns that has crossed the halfway line.';return;} const ans=window.prompt('Reinforce to knight or bishop? Enter N or B.','N'); if(ans===null)return; const t=String(ans).trim().toLowerCase(); if(t!=='n'&&t!=='b'){game.lastMessage='Choose N for knight or B for bishop.';return;} const next=cloneState(game);next.board[r][c]=game.turn+t; if(!allLegalMoves(next,game.turn).length){playFailureSound();game.lastMessage='Reinforce must leave a legal follow-up move.';return;} game.board=next.board; completeAbility('reinforce',5,`Pawn reinforced as a ${t==='b'?'bishop':'knight'}. Now make your normal move.`); }
   function applyPortal(r,c){ if(pieceAt(game.board,r,c)){game.lastMessage='Portal squares must be empty.';return;} if(isFortifiedAgainstAbility(game,r,c,game.turn)){game.lastMessage='That square is protected by Fortify.';return;} if(!game.abilitySelection){game.abilitySelection={r,c};game.lastMessage='Portal: choose the second empty square.';return;} if(sameSquare(game.abilitySelection,{r,c})){game.lastMessage='Choose a different empty square.';return;} game.portals[game.turn]={a:{...game.abilitySelection},b:{r,c},turnsRemaining:3}; completeAbility('portal',5,'Portal pair active for three of your turns and usable by both players in either direction. Now make your normal move.'); }
   function applyFortify(r,c){ const king=findKing(game,game.turn); if(!king){return;} const candidates=[]; for(const top of [r-1,r])for(const left of [c-1,c]){const squares=[{r:top,c:left},{r:top,c:left+1},{r:top+1,c:left},{r:top+1,c:left+1}];if(squares.every(s=>inBounds(s.r,s.c))&&squares.some(s=>sameSquare(s,king)))candidates.push(squares);} if(!candidates.length){game.lastMessage='Choose a square in a 2×2 area that contains your king.';return;} game.fortified[game.turn]={squares:candidates[0]}; completeAbility('fortify',4,'Fortify active until your next turn. Now make your normal move.'); }
 
@@ -3855,7 +3862,9 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     const crossed=p&&typeOf(p)==='p'&&colorOf(p)===game.turn&&((game.turn==='w'&&r<=3)||(game.turn==='b'&&r>=4));
     if(!crossed)return false;
     const t=action.promoteTo==='b'?'b':'n';
-    game.board[r][c]=game.turn+t;
+    const next=cloneState(game);next.board[r][c]=game.turn+t;
+    if(!allLegalMoves(next,game.turn).length)return false;
+    game.board=next.board;
     completeAbility('reinforce',5,`Pawn reinforced as a ${t==='b'?'bishop':'knight'}. Now make your normal move.`);
     return true;
   }
