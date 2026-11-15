@@ -1,0 +1,32 @@
+name: Apply rule consistency fixes to large game file
+on:
+  push:
+    branches:
+      - fix/rule-reinforce-promotion-upgrade-interactions-2026
+    paths:
+      - .github/workflows/apply-rule-consistency-fixes.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  apply-fixes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate and apply rule corrections
+        run: |
+          node --check scripts/apply_rule_consistency_fixes.js
+          node scripts/apply_rule_consistency_fixes.js
+          git diff --check
+      - name: Commit updated game rules
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Fix Reinforce, Ambush promotion, upgraded draws and noncapturing jumps"
+          git push origin HEAD:fix/rule-reinforce-promotion-upgrade-interactions-2026
