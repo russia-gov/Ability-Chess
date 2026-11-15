@@ -17,6 +17,12 @@ begin
    - 'positionCounts' - 'lastRecordedPositionKey'
    - 'historySnapshots' - 'historyGameKey'
    - 'log' - 'lastMessage';
+ -- Keep harmless collection shapes for existing browser rendering while
+ -- removing actual private keys, replay history and hidden action logs.
+ visible:=visible||jsonb_build_object(
+   'positionCounts','{}'::jsonb,'lastRecordedPositionKey',null,
+   'historySnapshots','[]'::jsonb,'log','[]'::jsonb,
+   'lastMessage','');
  if coalesce((visible->>'over')::boolean,false)=false then
    hidden_color:=case when p_viewer_color='w' then 'b' else 'w' end;
    if jsonb_typeof(visible->'ambushed')='object' then
