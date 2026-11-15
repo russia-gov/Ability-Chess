@@ -11,7 +11,8 @@ const mods=[
  ['board-move-intent.js','server/board-move-intent.js'],
  ['ability-intent.js','server/ability-intent.js'],
  ['upgrade-intent.js','server/upgrade-intent.js'],
- ['turn-reducer.js','server/turn-reducer.js']
+ ['turn-reducer.js','server/turn-reducer.js'],
+ ['viewer-state.js','server/viewer-state.js']
 ];
 const out=[
  '// AUTOMATICALLY GENERATED: node scripts/build_verified_edge_module.js',
@@ -33,6 +34,7 @@ const out=[
  'export const applyGameAction=trusted.applyGameAction;',
  'export const finishTurn=trusted.finishTurn;',
  'export const adjudicate=trusted.adjudicate;',
+ 'export const viewerState=requireModule("./viewer-state.js").viewerState;',
  ''
 ].join('\n');
 const dest='supabase/functions/verified-game/rules.mjs';
