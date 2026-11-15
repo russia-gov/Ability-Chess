@@ -4,6 +4,8 @@ on:
     branches: [main]
     paths:
       - 'database/verified_room_finalization_staged.sql'
+      - 'database/canonical_initial_game_state_staged.sql'
+      - 'database/legacy_room_genesis_hardening_staged.sql'
       - 'database/verified_room_action_commit_staged.sql'
       - 'server/tests/sql/**'
       - '.github/workflows/trusted-multiplayer-sql.yml'
@@ -41,9 +43,11 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f server/tests/sql/fixture.sql
       - name: Apply staged migrations to disposable database
         run: |
+          psql -v ON_ERROR_STOP=1 -f database/canonical_initial_game_state_staged.sql
           psql -v ON_ERROR_STOP=1 -f database/verified_room_finalization_staged.sql
           psql -v ON_ERROR_STOP=1 -f database/verified_room_action_commit_staged.sql
       - name: Test ratings, tournaments, identity, idempotency and version checks
         run: |
+          psql -v ON_ERROR_STOP=1 -f server/tests/sql/test_canonical_genesis.sql
           psql -v ON_ERROR_STOP=1 -f server/tests/sql/test_verified_result.sql
           psql -v ON_ERROR_STOP=1 -f server/tests/sql/test_verified_action.sql
