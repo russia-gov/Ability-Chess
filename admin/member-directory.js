@@ -73,8 +73,7 @@
       const tr=el('tr');
       const identity=el('td');
       const name=el('strong','',m.display_name||m.username);
-      const handle=el('small','muted','@'+m.username);
-      identity.append(name,handle);
+      identity.append(name);
       if(m.is_owner)identity.append(el('span','tag','Owner'));
       else if(m.is_staff)identity.append(el('span','tag','Staff'));
       tr.append(identity);
@@ -110,7 +109,6 @@
     const dialog=$('memberDialog'),body=$('memberDetail');
     body.replaceChildren();
     body.append(el('h2','',m.display_name||m.username));
-    body.append(el('p','muted','@'+m.username));
     const grid=el('div','detail-grid');
     for(const [label,value] of [
       ['Joined',date(m.created_at)],['Last active',date(m.last_seen_at)],
@@ -128,7 +126,7 @@
         ['Mute 24h','mute',24],['Unmute','unmute',null],
         ['Suspend 24h','suspend',24],['Unsuspend','unsuspend',null]
       ]){
-        controls.append(button(label,()=>action(label+' @'+m.username+'?',()=>rpc('ability_chess_admin_moderate_user',{
+        controls.append(button(label,()=>action(label+' '+(m.display_name||m.username)+'?',()=>rpc('ability_chess_admin_moderate_user',{
           p_user_id:m.id,p_action:kind,p_hours:hours,p_note:'Admin directory'
         })),kind==='suspend'?'danger':'subtle'));
       }
@@ -139,22 +137,22 @@
     dialog.showModal();
   }
   async function notification(m){
-    const title=window.prompt('Notification title for @'+m.username+' (max 120 characters):');
+    const title=window.prompt('Notification title for '+(m.display_name||m.username)+' (max 120 characters):');
     if(title===null||!title.trim())return;
     const message=window.prompt('Notification body (max 800 characters):');
     if(message===null||!message.trim())return;
-    await action('Send notification to @'+m.username+'?',()=>rpc('ability_chess_admin_send_notification',{
+    await action('Send notification to '+(m.display_name||m.username)+'?',()=>rpc('ability_chess_admin_send_notification',{
       p_user_id:m.id,p_title:title.trim().slice(0,120),p_body:message.trim().slice(0,800),p_href:null
     }));
   }
   async function history(m){
     const dialog=$('historyDialog'),container=$('historyContent');container.replaceChildren();
-    container.append(el('p','muted','Loading history for @'+m.username+'…'));
+    container.append(el('p','muted','Loading history for '+(m.display_name||m.username)+'…'));
     dialog.showModal();
     try{
       const data=await rpc('ability_chess_owner_list_member_history',{p_user_id:m.id});
       container.replaceChildren();
-      container.append(el('h2','', 'Game history: @'+m.username));
+      container.append(el('h2','', 'Game history: '+(m.display_name||m.username)));
       if(!data?.length){container.append(el('p','muted','No games recorded.'));return;}
       const list=el('div','history-list');
       for(const g of data.slice(0,200)){
