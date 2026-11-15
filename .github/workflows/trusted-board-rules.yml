@@ -1,5 +1,14 @@
 name: Extract and test browser board rules for trusted server
 on:
+  push:
+    branches: [security/server-authoritative-gameplay-foundation-2026]
+    paths:
+      - 'scripts/extract_board_rules.js'
+      - 'scripts/build_verified_edge_module.js'
+      - 'scripts/build_verified_edge_module.js'
+      - 'server/**'
+      - 'index.html'
+      - '.github/workflows/trusted-board-rules.yml'
   pull_request:
     branches: [main]
     paths:
@@ -9,7 +18,7 @@ on:
       - 'index.html'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   rules:
     runs-on: ubuntu-latest
@@ -24,3 +33,13 @@ jobs:
       - run: node --check supabase/functions/verified-game/rules.mjs
       - run: node -e "import('./supabase/functions/verified-game/rules.mjs').then(m => {if(typeof m.applyGameAction!=='function')process.exit(1);})"
       - run: node --test server/tests/*.test.js
+      - name: Commit generated deployment bundle on security branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/security/server-authoritative-gameplay-foundation-2026'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add supabase/functions/verified-game/rules.mjs
+          if ! git diff --cached --quiet; then
+            git commit -m "Generate trusted Edge gameplay rules bundle"
+            git push origin HEAD:security/server-authoritative-gameplay-foundation-2026
+          fi
