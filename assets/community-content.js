@@ -30,6 +30,8 @@
       if(node.nodeType===Node.TEXT_NODE){dest.appendChild(document.createTextNode(node.textContent||''));return;}
       if(node.nodeType!==Node.ELEMENT_NODE)return;
       const tag=node.tagName.toUpperCase();
+      // Do not preserve the contents of executable or embedded elements.
+      if(['SCRIPT','STYLE','IFRAME','OBJECT','EMBED','SVG','MATH','FORM','VIDEO','AUDIO','TEMPLATE'].includes(tag))return;
       if(!tags.has(tag)){for(const c of Array.from(node.childNodes))visit(c,dest,depth+1);return;}
       const normal=tag==='FONT'?'SPAN':tag==='DIV'?'P':tag;
       const el=document.createElement(normal.toLowerCase());
