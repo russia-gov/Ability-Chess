@@ -37,6 +37,8 @@ declare
   opponent_id uuid;
   old_rating integer;
   opponent_rating integer;
+  white_rating_before integer;
+  black_rating_before integer;
   current_score numeric;
   expected_score numeric;
   delta integer;
@@ -97,6 +99,18 @@ begin
   returning room_id into inserted_id;
 
   if category_rated then
+    -- Snapshot both Elo inputs before updating either profile; otherwise the
+    -- second player's rating change would depend on the first update.
+    select case category when 'bullet' then bullet_rating
+             when 'blitz' then blitz_rating else rapid_rating end
+      into white_rating_before from public.ability_chess_profiles
+      where id=white_player;
+    select case category when 'bullet' then bullet_rating
+             when 'blitz' then blitz_rating else rapid_rating end
+      into black_rating_before from public.ability_chess_profiles
+      where id=black_player;
+    white_rating_before:=coalesce(white_rating_before,1200);
+    black_rating_before:=coalesce(black_rating_before,1200);
     for player_id,opponent_id,score_label in
       select white_player,black_player,
         case when p_winner='draw' then 'draw'
@@ -106,14 +120,10 @@ begin
         case when p_winner='draw' then 'draw'
              when p_winner='b' then 'win' else 'loss' end
     loop
-      select case category when 'bullet' then bullet_rating
-               when 'blitz' then blitz_rating else rapid_rating end
-        into old_rating from public.ability_chess_profiles where id=player_id;
-      select case category when 'bullet' then bullet_rating
-               when 'blitz' then blitz_rating else rapid_rating end
-        into opponent_rating from public.ability_chess_profiles where id=opponent_id;
-      old_rating := coalesce(old_rating,1200);
-      opponent_rating := coalesce(opponent_rating,1200);
+      old_rating := case when player_id=white_player
+        then white_rating_before else black_rating_before end;
+      opponent_rating := case when opponent_id=white_player
+        then white_rating_before else black_rating_before end;
       current_score := case score_label when 'win' then 1.0
         when 'draw' then 0.5 else 0.0 end;
       expected_score := 1.0/(1.0+power(10.0,(opponent_rating-old_rating)/400.0));
@@ -159,7 +169,11 @@ begin
            assigned_color=null
        where tournament_id=tournament_record.tournament_id
          and user_id in(white_player,black_player);
-    if not found then raise exception 'Tournament entries missing'; end if;
+    if (select count(*) from public.ability_chess_tournament_entries
+         where tournament_id=tournament_record.tournament_id
+           and user_id in (white_player,black_player))<>2 then
+      raise exception 'Tournament entries missing';
+    end if;
   end if;
   return true;
 end;
