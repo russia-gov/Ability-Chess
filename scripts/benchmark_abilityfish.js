@@ -14,8 +14,9 @@ const args=process.argv.slice(2);
 const binary=args[0];
 const option=(name,fallback)=>{const i=args.indexOf(name);return i<0?fallback:Number(args[i+1]);};
 const depth=option('--depth',5), timeoutSeconds=option('--timeout',180);
+const wanted=args.includes('--scenario')?args[args.indexOf('--scenario')+1]:null;
 if(!binary||!fs.existsSync(binary)||!Number.isInteger(depth)||depth<1||depth>30||timeoutSeconds<1){
-  console.error('Usage: node scripts/benchmark_abilityfish.js ENGINE_PATH [--depth 5] [--timeout 180]');
+  console.error('Usage: node scripts/benchmark_abilityfish.js ENGINE_PATH [--depth 5] [--timeout 180] [--scenario NAME]');
   process.exit(2);
 }
 const scenarios=[
@@ -26,9 +27,9 @@ const scenarios=[
 ];
 async function run(test){
   return new Promise((resolve,reject)=>{
-    const processStart=Date.now();
     const proc=spawn(binary,[],{stdio:['pipe','pipe','pipe']});
     let buffer='',errorBuffer='',reached=0,nodes=0,nps=0,engineTime=0,bestmove=null;
+    let infoCount=0,abilityActionCount=0;
     let started=0,ready=false,finished=false;
     const finish=(err)=>{
       if(finished)return; finished=true;clearTimeout(watchdog);
@@ -36,7 +37,7 @@ async function run(test){
       if(err)return reject(err);
       resolve({scenario:test.name,depthRequested:depth,depthReached:reached,wallMs:Date.now()-started,engineMs:engineTime,nodes,nps,bestmove});
     };
-    const watchdog=setTimeout(()=>finish(new Error(test.name+' exceeded watchdog '+timeoutSeconds+'s at depth '+reached+'; stderr='+errorBuffer.slice(-1000))),timeoutSeconds*1000);
+    const watchdog=setTimeout(()=>finish(new Error(test.name+' exceeded watchdog '+timeoutSeconds+'s at depth '+reached+'; nodes='+nodes+'; info='+infoCount+'; abilityActions='+abilityActionCount+'; stderr='+errorBuffer.slice(-1000))),timeoutSeconds*1000);
     proc.on('error',finish);
     proc.on('exit',code=>{if(!finished)finish(new Error(test.name+' exited '+code+': '+errorBuffer.slice(-1000)));});
     proc.stderr.on('data',x=>{errorBuffer+=String(x);});
@@ -56,6 +57,8 @@ async function run(test){
           started=Date.now();
           proc.stdin.write('go depth '+depth+'\n');
         }else if(line.startsWith('info ')){
+          infoCount++;
+          if(line.startsWith('info string abilityaction '))abilityActionCount++;
           const d=line.match(/^info depth (\d+)\b/);
           if(d)reached=Math.max(reached,Number(d[1]));
           const n=line.match(/\bnodes (\d+)/);if(n)nodes=Number(n[1]);
@@ -73,6 +76,8 @@ async function run(test){
 }
 (async()=>{
   const results=[];
-  for(const test of scenarios){const r=await run(test);results.push(r);console.error(test.name+': depth='+r.depthReached+' nodes='+r.nodes+' time='+r.wallMs+'ms');}
+  const selected=scenarios.filter(x=>!wanted || x.name===wanted);
+  if(!selected.length)throw new Error('Unknown --scenario '+wanted+'. Valid: '+scenarios.map(x=>x.name).join(', '));
+  for(const test of selected){const r=await run(test);results.push(r);console.error(test.name+': depth='+r.depthReached+' nodes='+r.nodes+' time='+r.wallMs+'ms');}
   console.log(JSON.stringify({benchmark:'abilityfish-v1',engine:binary,depth,results},null,2));
 })().catch(e=>{console.error(e.stack||e);process.exitCode=1;});
