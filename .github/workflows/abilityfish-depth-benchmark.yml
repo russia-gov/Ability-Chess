@@ -1,0 +1,47 @@
+name: AbilityFish depth-15 performance benchmark
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'scripts/benchmark_abilityfish.js'
+      - '.github/workflows/abilityfish-depth-benchmark.yml'
+      - 'scripts/apply_fairy_unified_*.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deep-benchmark:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario: [ordinary_midgame, upgraded_knight, ability_sparse, ability_tactical, ability_open_board]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: fairy-stockfish/Fairy-Stockfish
+          ref: c19b5f6c66894fdb0e88d0dd100e3885f744760a
+          path: vendor/Fairy-Stockfish
+      - name: Patch pinned Fairy engine
+        run: python3 scripts/prepare_fairy.py vendor/Fairy-Stockfish
+      - name: Build native optimized engine
+        working-directory: vendor/Fairy-Stockfish/src
+        run: make -j2 build ARCH=x86-64
+      - name: Search to depth 15 without engine time limit (120-second test watchdog)
+        run: |
+          mkdir -p benchmark-results
+          node scripts/benchmark_abilityfish.js vendor/Fairy-Stockfish/src/stockfish \
+            --scenario ${{ matrix.scenario }} --depth 15 --timeout 120 \
+            --allow-timeout --report-progress | tee benchmark-results/${{ matrix.scenario }}.json
+      - name: Publish benchmark results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: depth15-${{ matrix.scenario }}
+          path: benchmark-results/
+          if-no-files-found: ignore

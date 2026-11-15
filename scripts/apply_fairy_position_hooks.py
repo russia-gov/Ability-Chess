@@ -110,14 +110,30 @@ class AbilityFishBoardAdapter final : public abilityfish::BoardAdapter {
       return k == SQ_NONE || !(p.attackers_to(k, ~c) & p.pieces(~c));
   }
 
-  template<class Fn>
-  bool simulate(Fn&& fn, abilityfish::Side s) {
-      std::array<abilityfish::PieceInfo, 64> before{};
-      for (int i = 0; i < 64; ++i) before[i] = piece_at(abilityfish::Square{uint8_t(i)});
+  // ABILITYFISH_TOUCHED_SIMULATION_V1
+  // Legality probes are extremely hot during Teleport/Swap generation.
+  // Save and restore only squares the probe actually touches, not all 64.
+  // This is an exact board-state restoration, not a search approximation.
+  template<size_t N, class Fn>
+  bool simulate_touched(const std::array<abilityfish::Square,N>& touched,
+                        Fn&& fn, abilityfish::Side s) {
+      std::array<abilityfish::PieceInfo,N> before{};
+      for (size_t i=0; i<N; ++i) before[i]=piece_at(touched[i]);
       fn();
-      bool safe = king_safe(s);
-      for (int i = 0; i < 64; ++i) set_piece_exact(abilityfish::Square{uint8_t(i)}, before[i]);
+      const bool safe=king_safe(s);
+      for (size_t i=0; i<N; ++i)
+          if (piece_at(touched[i]).code != before[i].code
+              || piece_at(touched[i]).type != before[i].type
+              || (piece_at(touched[i]).present() && piece_at(touched[i]).side != before[i].side))
+              set_piece_exact(touched[i],before[i]);
       return safe;
+  }
+
+  template<class Fn>
+  bool simulate_pair(abilityfish::Square a, abilityfish::Square b, Fn&& fn,
+                     abilityfish::Side s) {
+      return simulate_touched(std::array<abilityfish::Square,2>{a,b},
+                              std::forward<Fn>(fn),s);
   }
 
 public:
@@ -146,28 +162,39 @@ public:
 
   bool swap_would_be_safe(abilityfish::Square a, abilityfish::Square b, abilityfish::Side s) const override {
       auto* self = const_cast<AbilityFishBoardAdapter*>(this);
-      return self->simulate([&]{ self->swap_pieces(a,b); }, s);
+      return self->simulate_pair(a,b,[&]{ self->swap_pieces(a,b); },s);
   }
   bool recall_would_be_safe(abilityfish::Square f, abilityfish::Square t, abilityfish::Side s) const override {
       auto* self = const_cast<AbilityFishBoardAdapter*>(this);
-      return self->simulate([&]{ self->move_piece(f,t); }, s);
+      return self->simulate_pair(f,t,[&]{ self->move_piece(f,t); },s);
   }
   bool teleport_would_be_safe(abilityfish::Square f, abilityfish::Square t, abilityfish::Side s) const override {
       auto* self = const_cast<AbilityFishBoardAdapter*>(this);
-      return self->simulate([&]{ self->move_piece(f,t); }, s);
+      return self->simulate_pair(f,t,[&]{ self->move_piece(f,t); },s);
   }
   bool teleport_would_attack_enemy_king(abilityfish::Square f, abilityfish::Square t, abilityfish::Side s) const override {
       auto* self = const_cast<AbilityFishBoardAdapter*>(this);
       bool attacks = false;
-      self->simulate([&]{ self->move_piece(f,t); Color them = ~af_color(s); Square k = p.square<KING>(them); attacks = k != SQ_NONE && self->piece_attacks_square(t, ability_sq(k)); }, s);
+      self->simulate_pair(f,t,[&]{ self->move_piece(f,t); Color them = ~af_color(s); Square k = p.square<KING>(them); attacks = k != SQ_NONE && self->piece_attacks_square(t, ability_sq(k)); },s);
       return attacks;
   }
   bool bomb_would_be_safe(abilityfish::Square c, abilityfish::Side s) const override {
       auto* self = const_cast<AbilityFishBoardAdapter*>(this);
       int cr = int(c.index) / 8, cf = int(c.index) % 8;
-      return self->simulate([&]{
-          for (int i=0;i<64;i++) if (std::abs(i/8-cr)<=1 && std::abs(i%8-cf)<=1 && self->piece_at(abilityfish::Square{uint8_t(i)}).present()) self->remove_piece(abilityfish::Square{uint8_t(i)});
-      }, s);
+      std::array<abilityfish::Square,9> affected{};
+      size_t n=0;
+      for (int r=std::max(0,cr-1);r<=std::min(7,cr+1);++r)
+          for (int f=std::max(0,cf-1);f<=std::min(7,cf+1);++f)
+              affected[n++]=abilityfish::Square{uint8_t(r*8+f)};
+      // Keep all entries valid; padded values repeat the origin square.
+      for (;n<9;++n) affected[n]=c;
+      return self->simulate_touched(affected,[&]{
+          for (int r=std::max(0,cr-1);r<=std::min(7,cr+1);++r)
+              for (int f=std::max(0,cf-1);f<=std::min(7,cf+1);++f) {
+                  auto sq=abilityfish::Square{uint8_t(r*8+f)};
+                  if (self->piece_at(sq).present())self->remove_piece(sq);
+              }
+      },s);
   }
 
   void swap_pieces(abilityfish::Square a, abilityfish::Square b) override {

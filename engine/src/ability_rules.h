@@ -42,6 +42,7 @@ public:
 struct ActionUndo {
   AbilityState state{};
   std::array<PieceInfo,64> board{};
+  bool boardMayChange = false;
   bool valid = false;
 };
 

@@ -27,6 +27,12 @@ hook = r'''    value = bestValue;
     if (!rootNode && pos.abilityfish_active())
     {
         auto abilityActions = pos.ability_actions();
+        // Ordering only: never discard or reduce depth for any legal action.
+        std::stable_sort(abilityActions.begin(), abilityActions.end(),
+                         [](const auto& a, const auto& b) {
+                             return abilityfish::action_order_priority(a.kind) <
+                                    abilityfish::action_order_priority(b.kind);
+                         });
         for (const auto& abilityAction : abilityActions)
         {
             StateInfo abilitySt;
@@ -70,15 +76,20 @@ hook = r'''    value = bestValue;
                     prepareSyntheticChild(ss+1, boardMove, PvNode ? childPv : nullptr);
 
                     const Depth childDepth = std::max(Depth(0), depth - 1);
+                    // Tighten the window as soon as a board continuation
+                    // improves this ability candidate. In particular, avoid
+                    // a new full-window search for every portal continuation.
+                    // Every legal continuation is still considered.
+                    const Value candidateAlpha=std::max(alpha,abilityValue);
                     Value boardValue;
                     if (PvNode)
                         boardValue = boardSideChanged
-                            ? -search<PV>(pos, ss+1, -beta, -alpha, childDepth, false)
-                            :  search<PV>(pos, ss+1, alpha, beta, childDepth, false);
+                            ? -search<PV>(pos, ss+1, -beta, -candidateAlpha, childDepth, false)
+                            :  search<PV>(pos, ss+1, candidateAlpha, beta, childDepth, false);
                     else
                         boardValue = boardSideChanged
-                            ? -search<NonPV>(pos, ss+1, -beta, -alpha, childDepth, false)
-                            :  search<NonPV>(pos, ss+1, alpha, beta, childDepth, false);
+                            ? -search<NonPV>(pos, ss+1, -beta, -candidateAlpha, childDepth, false)
+                            :  search<NonPV>(pos, ss+1, candidateAlpha, beta, childDepth, false);
 
                     pos.undo_move(boardMove);
 

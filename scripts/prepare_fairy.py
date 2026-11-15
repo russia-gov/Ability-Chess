@@ -82,6 +82,9 @@ for script in (
     "apply_fairy_post_effect_legality_hooks.py",
     "apply_fairy_search_hooks.py",
     "apply_fairy_root_hooks.py",
+    "apply_fairy_unified_root.py",
+    "apply_fairy_unified_internal.py",
+    "apply_fairy_king_capture_guard.py",
     "apply_fairy_protocol_hooks.py",
 ):
     subprocess.check_call([sys.executable, str(root / "scripts" / script), str(repo)])
