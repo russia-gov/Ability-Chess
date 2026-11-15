@@ -59,9 +59,16 @@ const server=http.createServer((req,res)=>{
     await page.waitForURL('**/community.html');
     await page.getByText('First tournament').waitFor();
     await page.getByRole('button',{name:'Read article'}).click();
+    if(await page.locator('#communityFeed').isVisible()) throw Error('News feed remained visible behind the open article');
     await page.getByText('Play this weekend.').waitFor();
     if(await page.locator('.post-detail script,.post-detail img[src="x"]').count())
       throw Error('Untrusted HTML was not sanitized on published article');
+    // Unauthenticated visitors must not see the draft editor.
+    const guest=await browser.newPage();
+    await guest.goto(home+'community-editor.html',{waitUntil:'domcontentloaded'});
+    await guest.getByText('Sign in on Ability Chess to use the editor.').waitFor({timeout:20000});
+    if(await guest.locator('#editorApp').isVisible())throw Error('Editor was visible without authentication');
+    await guest.close();
     await page.goto(home,{waitUntil:'domcontentloaded'});
     await page.evaluate(()=>localStorage.setItem('abilityChessMemberSession',JSON.stringify({
       access_token:'browser-smoke-token',refresh_token:'browser-smoke-refresh',
