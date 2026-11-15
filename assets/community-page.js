@@ -1,8 +1,8 @@
 (function(){
   'use strict';
-  const URL='https://cczvdpofddjghqoeiqew.supabase.co';
+  const SUPABASE_URL='https://cczvdpofddjghqoeiqew.supabase.co';
   const KEY='sb_publishable_1j0iGD0GxwBdhac9suyPSw_5CPJGvaM';
-  const api=window.supabase?.createClient?.(URL,KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+  const api=window.supabase?.createClient?.(SUPABASE_URL,KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
   const clean=window.AbilityChessCommunity;
   const feed=document.getElementById('communityFeed'),detail=document.getElementById('communityDetail'),status=document.getElementById('communityStatus');
   let posts=[],filter='all';
