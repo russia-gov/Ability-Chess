@@ -8,6 +8,7 @@ const html = fs.readFileSync('index.html', 'utf8');
 for (const marker of [
   'assets/account-auth.js', 'assets/admin.js', 'assets/account.css', 'assets/admin.css',
   'window.AbilityChessAccountAuth.createAccountAuth', 'window.AbilityChessAdmin.createAdminUi',
+  "typeof ensureAdminFoundationCards==='function'", "typeof loadModerationFoundation==='function'",
   'data-admin-management="directory"', 'data-admin-management="reports"'
 ]) {
   if (!html.includes(marker)) throw new Error(`Missing modular account/admin marker: ${marker}`);

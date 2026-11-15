@@ -69,6 +69,12 @@ replaceOnce(
   'admin module state'
 );
 
+replaceOnce(
+  'ensureAdminFoundationCards();loadModerationFoundation();}',
+  "if(typeof ensureAdminFoundationCards==='function')ensureAdminFoundationCards();if(typeof loadModerationFoundation==='function')loadModerationFoundation();}",
+  'optional legacy admin hooks'
+);
+
 replaceRange(
   '  function rebuildCanonicalSidebars(){',
   '  const originalUpdateSidebarAccounts=updateSidebarAccounts;updateSidebarAccounts=function(){originalUpdateSidebarAccounts();document.querySelectorAll(\'.sidebar-avatar\').forEach(a=>{if(memberProfile?.avatar_url)a.innerHTML=`<img src="${escapeHtml(memberProfile.avatar_url)}" alt="">`;});installSpecialNav();};',
