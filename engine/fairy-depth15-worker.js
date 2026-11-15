@@ -124,7 +124,7 @@ function upgradeCommands(value) {
         : rawUpgrade?.id ?? rawUpgrade?.upgradeId ?? rawUpgrade?.upgrade ?? rawUpgrade?.name ?? null;
       // Accept snake_case, kebab-case, human labels and camelCase aliases.
       const normalized=String(id||'').replace(/([a-z0-9])([A-Z])/g,'$1_$2')
-        .trim().toLowerCase().replace(/[\\s-]+/g,'_');
+        .trim().toLowerCase().replace(/[\s-]+/g,'_');
       const encoded=UPGRADE_CODE[normalized] || int(rawUpgrade?.encoded ?? rawUpgrade?.code ?? 0);
       // Zero is not a purchased upgrade; avoid resetting an existing engine
       // upgrade when an unrecognized client-side label is encountered.
