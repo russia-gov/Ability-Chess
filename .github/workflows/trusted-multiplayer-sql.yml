@@ -1,5 +1,11 @@
 name: Trusted multiplayer SQL integration tests
 on:
+  push:
+    branches: [security/server-authoritative-gameplay-foundation-2026]
+    paths:
+      - 'database/**'
+      - 'server/tests/sql/**'
+      - '.github/workflows/trusted-multiplayer-sql.yml'
   pull_request:
     branches: [main]
     paths:
