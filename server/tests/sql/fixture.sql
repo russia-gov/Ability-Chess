@@ -25,6 +25,7 @@ create table public.ability_chess_rooms (
  guest_token uuid default '00000000-0000-0000-0000-0000000000d2',
  version bigint not null default 0,
  game_state jsonb not null default '{"turn":"w","over":false}'::jsonb,
+ updated_at timestamptz not null default now(),
  expires_at timestamptz not null default now() + interval '1 day'
 );
 create table public.ability_chess_rating_results (
