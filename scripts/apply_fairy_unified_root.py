@@ -192,14 +192,14 @@ main_root="  if (rootMoves.empty() || (CurrentProtocol == XBOARD && rootPos.is_o
 if s.count(main_root)!=1:
     raise SystemExit("MainThread terminal-search root anchor changed")
 s=s.replace(main_root,\
-    "  const bool abilityOnlyRoot = rootMoves.empty() && rootPos.abilityfish_active()\\n"
-    "                           && !rootPos.ability_actions().empty();\\n"
+    "  const bool abilityOnlyRoot = rootMoves.empty() && rootPos.abilityfish_active()\n"
+    "                           && !rootPos.ability_actions().empty();\n"
     "  if ((rootMoves.empty() && !abilityOnlyRoot) || (CurrentProtocol == XBOARD && rootPos.is_optional_game_end()))",1)
 main_start="      Threads.start_searching(); // start non-main threads"
 if s.count(main_start)!=1:
     raise SystemExit("MainThread search dispatch anchor changed")
 s=s.replace(main_start,\
-    "      if (abilityOnlyRoot) rootMoves.emplace_back(MOVE_NONE);\\n"
+    "      if (abilityOnlyRoot) rootMoves.emplace_back(MOVE_NONE);\n"
     "      Threads.start_searching(); // start non-main threads",1)
 
 # Preserve the variant root best score when regular moves have inferior scores.
