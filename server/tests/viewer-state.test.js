@@ -15,8 +15,12 @@ test('opponent ambush cannot leak through repetition keys, logs or snapshots',()
  const view=viewerState(state,'w');
  assert.deepEqual(view.ambushed.w,{r:3,c:1});
  assert.equal(view.ambushed.b,null);
- for(const key of ['positionCounts','lastRecordedPositionKey',
-  'historySnapshots','historyGameKey','log','lastMessage','syncActionId']){
+ assert.deepEqual(view.positionCounts,{});
+ assert.equal(view.lastRecordedPositionKey,null);
+ assert.deepEqual(view.historySnapshots,[]);
+ assert.deepEqual(view.log,[]);
+ assert.equal(view.lastMessage,'');
+ for(const key of ['historyGameKey','syncActionId']){
   assert.equal(key in view,false,'must not disclose '+key);
  }
  assert.deepEqual(state.ambushed.b,{r:4,c:2},'input must remain unchanged');
