@@ -10,7 +10,7 @@
 .home-nav .sidebar-group-items{display:grid;gap:4px;padding:4px 0 3px 15px}
 .home-nav .sidebar-group-items>.home-nav-item{width:100%;box-sizing:border-box}
 @media(max-width:900px){
-  .community-nav.home-nav .sidebar-nav-group{flex:0 0 auto;width:auto;position:relative}
+  .community-nav.home-nav{flex-wrap:wrap;overflow:visible}\n  .community-nav.home-nav .sidebar-nav-group{flex:0 0 auto;width:auto;position:relative}
   .community-nav.home-nav .sidebar-group-toggle{white-space:nowrap;padding:9px 11px}
   .community-nav.home-nav .sidebar-group-items{position:absolute;left:0;top:100%;z-index:40;min-width:190px;max-height:60vh;overflow-y:auto;padding:7px;background:#181d23;border:1px solid #35414d;border-radius:10px;box-shadow:0 14px 35px rgba(0,0,0,.4)}
   .community-nav.home-nav .sidebar-group-items>.home-nav-item{white-space:nowrap}
