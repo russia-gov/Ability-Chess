@@ -5,6 +5,7 @@ on:
     branches: [security/server-authoritative-gameplay-foundation-2026]
     paths:
       - 'scripts/inventory_multiplayer_rules.js'
+      - 'scripts/examine_multiplayer_flows.js'
       - '.github/workflows/inventory-multiplayer-rules.yml'
 permissions:
   contents: read
