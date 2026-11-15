@@ -50,6 +50,17 @@ jobs:
       - name: Diagnose ability-rich search explosion (depth 2, 20-second watchdog only)
         continue-on-error: true
         run: node scripts/benchmark_abilityfish.js vendor/Fairy-Stockfish/src/stockfish --depth 2 --timeout 20 --scenario ability_tactical
+      - name: Search ability-only root positions instead of declaring stalemate
+        run: |
+          set -euo pipefail
+          output=$(mktemp)
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 45 --command uci \
+            --command 'position fen 7k/5Q2/6K1/8/8/8/8/8 b - - 0 1' \
+            --command 'abilityfish on' --command 'abilitypoints 0 4' \
+            --command 'go depth 3' | tee "$output"
+          grep -Eq '^info string abilityfish rootactions depth [0-9]+ count [1-9]' "$output"
+          grep -q '^bestmove ' "$output"
       - name: Root ability transport smoke test
         run: |
           python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
