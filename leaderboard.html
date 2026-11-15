@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leaderboard · Ability Chess</title><meta name="description" content="Compare player ratings on Ability Chess.">
+<link rel="stylesheet" href="./assets/community.css"><link rel="stylesheet" href="./assets/account.css"><link rel="stylesheet" href="./assets/learning-pages.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.90.1/dist/umd/supabase.min.js"></script>
+<script defer src="./assets/admin.js"></script><script defer src="./assets/community-sidebar.js"></script><script defer src="./assets/leaderboard-page.js"></script></head>
+<body class="community-page" data-sidebar-route="leaderboard">
+<div class="community-shell"><aside class="community-rail site-ribbon" aria-label="Ability Chess site navigation">
+<nav id="communitySidebarNav" class="community-nav home-nav" aria-label="Main navigation"></nav></aside>
+<div class="community-main"><header class="site-head"><a class="brand" href="./">♞ <span>Ability</span> Chess</a>
+<nav class="header-links" aria-label="Page navigation"><a href="./">Back to game</a></nav></header>
+<main>
+<section class="hero"><div class="eyebrow">Play · Leaderboard</div><h1>Leaderboard</h1>
+<p>Compare Ability Chess player ratings. Ratings are shown as recorded by the current game system.</p></section>
+<section class="learning-card" aria-labelledby="leaderHeading"><div class="leader-controls"><h2 id="leaderHeading">Player rankings</h2>
+<label for="leaderCategory">Rating category <select id="leaderCategory"><option value="rapid_rating">Rapid</option><option value="blitz_rating">Blitz</option><option value="bullet_rating">Bullet</option><option value="rating">Overall</option></select></label></div>
+<div class="leader-status" id="leaderStatus" role="status" aria-live="polite">Loading ratings…</div>
+<div class="leader-table-wrap"><table class="leader-table"><thead><tr><th scope="col">Rank</th><th scope="col">Player</th><th scope="col">Rating</th><th scope="col">Games</th></tr></thead>
+<tbody id="leaderRows"></tbody></table></div><p class="learning-note">The current member directory supports up to 100 other players. This leaderboard displays the returned rankings, including your own account when signed in.</p></section></main></div></div></body></html>

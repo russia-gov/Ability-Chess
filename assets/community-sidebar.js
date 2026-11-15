@@ -3,9 +3,10 @@
   // The sidebar shares the site's existing session. Owner/staff links are
   // exposed only after the server verifies administrator access.
   const nav=document.getElementById('communitySidebarNav');
+  const activeRoute=document.body.dataset.sidebarRoute||'community';
   const shared=window.AbilityChessAdmin?.mountSidebar;
   if(!shared||!nav)return;
-  shared({nav,mode:'community',activeRoute:'community',canAdmin:false});
+  shared({nav,mode:'community',activeRoute,canAdmin:false});
   document.getElementById('communityProfileLink')?.addEventListener('click',()=>{
     window.location.assign('./?sidebarAction=profile');
   });
@@ -44,7 +45,7 @@
         }
       }catch(_error){/* Cache is optional; account navigation still works. */}
       const {data:allowed,error:roleError}=await client.rpc('ability_chess_is_admin',{p_user_id:data.user.id});
-      if(!roleError&&allowed===true)shared({nav,mode:'community',activeRoute:'community',canAdmin:true});
+      if(!roleError&&allowed===true)shared({nav,mode:'community',activeRoute,canAdmin:true});
     }catch(error){
       console.debug('Community sidebar: admin link unavailable',error);
     }
