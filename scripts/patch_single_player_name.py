@@ -55,6 +55,29 @@ replace_once('<div class="history-meta">@${escapeHtml(member.username||\'\')}</d
 replace_once('sub:`@${p.username} · B ${p.bullet_rating??1200} · Z ${p.blitz_rating??1200} · R ${p.rapid_rating??1200}`',
              'sub:`B ${p.bullet_rating??1200} · Z ${p.blitz_rating??1200} · R ${p.rapid_rating??1200}`',
              'global player search')
+replace_once('memberIdentity.innerHTML=`${escapeHtml(memberProfile.display_name)} (<span class="player-username" data-player-username="${escapeHtml(memberProfile.username)}">@${escapeHtml(memberProfile.username)}</span>)${roleTagHtml(memberProfile)}`',
+             'memberIdentity.innerHTML=`${escapeHtml(memberProfile.display_name||memberProfile.username)}${roleTagHtml(memberProfile)}`',
+             'account modal identity')
+replace_once('memberChallengeSetupTarget.textContent=member?`Challenge ${member.display_name} (@${member.username}). Choose the rules before sending.`',
+             'memberChallengeSetupTarget.textContent=member?`Challenge ${member.display_name||member.username}. Choose the rules before sending.`',
+             'challenge dialog')
+replace_once('memberRow(`${m.display_name} (@${m.username})`',
+             'memberRow(`${m.display_name||m.username}`',
+             'member browse list')
+replace_once('`${c.other_display_name} (@${c.other_username})`',
+             '`${c.other_display_name}`',
+             'challenge list name')
+replace_once('`@${challenge.other_username||\'A member\'}`',
+             '`${challenge.other_username||\'A member\'}`',
+             'incoming challenge fallback')
+replace_once("const mine=memberProfile?.username?`@${memberProfile.username}`:'';",
+             "const mine=memberProfile?.display_name||memberProfile?.username||'';",
+             'game player status name')
+# Incoming and outgoing challenge toasts both previously repeated the handle.
+needle='`${challenge.other_display_name} (@${challenge.other_username})`'
+if source.count(needle)!=2:
+    raise SystemExit(f'challenge toasts: expected two, found {source.count(needle)}')
+source=source.replace(needle,'`${challenge.other_display_name}`')
 # Leave the admin/role/access system intact; it continues to use the UUID
 # and unique username behind the scenes.
 source=source.replace('</head>','<!-- '+marker+' -->\n</head>',1)
