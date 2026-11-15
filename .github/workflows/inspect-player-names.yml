@@ -1,0 +1,19 @@
+name: Inspect player name presentation
+on:
+  push:
+    branches: [feature/single-player-name]
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Find dual name UI elements
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text().splitlines()
+          for i,line in enumerate(s):
+            if any(t in line for t in ('profilePageHandle','profilePageName','sidebar-profile-name','sidebar-profile-meta','roleTagHtml','member-row','member-meta','@'+r'${','@'+r'${escapeHtml','display_name||','display_name ||','username||','username ||','memberHandle','memberDisplayName')):
+              if 230<i<400 or 430<i<780 or i>3500:
+                print(f'{i+1}: '+line[:1300])
+          PY
