@@ -20,7 +20,12 @@ create table public.ability_chess_rooms (
  host_color text,
  host_user_id uuid,
  guest_user_id uuid,
- settings jsonb
+ settings jsonb,
+ host_token uuid default '00000000-0000-0000-0000-0000000000d1',
+ guest_token uuid default '00000000-0000-0000-0000-0000000000d2',
+ version bigint not null default 0,
+ game_state jsonb not null default '{"turn":"w","over":false}'::jsonb,
+ expires_at timestamptz not null default now() + interval '1 day'
 );
 create table public.ability_chess_rating_results (
  game_key text not null,
@@ -52,4 +57,16 @@ create table public.ability_chess_tournament_entries (
  seat_token uuid,
  assigned_color text,
  primary key(tournament_id,user_id)
+);
+
+create table public.ability_chess_room_actions (
+ id bigint generated always as identity primary key,
+ room_id uuid not null references public.ability_chess_rooms(id),
+ room_version bigint not null,
+ actor_id uuid,
+ actor_color text,
+ action_type text,
+ action_payload jsonb,
+ state_snapshot jsonb,
+ unique(room_id,room_version)
 );
