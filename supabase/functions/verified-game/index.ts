@@ -1,7 +1,7 @@
 // STAGED Edge endpoint. Do not deploy before the online UI migration and the
 // coordinated removal of legacy state/result RPCs.
 // The generated rules.mjs is produced by scripts/build_verified_edge_module.js.
-import {applyGameAction} from './rules.mjs';
+import {applyGameAction,viewerState} from './rules.mjs';
 
 const URL_BASE=Deno.env.get('SUPABASE_URL')||'';
 const SERVICE_KEY=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')||'';
@@ -65,24 +65,6 @@ function authorize(room,token,userId){
  if(protectedRoom(room)&&(!seat.userId||!room.host_user_id||!room.guest_user_id))
   throw new Error('Competitive games require two authenticated seats');
  return seat;
-}
-function viewerState(state,color){
- const result=structuredClone(state);
- // Ambush destinations are private until the game ends. This is only the
- // direct game-state response; the legacy room-actions/read RPCs must also
- // be revoked or replaced before competitive launch.
- if(!result.over&&result.ambushed){
-  const enemy=color==='w'?'b':'w';
-  result.ambushed[enemy]=null;
- }
- if(!result.over && Array.isArray(result.log)){
-  result.log=result.log.filter(entry=>{
-   const s=String(entry),enemy=color==='w'?'Black':'White';
-   return !s.includes('__ABILITY_CHESS_HIDDEN_AMBUSH__') &&
-     !(s.startsWith(enemy)&&/\bused\b|\bpurchased\b|\breplaced\b|\bshielded\b|\bteleported\b|\bBomb\b|\bFreeze\b|\bFortify\b|\bRecall\b|\bSwap\b|\bDouble Move\b|\bAmbush\b/i.test(s));
-  });
- }
- return result;
 }
 function estimateClock(row,state){
  if(!state.clocks||!Number.isFinite(Number(state.clocks[state.turn])))
