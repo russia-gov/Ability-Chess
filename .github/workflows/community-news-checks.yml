@@ -38,5 +38,7 @@ jobs:
         run: |
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
+      - name: Regression test existing accounts and Admin
+        run: node scripts/run_account_admin_browser_smoke.js index.html
       - name: Browser test community and publishing
         run: node scripts/run_community_browser_smoke.js
