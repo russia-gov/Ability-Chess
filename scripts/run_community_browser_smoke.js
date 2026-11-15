@@ -57,6 +57,17 @@ const server=http.createServer((req,res)=>{
     await page.goto(home,{waitUntil:'domcontentloaded'});
     await page.locator('.community-nav-btn').first().click();
     await page.waitForURL('**/community.html');
+    await page.locator('.community-rail').waitFor({state:'visible'});
+    await page.locator('.community-nav a.current[aria-current="page"]').waitFor({state:'visible'});
+    if(await page.locator('#communitySidebarAdmin').isVisible())
+      throw Error('Admin link visible to guest on Community');
+    const gradient=await page.locator('body').evaluate(el=>getComputedStyle(el).backgroundImage);
+    if(!gradient.includes('radial-gradient'))throw Error('Community background gradient was lost');
+    await page.getByText('First tournament').waitFor();
+    await page.locator('.community-nav a[href="./?communityNav=analysis"]').click();
+    await page.waitForURL('**/?communityNav=analysis');
+    await page.locator('#analysisScreen.active').waitFor({timeout:20000});
+    await page.goto(home+'community.html',{waitUntil:'domcontentloaded'});
     await page.getByText('First tournament').waitFor();
     await page.getByRole('button',{name:'Read article'}).click();
     if(await page.locator('#communityFeed').isVisible()) throw Error('News feed remained visible behind the open article');
@@ -76,6 +87,12 @@ const server=http.createServer((req,res)=>{
       user:{id:'browser-smoke-owner',aud:'authenticated',role:'authenticated'}
     })));
     await page.reload({waitUntil:'domcontentloaded'});
+    await page.locator('.admin-nav-btn').first().waitFor();
+    await page.goto(home+'community.html',{waitUntil:'domcontentloaded'});
+    await page.locator('#communitySidebarAdmin:not([hidden])').waitFor({timeout:20000});
+    await page.locator('#communitySidebarAdmin').click();
+    await page.locator('#adminScreen.active').waitFor({timeout:20000});
+    await page.goto(home,{waitUntil:'domcontentloaded'});
     await page.locator('.admin-nav-btn').first().waitFor();
     await page.locator('.admin-nav-btn').first().click();
     await page.locator('#adminScreen.active').waitFor();
