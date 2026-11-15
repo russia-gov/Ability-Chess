@@ -23,6 +23,26 @@
       else showScreen(destination);
     }
     global.addEventListener('load',restoreCommunityDestination,{once:true});
+    function restoreSidebarAccountDestination() {
+      const url=new URL(global.location.href);
+      const query=url.searchParams.get('sidebarSearch');
+      const action=url.searchParams.get('sidebarAction');
+      if(query===null&&action!=='profile')return;
+      if(query!==null){
+        const input=global.document.querySelector('.sidebar-member-search input');
+        if(!input)return;
+        input.value=query;
+        input.dispatchEvent(new Event('input',{bubbles:true}));
+        input.focus();
+      }else{
+        const button=global.document.querySelector('.sidebar-profile-link');
+        if(!button)return;
+        button.click();
+      }
+      url.searchParams.delete('sidebarSearch');
+      url.searchParams.delete('sidebarAction');
+      global.history.replaceState(global.history.state,'',url.pathname+url.search+url.hash);
+    }
     function rebuildCanonicalSidebars() {
       const memberProfile = getMemberProfile();
       const canAdmin = !!(memberProfile && (memberProfile.is_owner || memberProfile.is_staff));
@@ -53,6 +73,7 @@
       });
       updateNotificationBadge();
       restoreCommunityDestination();
+      restoreSidebarAccountDestination();
     }
 
     function installManagementPanel() {
@@ -103,6 +124,21 @@
           const memberProfile = getMemberProfile();
           if (memberProfile?.avatar_url) avatar.innerHTML = `<img src="${global.AbilityChessAdmin.escapeAttribute(memberProfile.avatar_url)}" alt="">`;
         });
+        // Share the main site's rendered player identity with standalone pages.
+        // This is a display-only cache, not an authorization or rating source.
+        const member=getMemberProfile();
+        const account=global.document.querySelector('.sidebar-account');
+        const name=account?.querySelector('.sidebar-profile-name')?.textContent?.trim();
+        const meta=account?.querySelector('.sidebar-profile-meta')?.textContent?.trim();
+        if(member?.id && name){
+          try {
+            global.localStorage.setItem('abilityChessSidebarMember',JSON.stringify({
+              userId:member.id,name,meta,avatarUrl:member.avatar_url||'',savedAt:Date.now()
+            }));
+          }catch(_error){/* Storage unavailable; sidebar still works. */}
+        }else{
+          try{global.localStorage.removeItem('abilityChessSidebarMember');}catch(_error){}
+        }
         rebuildCanonicalSidebars();
       };
     }
