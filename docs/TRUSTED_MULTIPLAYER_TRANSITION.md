@@ -76,3 +76,25 @@ The live site currently calls legacy result RPCs. Immediately revoking them woul
 make apparently completed games fail to update ratings/history and could interrupt
 tournaments. Staging the revocations in GitHub preserves live play until a coordinated
 cutover; it does **not** yet secure production.
+
+
+## Additional staged implementation on this branch
+
+- `database/verified_room_finalization_staged.sql` creates a service-only,
+  immutable, transactionally applied result finalization primitive. It locks
+  both profiles and snapshots *both* Elo inputs before any rating changes,
+  awards category-rated results to both participants, and updates both
+  tournament entries. This SQL is not deployed and must not be considered
+  secure until the trusted action handler produces the result.
+- `server/game-state-schema.js` is a reusable validation layer that rejects
+  malformed boards, missing kings during active games, invalid points, and
+  invalid turn/move counters. Its tests live in `server/tests/`.
+  **Structural validation is not move legality validation.** A plausible
+  board can still be fabricated by a cheating client.
+- `scripts/inventory_multiplayer_rules.js` and
+  `scripts/examine_multiplayer_flows.js` inventory the 7MB `index.html`
+  on a GitHub runner without splitting or rewriting production source.
+
+The game-rule extraction / server-side action reducer remains the release
+blocker. No existing gameplay RPC may be labeled authoritative until the
+reducer validates and applies all move/ability/upgrade actions.
