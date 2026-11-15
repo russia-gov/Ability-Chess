@@ -1,0 +1,45 @@
+name: One public player name checks
+on:
+  push:
+    branches: [feature/single-player-name]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/patch_single_player_name.py'
+      - 'admin/member-directory.js'
+      - '.github/workflows/single-player-name-checks.yml'
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch actual page and check single-name UI
+        run: |
+          python3 -m py_compile scripts/patch_single_player_name.py
+          python3 scripts/patch_single_player_name.py index.html
+          python3 scripts/patch_single_player_name.py index.html
+          grep -q 'ABILITY_CHESS_SINGLE_PUBLIC_NAME_V1' index.html
+          grep -q 'id="profileDisplayName" maxlength="40" placeholder="Player name"' index.html
+          grep -q 'id="profileUsername" type="hidden"' index.html
+          ! grep -q 'player-preview-handle' index.html
+          ! grep -q 'profilePageHandle.innerHTML=' index.html
+          node --check admin/member-directory.js
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          import subprocess
+          class Reader(HTMLParser):
+              def __init__(self):super().__init__();self.active=False;self.parts=[]
+              def handle_starttag(self,tag,attrs):
+                  if tag=='script' and not dict(attrs).get('src'):
+                      self.active=True;self.parts.append('')
+              def handle_endtag(self,tag):
+                  if tag=='script':self.active=False
+              def handle_data(self,txt):
+                  if self.active:self.parts[-1]+=txt
+          r=Reader();r.feed(Path('index.html').read_text())
+          for i,js in enumerate(r.parts):
+              p=Path('/tmp/player-code-'+str(i)+'.js');p.write_text(js)
+              subprocess.run(['node','--check',str(p)],check=True)
+          print('Main page JS and admin directory both parse')
+          PY
