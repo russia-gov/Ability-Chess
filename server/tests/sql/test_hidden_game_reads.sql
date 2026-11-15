@@ -28,9 +28,11 @@ begin
  if visible#>'{ambushed,b}' <> 'null'::jsonb then
    raise exception 'Opponent Ambush leaked in live read';
  end if;
- if visible ? 'positionCounts' or visible ? 'lastRecordedPositionKey'
-   or visible ? 'historySnapshots' or visible ? 'log'
-   or visible ? 'lastMessage' then
+ if visible->'positionCounts'<>'{}'::jsonb
+    or visible->'historySnapshots'<>'[]'::jsonb
+    or visible->'log'<>'[]'::jsonb
+    or visible->>'lastMessage'<>''
+    or visible->'lastRecordedPositionKey'<>'null'::jsonb then
    raise exception 'Private metadata leaked through live read';
  end if;
  select * into a from public.ability_chess_get_room_actions(
@@ -40,8 +42,8 @@ begin
    raise exception 'Opponent private action metadata leaked';
  end if;
  if a.state_snapshot#>'{ambushed,b}' <> 'null'::jsonb
-    or a.state_snapshot ? 'positionCounts'
-    or a.state_snapshot ? 'historySnapshots' then
+    or a.state_snapshot->'positionCounts' <> '{}'::jsonb
+    or a.state_snapshot->'historySnapshots' <> '[]'::jsonb then
    raise exception 'Hidden state leaked through action snapshot';
  end if;
  begin
