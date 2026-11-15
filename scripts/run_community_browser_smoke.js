@@ -65,8 +65,16 @@ const server=http.createServer((req,res)=>{
     if(!gradient.includes('radial-gradient'))throw Error('Community background gradient was lost');
     await page.getByText('First tournament').waitFor();
     await page.locator('.community-nav a[href="./?communityNav=analysis"]').click();
-    await page.waitForURL('**/?communityNav=analysis');
-    await page.locator('#analysisScreen.active').waitFor({timeout:20000});
+    await page.waitForTimeout(800);
+    const routeDebug=await page.evaluate(()=>({
+      url:location.href,
+      analysisCount:document.querySelectorAll('#analysisScreen,.analysis-screen').length,
+      active:[...document.querySelectorAll('.screen.active')].map(el=>el.id),
+      selection:[...document.querySelectorAll('.analysis-screen')].map(el=>({id:el.id,classes:el.className})),
+      nav:[...document.querySelectorAll('.analysis-nav-btn')].map(el=>el.className)
+    }));
+    if(!routeDebug.active.some(id=>/analysis/i.test(id))&&!routeDebug.selection.some(el=>/active/.test(el.classes)))
+      throw Error('Community → Analysis did not activate Analysis: '+JSON.stringify(routeDebug));
     await page.goto(home+'community.html',{waitUntil:'domcontentloaded'});
     await page.getByText('First tournament').waitFor();
     await page.getByRole('button',{name:'Read article'}).click();
