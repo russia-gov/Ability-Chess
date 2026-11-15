@@ -71,6 +71,26 @@ const server = http.createServer((request, response) => {
     })));
     await page.reload({ waitUntil: 'domcontentloaded' });
     await page.locator('.admin-nav-btn').first().waitFor({ state: 'visible' });
+    // Keep the sidebar's player name and B/Z/R ratings on distinct lines.
+    const profileLayout = await page.locator('.sidebar-profile-link').first().evaluate(button => {
+      const name = button.querySelector('.sidebar-profile-name');
+      const ratings = button.querySelector('.sidebar-profile-meta');
+      const nameBox = name.getBoundingClientRect();
+      const ratingBox = ratings.getBoundingClientRect();
+      return {
+        nameDisplay: getComputedStyle(name).display,
+        ratingDisplay: getComputedStyle(ratings).display,
+        nameBottom: nameBox.bottom,
+        ratingsTop: ratingBox.top,
+        ratingsText: ratings.textContent.trim()
+      };
+    });
+    if (profileLayout.nameDisplay !== 'block' || profileLayout.ratingDisplay !== 'block' ||
+        profileLayout.ratingsTop < profileLayout.nameBottom - 1 ||
+        !/^B\s*\d+\s*·\s*Z\s*\d+\s*·\s*R\s*\d+/.test(profileLayout.ratingsText)) {
+      throw new Error('Sidebar name and ratings are not on distinct lines: '+JSON.stringify(profileLayout));
+    }
+
     await page.locator('.admin-nav-btn').first().click();
     await page.locator('#adminScreen.active').waitFor();
     await page.locator('[data-admin-management="directory"]').click();
