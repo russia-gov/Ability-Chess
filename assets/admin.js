@@ -1,6 +1,74 @@
 (function (global) {
   'use strict';
 
+
+  // Shared sidebar contract used by both the main SPA and standalone Community.
+  // Main-site account handlers remain attached to their existing footer nodes.
+  const SIDEBAR_DESTINATIONS=Object.freeze([
+    {route:'play',icon:'▶',label:'Play',className:'page-play-btn'},
+    {route:'abilities',icon:'★',label:'Abilities Guide',className:'abilities-nav-btn'},
+    {route:'analysis',icon:'◩',label:'Analysis',className:'analysis-nav-btn'},
+    {route:'settings',icon:'⚙',label:'Settings',className:'settings-nav-btn'},
+    {route:'history',icon:'◫',label:'Game history',className:'history-nav-btn'},
+    {route:'tournaments',icon:'♜',label:'Tournaments',className:'tournaments-nav-btn'},
+    {route:'community',icon:'◈',label:'Community',className:'community-nav-btn'},
+    {route:'notifications',icon:'●',label:'Notifications',className:'sidebar-notification-btn'},
+    {route:'admin',icon:'⚑',label:'Admin',className:'admin-nav-btn'}
+  ]);
+  function mountSidebar({nav,mode='game',activeRoute='play',canAdmin=false,onNavigate,onNotifications}) {
+    if(!nav)return;
+    const rail=nav.closest('aside');
+    if(rail)rail.classList.add('ability-sidebar');
+    // The same component builds brand and footer for a standalone page,
+    // while preserving account DOM and event listeners in the main app.
+    if(mode==='community'&&rail){
+      if(!rail.querySelector('.community-rail-brand')){
+        const brand=document.createElement('a');
+        brand.className='community-rail-brand brand';
+        brand.href='./';
+        brand.innerHTML='<span class="brand-mark" aria-hidden="true">♞</span><span class="brand-name">Ability<br>Chess</span>';
+        rail.insertBefore(brand,nav);
+      }
+      if(!rail.querySelector('.sidebar-account')){
+        const footer=document.createElement('div');
+        footer.className='sidebar-account';
+        footer.id='communitySidebarAccount';
+        footer.innerHTML='<form class="sidebar-member-search" id="communityMemberSearchForm" role="search" action="./" method="get"><label class="visually-hidden" for="communityMemberSearch">Search members</label><input id="communityMemberSearch" name="sidebarSearch" type="search" placeholder="Search members" maxlength="80" autocomplete="off"></form><button type="button" class="sidebar-profile-link" id="communityProfileLink" aria-label="Open your profile"><span class="sidebar-avatar" id="communityProfileAvatar" aria-hidden="true">♜</span><span><span class="sidebar-profile-name" id="communityProfileName">My profile</span><span class="sidebar-profile-meta" id="communityProfileMeta">Sign in to view ratings</span></span></button>';
+        rail.appendChild(footer);
+      }
+    }
+    nav.replaceChildren();
+    for(const item of SIDEBAR_DESTINATIONS){
+      if(item.route==='admin'&&!canAdmin)continue;
+      const active=item.route===activeRoute;
+      const el=document.createElement(mode==='community'?'a':'button');
+      el.className='home-nav-item '+item.className+(active?' active current':'');
+      if(mode==='community'){
+        el.href=item.route==='community'?'./community.html':'./?communityNav='+encodeURIComponent(item.route);
+        if(item.route==='admin')el.id='communitySidebarAdmin';
+      }else{
+        el.type='button';
+        el.addEventListener('click',()=>{
+          if(item.route==='notifications')onNotifications?.();
+          else if(item.route==='community')global.location.assign('community.html');
+          else onNavigate?.(item.route);
+        });
+      }
+      if(active)el.setAttribute('aria-current','page');
+      const icon=document.createElement('span');
+      icon.className='home-nav-icon';
+      icon.textContent=item.icon;
+      el.append(icon,document.createTextNode(item.label));
+      if(mode==='game'&&item.route==='notifications'){
+        const badge=document.createElement('span');
+        badge.className='notification-badge';
+        badge.hidden=true;
+        el.append(badge);
+      }
+      nav.appendChild(el);
+    }
+  }
+
   function createAdminUi({ getMemberProfile, currentRoute, showScreen, updateNotificationBadge, openNotifications }) {
     let handledCommunityNav=false;
     function restoreCommunityDestination() {
@@ -46,30 +114,11 @@
     function rebuildCanonicalSidebars() {
       const memberProfile = getMemberProfile();
       const canAdmin = !!(memberProfile && (memberProfile.is_owner || memberProfile.is_staff));
-      const items = [
-        { className: 'page-play-btn', icon: '▶', label: 'Play', route: 'play', action: () => showScreen('play') },
-        { className: 'abilities-nav-btn', icon: '★', label: 'Abilities Guide', route: 'abilities', action: () => showScreen('abilities') },
-        { className: 'analysis-nav-btn', icon: '◩', label: 'Analysis', route: 'analysis', action: () => showScreen('analysis') },
-        { className: 'settings-nav-btn', icon: '⚙', label: 'Settings', route: 'settings', action: () => showScreen('settings') },
-        { className: 'history-nav-btn', icon: '◫', label: 'Game history', route: 'history', action: () => showScreen('history') },
-        { className: 'tournaments-nav-btn', icon: '♜', label: 'Tournaments', route: 'tournaments', action: () => showScreen('tournaments') },
-        { className: 'community-nav-btn', icon: '◈', label: 'Community', action: () => global.location.assign('community.html') },
-        { className: 'sidebar-notification-btn', icon: '●', label: 'Notifications', action: openNotifications, notification: true }
-      ];
-      if (canAdmin) {
-        items.push({ className: 'admin-nav-btn', icon: '⚑', label: 'Admin', route: 'admin', action: () => showScreen('admin') });
-      }
-
       document.querySelectorAll('.home-nav').forEach(nav => {
-        nav.replaceChildren();
-        for (const item of items) {
-          const button = document.createElement('button');
-          button.type = 'button';
-          button.className = `home-nav-item ${item.className}${item.route === currentRoute() ? ' active' : ''}`;
-          button.innerHTML = `<span class="home-nav-icon">${item.icon}</span>${item.label}${item.notification ? ' <span class="notification-badge" hidden></span>' : ''}`;
-          button.addEventListener('click', item.action);
-          nav.appendChild(button);
-        }
+        mountSidebar({
+          nav,mode:'game',activeRoute:currentRoute(),canAdmin,
+          onNavigate:showScreen,onNotifications:openNotifications
+        });
       });
       updateNotificationBadge();
       restoreCommunityDestination();
@@ -150,6 +199,6 @@
     return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
   }
 
-  global.AbilityChessAdmin = Object.freeze({ createAdminUi, escapeAttribute });
+  global.AbilityChessAdmin = Object.freeze({ createAdminUi, escapeAttribute, mountSidebar });
 })(window);
 
