@@ -20,4 +20,7 @@ jobs:
           node-version: '22'
       - run: node scripts/extract_board_rules.js
       - run: node --check server/generated/board-rules.js
+      - run: node scripts/build_verified_edge_module.js
+      - run: node --check supabase/functions/verified-game/rules.mjs
+      - run: node -e "import('./supabase/functions/verified-game/rules.mjs').then(m => {if(typeof m.applyGameAction!=='function')process.exit(1);})"
       - run: node --test server/tests/*.test.js
