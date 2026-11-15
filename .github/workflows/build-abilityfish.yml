@@ -44,6 +44,9 @@ jobs:
         run: node scripts/benchmark_abilityfish.js vendor/Fairy-Stockfish/src/stockfish --depth 2 --timeout 30 --scenario ordinary_midgame
       - name: Benchmark purchased upgrades (depth 2)
         run: node scripts/benchmark_abilityfish.js vendor/Fairy-Stockfish/src/stockfish --depth 2 --timeout 30 --scenario upgraded_knight
+      - name: Benchmark sparse ability search at depth 5
+        continue-on-error: true
+        run: node scripts/benchmark_abilityfish.js vendor/Fairy-Stockfish/src/stockfish --depth 5 --timeout 75 --scenario ability_sparse
       - name: Diagnose ability-rich search explosion (depth 2, 20-second watchdog only)
         continue-on-error: true
         run: node scripts/benchmark_abilityfish.js vendor/Fairy-Stockfish/src/stockfish --depth 2 --timeout 20 --scenario ability_tactical
