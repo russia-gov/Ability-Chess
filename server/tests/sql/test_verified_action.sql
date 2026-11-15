@@ -1,0 +1,70 @@
+\set ON_ERROR_STOP on
+do $$
+begin
+ if has_function_privilege('anon',
+     'public.ability_chess_commit_verified_action(uuid,uuid,uuid,bigint,jsonb,text,jsonb)',
+     'EXECUTE') or has_function_privilege('authenticated',
+     'public.ability_chess_commit_verified_action(uuid,uuid,uuid,bigint,jsonb,text,jsonb)',
+     'EXECUTE') then
+  raise exception 'Untrusted client can commit a verified action';
+ end if;
+end $$;
+insert into public.ability_chess_profiles(id) values
+ ('00000000-0000-0000-0000-000000000003'),
+ ('00000000-0000-0000-0000-000000000004');
+insert into public.ability_chess_rooms
+ (id,status,host_color,host_user_id,guest_user_id,settings,game_state) values
+ ('00000000-0000-0000-0000-0000000000a2','active','w',
+  '00000000-0000-0000-0000-000000000003',
+  '00000000-0000-0000-0000-000000000004',
+  '{"rated":true,"ratingCategory":"rapid"}'::jsonb,
+  '{"turn":"w","over":false}'::jsonb);
+do $$
+declare ver bigint;aid bigint;
+begin
+ begin
+  perform public.ability_chess_commit_verified_action(
+   '00000000-0000-0000-0000-0000000000a2',
+   '00000000-0000-0000-0000-0000000000d1',
+   '00000000-0000-0000-0000-000000000004',0,
+   '{"turn":"b","over":false}'::jsonb,'move');
+  raise exception 'Wrong account forged a seat';
+ exception when raise_exception then
+  if sqlerrm='Wrong account forged a seat' then raise; end if;
+  if sqlerrm <> 'Authenticated caller does not own this seat' then raise; end if;
+ end;
+ select new_version,action_id into ver,aid
+  from public.ability_chess_commit_verified_action(
+   '00000000-0000-0000-0000-0000000000a2',
+   '00000000-0000-0000-0000-0000000000d1',
+   '00000000-0000-0000-0000-000000000003',0,
+   '{"turn":"b","over":false}'::jsonb,'move');
+ if ver<>1 or aid is null then raise exception 'Expected one verified version'; end if;
+ if (select count(*) from public.ability_chess_room_actions
+     where room_id='00000000-0000-0000-0000-0000000000a2')<>1 then
+    raise exception 'Expected exactly one authoritative action event';
+ end if;
+ begin
+  perform public.ability_chess_commit_verified_action(
+   '00000000-0000-0000-0000-0000000000a2',
+   '00000000-0000-0000-0000-0000000000d1',
+   '00000000-0000-0000-0000-000000000003',0,
+   '{"turn":"b","over":false}'::jsonb,'move');
+  raise exception 'Stale version was accepted';
+ exception when raise_exception then
+  if sqlerrm='Stale version was accepted' then raise; end if;
+  if sqlerrm <> 'Version conflict' then raise; end if;
+ end;
+ begin
+  perform public.ability_chess_commit_verified_action(
+   '00000000-0000-0000-0000-0000000000a2',
+   '00000000-0000-0000-0000-0000000000d1',
+   '00000000-0000-0000-0000-000000000003',1,
+   '{"turn":"b","over":false}'::jsonb,'move');
+  raise exception 'Moving out of turn was accepted';
+ exception when raise_exception then
+  if sqlerrm='Moving out of turn was accepted' then raise; end if;
+  if sqlerrm <> 'Wrong player turn' then raise; end if;
+ end;
+end $$;
+select 'Verified action persistence tests passed' as result;
