@@ -8,7 +8,7 @@ const terms=[
   'allLegalMoves','applyMove','makeMove','applyAbility','applyBotAbility',
   'updateRoomAction','ability_chess_update_room_action','ability_chess_apply_category_rating_result',
   'ability_chess_tournament_report_result','game.board','getLegalMoves','useAbility',
-  'performAbility','cloneState','applyUpgrade','handleBot','abilityPoints'
+  'performAbility','cloneState','applyUpgrade','handleBot','abilityPoints','isInsufficientMaterial','recordPosition','positionKey','function pawnOnOwnSide','function updateClockNow'
 ];
 function lineOf(at) {let l=1;for(let i=0;i<at;i++)if(src.charCodeAt(i)===10)l++;return l;}
 function snippet(at,n=260){
