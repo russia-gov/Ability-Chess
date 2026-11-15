@@ -87,6 +87,24 @@ int main(){
   assert(r.ok&&b.p[20].present()); undo_action(s,b,u);
   assert(b.p[12].type==PieceType::Knight&&!b.p[20].present()&&s.turn==Side::White&&s.variantKey==keyBefore);
 
+  // Board-state-only actions must not snapshot or modify the 64-square
+  // board. Their complete AbilityState still has to undo exactly.
+  AbilityState portalState; portalState.turn=Side::White;
+  portalState.side[0].points=20; portalState.recompute_key();
+  const auto portalKey=portalState.variantKey;
+  const auto portalBefore=b.p;
+  ActionUndo portalUndo;
+  r=apply_action_reversible(portalState,b,{ActionKind::PortalFinish,0,1,0,0},portalUndo);
+  assert(r.ok && portalUndo.valid && !portalUndo.boardMayChange);
+  assert(portalState.variantKey!=portalKey);
+  undo_action(portalState,b,portalUndo);
+  assert(portalState.variantKey==portalKey && portalState.side[0].points==20);
+  for(int i=0;i<64;++i) {
+    assert(b.p[i].type==portalBefore[i].type);
+    assert(b.p[i].side==portalBefore[i].side);
+    assert(b.p[i].code==portalBefore[i].code);
+  }
+
   s.begin_turn(Side::White,false); s.side[0].points=20;
   b.p[12]=W(PieceType::Knight,3); b.p[20]={};
   r=apply_action(s,b,{ActionKind::Teleport,12,20,0,0});
