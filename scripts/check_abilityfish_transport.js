@@ -35,5 +35,5 @@ const commands=Array.from(abilityCommands({abilityState:{
 }}));
 assert(commands.includes('abilityupgrade w 1 5'));
 assert(commands.includes('abilityupgrade b 2 8'));
-assert.match(source,/const defaultTimeMs = 8000;/);
-console.log('AbilityFish upgrade UCI transport and bounded default search checks passed');
+assert.match(source,/const defaultTimeMs = 0;/);
+console.log('AbilityFish upgrade UCI transport and unrestricted default depth checks passed');
