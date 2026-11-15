@@ -39,6 +39,14 @@ const server = http.createServer((request, response) => {
       throw new Error('Signed-out account controls did not become visible.');
     }
 
+    await page.route('**/auth/v1/user', async route => {
+      await route.fulfill({
+        status:200,contentType:'application/json',
+        body:JSON.stringify({id:'browser-smoke-owner',aud:'authenticated',role:'authenticated',
+          email:'browser-owner@example.invalid',app_metadata:{provider:'email'},
+          user_metadata:{},created_at:new Date().toISOString()})
+      });
+    });
     await page.route('**/rest/v1/rpc/**', async route => {
       const name = new URL(route.request().url()).pathname.split('/').pop();
       const profile = {
@@ -46,14 +54,20 @@ const server = http.createServer((request, response) => {
         is_owner: true, is_staff: false, games_played: 0, wins: 0, losses: 0, draws: 0,
         bullet_rating: 1200, blitz_rating: 1200, rapid_rating: 1200
       };
-      const body = name === 'ability_chess_get_my_profile_v2' || name === 'ability_chess_profile_extras' ? [profile]
+      const body = name === 'ability_chess_is_admin' || name === 'ability_chess_is_owner' ? true
+        : name === 'ability_chess_admin_member_directory' ? [{id:'browser-smoke-owner',
+            username:'browser_owner',display_name:'Browser Owner',is_owner:true,is_staff:false,
+            games_played:0,total_count:1}]
+        : name === 'ability_chess_get_my_profile_v2' || name === 'ability_chess_profile_extras' ? [profile]
         : name === 'ability_chess_get_my_ratings' ? [{ bullet_rating: 1200, blitz_rating: 1200, rapid_rating: 1200 }]
         : name === 'ability_chess_get_my_challenge_inbox_key' ? 'browser-smoke-key'
         : [];
       await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
     });
     await page.evaluate(() => localStorage.setItem('abilityChessMemberSession', JSON.stringify({
-      access_token: 'browser-smoke-token', refresh_token: 'browser-smoke-refresh', expires_at: Math.floor(Date.now() / 1000) + 3600
+      access_token: 'browser-smoke-token', refresh_token: 'browser-smoke-refresh',
+      token_type:'bearer',user:{id:'browser-smoke-owner',role:'authenticated',aud:'authenticated'},
+      expires_at: Math.floor(Date.now() / 1000) + 3600
     })));
     await page.reload({ waitUntil: 'domcontentloaded' });
     await page.locator('.admin-nav-btn').first().waitFor({ state: 'visible' });
@@ -63,6 +77,14 @@ const server = http.createServer((request, response) => {
     await page.locator('#adminManagementFrame:not([hidden])').waitFor();
     const directoryUrl = await page.locator('#adminManagementFrame').getAttribute('src');
     if (directoryUrl !== 'admin-directory.html?embedded=1') throw new Error(`Unexpected directory URL: ${directoryUrl}`);
+    // Exercise the actual embedded directory authentication, not merely iframe navigation.
+    const directory=page.frameLocator('#adminManagementFrame');
+    await directory.locator('#directoryControls:not([hidden])').waitFor({timeout:20000});
+    await directory.locator('#memberTableBody').getByText('Browser Owner').waitFor({timeout:10000});
+    const authMessage=await directory.locator('#directoryMessage').textContent();
+    if(/sign in|restricted|admin access required/i.test(authMessage||'')){
+      throw new Error('Directory rejected the existing owner session: '+authMessage);
+    }
     await page.locator('[data-admin-management="reports"]').click();
     const reportUrl = await page.locator('#adminManagementFrame').getAttribute('src');
     if (reportUrl !== 'dm-safety.html?embedded=1#reports') throw new Error(`Unexpected reports URL: ${reportUrl}`);

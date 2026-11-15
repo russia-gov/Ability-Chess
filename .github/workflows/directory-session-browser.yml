@@ -1,0 +1,27 @@
+name: Account and directory session browser regression
+on:
+  push:
+    branches: [fix/directory-shared-session]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'admin/member-directory.js'
+      - 'admin/dm-reports.js'
+      - 'scripts/run_account_admin_browser_smoke.js'
+      - '.github/workflows/directory-session-browser.yml'
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - run: |
+          node --check admin/member-directory.js
+          node --check admin/dm-reports.js
+          node --check scripts/run_account_admin_browser_smoke.js
+          node scripts/run_account_admin_browser_smoke.js index.html
