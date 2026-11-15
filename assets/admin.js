@@ -221,22 +221,14 @@
           button.textContent=opening?'Close news editor':'Open news editor';
         });
       }
-      // Tutorial editor uses the site's existing Admin screen; the database
-      // separately enforces owner/staff privileges for every write.
+      // Open the tutorial authoring workspace as a real page instead of a
+      // constrained iframe inside the Admin dashboard.
       if(memberTools && !document.getElementById('adminTutorialPanel')){
         const section=document.createElement('section');
         section.className='admin-card admin-community-panel';
         section.id='adminTutorialPanel';
-        section.innerHTML='<h2>Tutorial lessons</h2><p>Edit lesson text, board positions, and teaching arrows.</p><button type="button" id="adminTutorialToggle" class="action">Open tutorial editor</button><iframe id="adminTutorialFrame" title="Tutorial editor" loading="lazy" hidden></iframe>';
-        const communityPanel=document.getElementById('adminCommunityPanel');
-        (communityPanel||memberTools).after(section);
-        const toggle=section.querySelector('#adminTutorialToggle');
-        const frame=section.querySelector('#adminTutorialFrame');
-        toggle.addEventListener('click',()=>{
-          frame.hidden=!frame.hidden;
-          if(!frame.hidden&&!frame.hasAttribute('src'))frame.src='tutorial-editor.html?embedded=1';
-          toggle.textContent=frame.hidden?'Open tutorial editor':'Close tutorial editor';
-        });
+        section.innerHTML='<h2>Tutorial lessons</h2><p>Manage the illustrated tutorial using a full-page lesson editor and interactive board preview.</p><a class="action" href="tutorial-editor.html" id="adminTutorialOpen">Open tutorial editor</a>';
+        (document.getElementById('adminCommunityPanel')||memberTools).after(section);
       }
       document.addEventListener('click', event => {
         const select = event.target.closest?.('[data-admin-management]');
