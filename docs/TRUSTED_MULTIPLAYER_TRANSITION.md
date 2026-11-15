@@ -98,3 +98,43 @@ cutover; it does **not** yet secure production.
 The game-rule extraction / server-side action reducer remains the release
 blocker. No existing gameplay RPC may be labeled authoritative until the
 reducer validates and applies all move/ability/upgrade actions.
+
+## Latest staged runtime components (2026-11-15)
+
+- All eleven single-ability intents: \`server/ability-intent.js\`; no client-provided
+  costs or effects are accepted. Corresponding security and transition tests pass.
+- All movement-upgrade purchases: \`server/upgrade-intent.js\`; server verifies
+  prices, ownership, slot limits and replacements. Tests pass.
+- Full deterministic *game action* transitions: \`server/turn-reducer.js\`.
+  Includes capture rewards, turn switching, effect duration, Double Move
+  sequencing, and the browser's extracted checkmate/draw adjudication helpers.
+  It is not a complete server clock or network security implementation.
+- \`scripts/build_verified_edge_module.js\` creates the self-contained, dependency-free
+  ESM module \`supabase/functions/verified-game/rules.mjs\`. CI imports and tests
+  it successfully; the generated module is committed to the draft branch.
+- \`supabase/functions/verified-game/index.ts\` is a **staged**, unaudited Edge
+  endpoint that validates Auth identity and seat ownership, loads the current
+  persisted state using a server-only credential, calls the deterministic
+  reducer, and commits by expected version. It is not deployed or linked from
+  the production UI.
+- Terminal action settlement is now invoked from the staged, service-role-only
+  action-commit RPC in the same PostgreSQL transaction; isolated tests verify
+  ratings are awarded to both participants exactly once.
+
+### Cutover blockers still open
+
+1. Migrate all browser online actions, polling and result handling to the typed
+   endpoint. Current \`index.html\` still calls legacy RPCs.
+2. Server-create/validate **all** official starting states and tournament settings;
+   the current room creation RPCs still accept arbitrary player-submitted JSON.
+3. Revoke direct access to all legacy position, action snapshot, room creation,
+   rating and tournament-result RPCs at cutover. In particular, the existing
+   \`ability_chess_get_room_actions\` snapshot route leaks private hidden Ambush
+   state and cannot remain active.
+4. Complete authoritative timed-game behavior, draw offers, disconnect handling,
+   full two-account adversarial tests, and browser parity checks.
+5. Audit and repair any gameplay rule inconsistencies found in those tests.
+
+Do not deploy this draft Edge endpoint or SQL independently: it is **not** safe
+as a replacement until the legacy bypasses, initial-state authorization and
+client integration are completed.
