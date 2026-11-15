@@ -6,6 +6,7 @@ on:
     paths:
       - 'scripts/inventory_multiplayer_rules.js'
       - 'scripts/examine_multiplayer_flows.js'
+      - 'scripts/scan_online_mutations.js'
       - '.github/workflows/inventory-multiplayer-rules.yml'
 permissions:
   contents: read
@@ -19,3 +20,4 @@ jobs:
           node-version: '22'
       - run: node scripts/inventory_multiplayer_rules.js
       - run: node scripts/examine_multiplayer_flows.js
+      - run: node scripts/scan_online_mutations.js
