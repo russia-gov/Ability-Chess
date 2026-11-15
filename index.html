@@ -3273,13 +3273,13 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
       render();
       return;
     }
+    // Validate the complete move before changing score, clock, or animation.
+    const next = applyMoveToState(game, move);
+    if (!next) return;
     if (animate) queueMoveAnimation(move);
     else pendingMoveAnimation = null;
     if (target) addPoints(game.turn, target);
-
     game.halfmoveClock = (piece[1]==='p' || target) ? 0 : Number(game.halfmoveClock||0)+1;
-    const next = applyMoveToState(game, move);
-    if (!next) return;
     game.board = next.board;
     game.castlingRights = next.castlingRights;
     game.enPassant = next.enPassant;
