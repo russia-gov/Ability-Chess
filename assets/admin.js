@@ -12,6 +12,7 @@
         { className: 'settings-nav-btn', icon: '⚙', label: 'Settings', route: 'settings', action: () => showScreen('settings') },
         { className: 'history-nav-btn', icon: '◫', label: 'Game history', route: 'history', action: () => showScreen('history') },
         { className: 'tournaments-nav-btn', icon: '♜', label: 'Tournaments', route: 'tournaments', action: () => showScreen('tournaments') },
+        { className: 'community-nav-btn', icon: '◈', label: 'Community', action: () => global.location.assign('community.html') },
         { className: 'sidebar-notification-btn', icon: '●', label: 'Notifications', action: openNotifications, notification: true }
       ];
       if (canAdmin) {
@@ -33,6 +34,23 @@
     }
 
     function installManagementPanel() {
+      // Community publishing lives inside Admin, separate from member management.
+      const memberTools=document.getElementById('adminManagementPanel');
+      if(memberTools && !document.getElementById('adminCommunityPanel')){
+        const section=document.createElement('section');
+        section.className='admin-card admin-community-panel';
+        section.id='adminCommunityPanel';
+        section.innerHTML='<h2>Community publishing</h2><p>Write news and announcements, upload thumbnails, and manage drafts.</p><button type="button" id="adminCommunityEditorToggle" class="action">Open news editor</button><iframe id="adminCommunityEditorFrame" title="Community news editor" loading="lazy" hidden></iframe>';
+        memberTools.after(section);
+        const button=section.querySelector('#adminCommunityEditorToggle');
+        const frame=section.querySelector('#adminCommunityEditorFrame');
+        button.addEventListener('click',()=>{
+          const opening=frame.hidden;
+          frame.hidden=!opening;
+          if(opening && !frame.hasAttribute('src'))frame.src='community-editor.html?embedded=1';
+          button.textContent=opening?'Close news editor':'Open news editor';
+        });
+      }
       document.addEventListener('click', event => {
         const select = event.target.closest?.('[data-admin-management]');
         const close = event.target.closest?.('#adminManagementClose');

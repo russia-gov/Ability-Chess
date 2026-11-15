@@ -1,0 +1,44 @@
+name: Community news publishing tests
+on:
+  push:
+    branches: [feature/community-news-publishing]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'community.html'
+      - 'community-editor.html'
+      - 'assets/community*'
+      - 'admin/community-editor.js'
+      - 'assets/admin.js'
+      - 'assets/admin.css'
+      - 'database/community_news.sql'
+      - 'scripts/run_community_browser_smoke.js'
+      - '.github/workflows/community-news-checks.yml'
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check editor, feed and security declarations
+        run: |
+          node --check assets/community-content.js
+          node --check assets/community-page.js
+          node --check admin/community-editor.js
+          node --check assets/admin.js
+          node --check scripts/run_community_browser_smoke.js
+          grep -q "alter table public.ability_chess_community_posts enable row level security" database/community_news.sql
+          grep -q "public.ability_chess_is_admin(auth.uid())" database/community_news.sql
+          grep -q "storage.objects" database/community_news.sql
+          grep -q "community-nav-btn" assets/admin.js
+          grep -q "adminCommunityEditorFrame" assets/admin.js
+      - name: Install Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Regression test existing accounts and Admin
+        run: node scripts/run_account_admin_browser_smoke.js index.html
+      - name: Browser test community and publishing
+        run: node scripts/run_community_browser_smoke.js

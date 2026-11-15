@@ -14,6 +14,9 @@ on:
       - 'scripts/check_account_admin_modules.js'
       - 'scripts/run_account_admin_browser_smoke.js'
       - 'assets/**'
+      - 'community.html'
+      - 'community-editor.html'
+      - 'scripts/run_community_browser_smoke.js'
       - 'dm-safety.html'
       - 'admin/dm-reports.js'
       - 'admin/**'
@@ -39,6 +42,9 @@ on:
       - 'scripts/check_account_admin_modules.js'
       - 'scripts/run_account_admin_browser_smoke.js'
       - 'assets/**'
+      - 'community.html'
+      - 'community-editor.html'
+      - 'scripts/run_community_browser_smoke.js'
       - 'scripts/patch_contextual_reporting.py'
       - 'dm-safety.html'
       - 'admin/dm-reports.js'
@@ -150,6 +156,9 @@ jobs:
 
       - name: Prove account sign-in and admin management in Chromium
         run: node scripts/run_account_admin_browser_smoke.js index.html
+
+      - name: Prove Community news and Admin editor in Chromium
+        run: node scripts/run_community_browser_smoke.js
 
       - name: Verify combined production + embedded Analysis integration
         run: |

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Community · Ability Chess</title><meta name="description" content="News and announcements from Ability Chess.">
+<link rel="stylesheet" href="./assets/community.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.90.1/dist/umd/supabase.min.js"></script>
+<script defer src="./assets/community-content.js"></script>
+<script defer src="./assets/community-page.js"></script></head>
+<body>
+<header class="site-head"><a class="brand" href="./">♞ <span>Ability</span> Chess</a>
+<nav class="header-links" aria-label="Community navigation"><a href="./">Back to game</a><a href="./community.html" aria-current="page">Community</a></nav></header>
+<main>
+<section class="hero"><div class="eyebrow">Ability Chess Community</div><h1>News &amp; Announcements</h1>
+<p>Updates about the game, upcoming events, and news from the Ability Chess team.</p></section>
+<nav class="filters" aria-label="Filter community news">
+<button type="button" data-filter="all" class="active" aria-pressed="true">All</button>
+<button type="button" data-filter="announcement" aria-pressed="false">Announcements</button>
+<button type="button" data-filter="news" aria-pressed="false">News</button>
+<button type="button" data-filter="update" aria-pressed="false">Updates</button></nav>
+<div id="communityStatus" class="status" role="status"></div>
+<div id="communityFeed" class="news-list" aria-live="polite"><p class="empty">Loading community news…</p></div>
+<div id="communityDetail" hidden></div>
+</main></body></html>

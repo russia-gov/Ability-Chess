@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Community publishing · Ability Chess Admin</title>
+<link rel="stylesheet" href="./assets/community.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.90.1/dist/umd/supabase.min.js"></script>
+<script defer src="./assets/community-content.js"></script>
+<script defer src="./admin/community-editor.js"></script>
+</head><body>
+<script>if(new URLSearchParams(location.search).has('embedded'))document.body.classList.add('embedded');</script>
+<header class="site-head"><a class="brand" href="./">♞ Ability Chess</a><nav class="header-links"><a href="./community.html">View Community</a><a href="./">Back to game</a></nav></header>
+<main>
+<section class="hero"><div class="eyebrow">Admin · Community</div><h1>News &amp; Announcements Editor</h1></section>
+<p id="editorStatus" class="status" role="status" aria-live="polite">Checking your administrator session…</p>
+<div id="editorApp" class="editor-layout" hidden>
+<aside class="editor-panel">
+<h2>Posts</h2><button id="newPostBtn" type="button" class="action primary">+ New post</button>
+<button id="refreshPostsBtn" type="button" class="action">Refresh</button>
+<div id="postList" class="post-list" aria-label="Existing posts"></div>
+</aside>
+<section class="editor-panel" aria-label="Edit community post">
+<form id="postForm">
+<div class="form-grid">
+<div class="field wide"><label for="postTitle">Headline</label><input id="postTitle" required maxlength="160" placeholder="What's new in Ability Chess?"></div>
+<div class="field"><label for="postKind">Type</label><select id="postKind"><option value="news">News</option><option value="announcement">Announcement</option><option value="update">Game update</option></select></div>
+<div class="field"><label for="postPinned">Featured post</label><label class="check-row"><input id="postPinned" type="checkbox"> Pin to top of Community</label></div>
+<div class="field wide"><label for="postSummary">Short description</label><textarea id="postSummary" rows="2" maxlength="500" placeholder="A short introduction displayed in the feed."></textarea></div>
+<div class="field wide"><label for="postThumbnail">Thumbnail image URL (HTTPS)</label>
+<input id="postThumbnail" type="url" placeholder="https://.../image.jpg" maxlength="2048">
+<div class="check-row"><input id="thumbnailFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" aria-label="Upload thumbnail image">
+<button type="button" class="action" id="uploadThumbnailBtn">Upload image</button></div>
+<img id="thumbnailPreview" class="thumb-preview" alt="Thumbnail preview" hidden></div>
+</div>
+<div class="field"><label id="postBodyLabel">Article body</label>
+<div class="editor-toolbar" role="toolbar" aria-label="Format article">
+<button type="button" data-command="bold" title="Bold"><b>B</b></button>
+<button type="button" data-command="italic" title="Italic"><i>I</i></button>
+<button type="button" data-command="underline" title="Underline"><u>U</u></button>
+<button type="button" data-block="H2">Heading</button>
+<button type="button" data-block="P">Paragraph</button>
+<button type="button" data-block="BLOCKQUOTE">Quote</button>
+<button type="button" data-command="insertUnorderedList">• List</button>
+<button type="button" data-command="insertOrderedList">1. List</button>
+<button type="button" data-command="justifyLeft">Left</button>
+<button type="button" data-command="justifyCenter">Center</button>
+<button type="button" data-command="justifyRight">Right</button>
+<select id="editorFont" aria-label="Font family"><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Verdana">Verdana</option><option value="Trebuchet MS">Trebuchet</option><option value="Times New Roman">Times</option><option value="Courier New">Courier</option></select>
+<select id="editorSize" aria-label="Font size"><option value="1">12 px</option><option value="2">14 px</option><option value="3" selected>16 px</option><option value="4">20 px</option><option value="5">24 px</option><option value="6">30 px</option><option value="7">36 px</option></select>
+<label>Text <input id="editorColor" type="color" value="#eef1f6" title="Text color"></label>
+<label>Highlight <input id="editorHighlight" type="color" value="#446035" title="Highlight color"></label>
+<button type="button" id="editorLink">Link</button>
+<button type="button" id="editorClear">Clear format</button>
+</div>
+<div id="postBody" class="editor-body rich-body" contenteditable="true" role="textbox" aria-multiline="true" aria-labelledby="postBodyLabel" data-placeholder="Write your news or announcement here…"></div>
+</div>
+<div class="editor-actions">
+<button type="button" id="saveDraftBtn" class="action">Save draft</button>
+<button type="button" id="publishBtn" class="action primary">Publish</button>
+<button type="button" id="unpublishBtn" class="action" hidden>Move to drafts</button>
+<button type="button" id="deletePostBtn" class="action" hidden>Delete</button>
+<button type="button" id="previewPostBtn" class="action">Preview</button>
+</div>
+</form>
+<div id="editorPreview" class="post-detail" style="margin-top:18px" hidden></div>
+</section>
+</div>
+</main></body></html>
