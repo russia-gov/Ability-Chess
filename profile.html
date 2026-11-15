@@ -1,0 +1,13 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Player Profile · Ability Chess</title>
+<meta name="description" content="Ability Chess player profile and ratings.">
+<link rel="stylesheet" href="./assets/community.css"><link rel="stylesheet" href="./assets/account.css"><link rel="stylesheet" href="./assets/learning-pages.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.90.1/dist/umd/supabase.min.js"></script>
+<script defer src="./assets/admin.js"></script><script defer src="./assets/community-sidebar.js"></script><script defer src="./assets/profile-page.js"></script></head>
+<body class="community-page" data-sidebar-route="profile">
+<div class="community-shell"><aside class="community-rail site-ribbon" aria-label="Ability Chess site navigation"><nav id="communitySidebarNav" class="community-nav home-nav" aria-label="Main navigation"></nav></aside>
+<div class="community-main"><header class="site-head"><a class="brand" href="./">♞ <span>Ability</span> Chess</a><nav class="header-links"><a href="./leaderboard.html">Leaderboard</a><a href="./">Back to game</a></nav></header>
+<main><section class="hero"><div class="eyebrow">Community · Player profile</div><h1 id="profilePageTitle">Player profile</h1></section>
+<p id="profilePageStatus" class="leader-status" role="status" aria-live="polite">Loading profile…</p>
+<div class="learning-card" id="profilePageContent" hidden><div class="leader-profile-heading"><div id="profilePageAvatar"></div><div><h2 id="profilePageDisplay"></h2><p class="leader-handle" id="profilePageHandle"></p></div></div>
+<p class="leader-preview-bio" id="profilePageBio"></p><div class="leader-preview-stats" id="profilePageRatings"></div><h2>Game record</h2><div class="leader-record" id="profilePageRecord"></div></div>
+</main></div></div></body></html>
