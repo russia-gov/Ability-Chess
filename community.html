@@ -2,6 +2,7 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Community · Ability Chess</title><meta name="description" content="News and announcements from Ability Chess.">
 <link rel="stylesheet" href="./assets/community.css">
+<link rel="stylesheet" href="./assets/account.css">
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.90.1/dist/umd/supabase.min.js"></script>
 <script defer src="./assets/community-content.js"></script>
 <script defer src="./assets/community-sidebar.js"></script>
@@ -21,6 +22,16 @@
     <a class="home-nav-item" href="./?communityNav=notifications"><span class="nav-icon home-nav-icon">●</span>Notifications</a>
     <a id="communitySidebarAdmin" class="home-nav-item" href="./?communityNav=admin" hidden><span class="nav-icon home-nav-icon">⚑</span>Admin</a>
   </nav>
+  <div class="sidebar-account" id="communitySidebarAccount">
+    <form class="sidebar-member-search" id="communityMemberSearchForm" role="search" action="./" method="get">
+      <label class="visually-hidden" for="communityMemberSearch">Search members</label>
+      <input id="communityMemberSearch" name="sidebarSearch" type="search" placeholder="Search members" maxlength="80" autocomplete="off">
+    </form>
+    <button type="button" class="sidebar-profile-link" id="communityProfileLink" aria-label="Open your profile">
+      <span class="sidebar-avatar" id="communityProfileAvatar" aria-hidden="true">♜</span>
+      <span><span class="sidebar-profile-name" id="communityProfileName">My profile</span><span class="sidebar-profile-meta" id="communityProfileMeta">Sign in to view ratings</span></span>
+    </button>
+  </div>
 </aside>
 <div class="community-main">
 <header class="site-head"><a class="brand" href="./">♞ <span>Ability</span> Chess</a>
