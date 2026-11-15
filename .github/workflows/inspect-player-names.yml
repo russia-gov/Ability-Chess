@@ -12,9 +12,8 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           s=Path('index.html').read_text().splitlines()
-          for start,end in [(806,846),(5090,5140),(5690,5707),(6692,6706)]:
-            print('====',start,end)
-            for j in range(start-1,end):
-              line=s[j]
-              if len(line)<6000:print(f'{j+1}: '+line[:3000])
+          for i,line in enumerate(s):
+            if len(line)>12000:continue
+            if r'@${' in line or ('display_name' in line and 'username' in line and i>900):
+              print(f'{i+1}: '+line[:1400])
           PY
