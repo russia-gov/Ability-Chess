@@ -1,0 +1,55 @@
+/* Full-page Tutorial Studio. Independent of Community's article/editor width caps. */
+.tutorial-studio-page .community-main{min-width:0;background:#101419}
+.tutorial-studio-page .studio-topbar{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:28px clamp(20px,3vw,45px);border-bottom:1px solid #293542;background:linear-gradient(130deg,#1d2830,#141b21)}
+.studio-topbar h1{font-size:clamp(26px,2.7vw,38px);letter-spacing:-.04em;margin:4px 0}
+.studio-topbar p{color:#aebbc7;margin:5px 0;font-size:14px}
+.studio-top-actions{display:flex;gap:10px;flex-wrap:wrap}
+.studio-top-actions .action{color:#e9f0f5;text-decoration:none;white-space:nowrap;font-size:13px}
+.tutorial-studio-page main.studio-main{width:100%;max-width:none;margin:0;padding:22px clamp(14px,2vw,30px) 50px}
+.studio-status{font-size:13px;color:#b7cf97;padding:9px 14px;min-height:40px;background:#1a2526;border:1px solid #344c40;border-radius:9px;margin:0 0 16px}
+.studio-status.error{color:#ffb1ad;background:#2e1d20;border-color:#704145}
+.studio-layout{display:grid;grid-template-columns:minmax(205px,250px) minmax(310px,1fr) minmax(280px,400px);gap:16px;align-items:start}
+.studio-lessons,.studio-editor,.studio-preview{background:#1b222b;border:1px solid #34414e;border-radius:14px;min-width:0}
+.studio-lessons{padding:18px;position:sticky;top:16px;max-height:calc(100vh - 32px);display:flex;flex-direction:column}
+.studio-editor{padding:clamp(18px,2vw,29px)}
+.studio-preview{padding:19px;position:sticky;top:16px}
+.studio-panel-heading,.studio-section-heading,.studio-preview-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+.studio-panel-heading h2,.studio-section-heading h2,.studio-preview-heading h2{margin:0;font-size:21px;letter-spacing:-.025em}
+.studio-section-heading h3{margin:2px 0 0;font-size:18px}
+.studio-panel-heading p{color:#94a5b4;font-size:12px;margin:4px 0 0}
+.studio-add{padding:8px 10px;border:1px solid #688d59;background:#395d35;border-radius:8px;color:#eaf6e7;font-size:12px;font-weight:800;white-space:nowrap}
+.studio-lesson-list{display:grid;align-content:start;gap:7px;overflow:auto;min-height:50px;max-height:60vh}
+.studio-lesson{display:flex;gap:10px;align-items:center;width:100%;border:1px solid transparent;background:#222d38;color:#dce6ef;text-align:left;border-radius:9px;padding:12px 10px;font-size:13px}
+.studio-lesson:hover{background:#303d4a}.studio-lesson.selected{border-color:#a6c58a;background:#354635;color:#f2ffe7}
+.studio-lesson-number{font-size:11px;color:#9eaeba;font-variant-numeric:tabular-nums;flex:none}
+.studio-lesson-name{font-weight:700;line-height:1.3;overflow-wrap:anywhere}
+.studio-hint{font-size:12px;color:#99a9b7;line-height:1.55;margin:16px 0 0}
+.studio-unsaved{color:#ffda91;font-size:12px;padding:6px 9px;background:#41331c;border-radius:99px;white-space:nowrap}
+.studio-field-row{display:grid;grid-template-columns:100px minmax(0,1fr);gap:13px}
+.studio-field-row:has(#tutorialFrom){grid-template-columns:repeat(2,minmax(0,1fr))}
+.studio-field{display:grid;gap:7px;margin-bottom:20px;min-width:0}
+.studio-field label{font-size:12px;font-weight:750;color:#c9d6df}
+.studio-field input,.studio-field textarea{width:100%;min-width:0;box-sizing:border-box;padding:11px 12px;border:1px solid #425160;background:#101820;color:#f3f6f8;border-radius:9px;font:inherit;font-size:14px}
+.studio-field textarea{resize:vertical;line-height:1.6}
+.studio-field #tutorialFen{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;overflow-wrap:anywhere}
+.studio-field input:focus,.studio-field textarea:focus{outline:2px solid #a6c58a;outline-offset:1px}
+.studio-field small{font-size:12px;color:#95a5b2;line-height:1.5}
+.studio-divider{height:1px;background:#364450;margin:7px 0 24px}
+.studio-text-btn{font-size:12px;background:transparent;border:0;color:#bbd99b;text-decoration:underline;text-underline-offset:3px}
+.studio-bottom-actions{border-top:1px solid #364450;padding-top:18px;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.studio-bottom-actions button{font-size:13px}
+.studio-danger{margin-right:auto;padding:8px 12px;background:#4c252a;border:1px solid #804047;border-radius:8px;color:#ffd8d8}
+.studio-live-dot{font-size:11px;color:#a9d491;border:1px solid #416744;padding:5px 8px;border-radius:99px}
+.studio-board{width:100%;max-width:420px;margin:auto;cursor:crosshair}
+.studio-board .tutorial-square{cursor:crosshair}
+.studio-board .tutorial-square:hover{outline:3px solid #e5bb68;outline-offset:-3px;z-index:4}
+.studio-board .tutorial-piece{font-size:clamp(22px,2.4vw,42px)}
+.studio-preview-controls{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.studio-mode{flex:1;padding:9px 7px;min-width:90px;font-size:11px;font-weight:700;background:#273440;border:1px solid #475768;border-radius:7px;color:#dce7ee}
+.studio-mode.active{background:#425b36;color:#f3ffe9;border-color:#81a66c}
+.studio-board-help{font-size:12px;color:#aebfca;line-height:1.5;min-height:35px}
+.studio-preview-note{border-top:1px solid #334350;padding-top:15px;font-size:13px}
+.studio-preview-note strong{color:#dce9ef}.studio-preview-note p{color:#aebfca;line-height:1.6;white-space:pre-wrap}
+@media(max-width:1300px){.studio-layout{grid-template-columns:200px minmax(0,1fr)}.studio-preview{grid-column:2;position:static;max-width:600px}.studio-lessons{grid-row:1/span 2}}
+@media(max-width:900px){.studio-layout{grid-template-columns:1fr}.studio-lessons,.studio-preview{position:static;max-height:none;grid-row:auto;grid-column:auto}.studio-lesson-list{max-height:220px}.tutorial-studio-page .studio-topbar{flex-direction:column;align-items:flex-start}.studio-board .tutorial-piece{font-size:clamp(22px,6vw,44px)}}
+@media(max-width:500px){.studio-field-row{grid-template-columns:1fr}.studio-top-actions{width:100%}.studio-top-actions .action{flex:1;text-align:center}}
