@@ -158,7 +158,13 @@ root_hook=r'''    // ABILITYFISH_UNIFIED_ROOT_V1
     }
 
 '''
-s=s.replace(anchor,root_hook+anchor,1)
+# Finish Stockfish's ordinary root candidates first, then use the *same*
+# alpha/beta window for the special-action candidates, all inside search<Root>.
+# In particular, no ability undo should affect the ordinary root move loop.
+post_anchor="    // The following condition would detect a stop only after move loop has been"
+if s.count(post_anchor)!=1:
+    raise SystemExit("Expected exactly one end-of-root move-loop anchor")
+s=s.replace(post_anchor,root_hook+post_anchor,1)
 # Upgrades end the turn and must consume a ply in non-root search too.
 old_depth="depth - (consumesMove ? 1 : 0)"
 new_depth="depth - (sideChanged ? 1 : 0)"
