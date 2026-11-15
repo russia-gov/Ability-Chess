@@ -144,6 +144,16 @@
     });
   });
   document.addEventListener('selectionchange',rememberSelection);
+  // Never insert untrusted clipboard HTML directly into contenteditable.
+  editor.addEventListener('paste',event=>{
+    event.preventDefault();
+    const html=event.clipboardData?.getData('text/html')||'';
+    const plain=event.clipboardData?.getData('text/plain')||'';
+    const sanitized=html?lib.clean(html):'';
+    if(sanitized)document.execCommand('insertHTML',false,sanitized);
+    else document.execCommand('insertText',false,plain);
+  });
+
   $('editorFont').addEventListener('change',e=>runCommand('fontName',e.target.value));
   $('editorSize').addEventListener('change',e=>runCommand('fontSize',e.target.value));
   $('editorColor').addEventListener('input',e=>runCommand('foreColor',e.target.value));
