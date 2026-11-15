@@ -88,6 +88,19 @@ begin
  values (new_row.id,new_row.version,acting_user,acting_color,
    p_action_type,coalesce(p_action_payload,'{}'::jsonb),new_row.game_state)
  returning id into new_action_id;
+
+ -- Critical: result settlement happens inside the same locked transaction
+ -- as the verified terminal action. No finished-but-unrated intermediate state.
+ if next_over and is_competitive then
+   if p_next_state->>'winner' not in ('w','b')
+      and p_next_state->>'winner' is not null then
+      raise exception 'Invalid authoritative game winner';
+   end if;
+   perform public.ability_chess_finalize_verified_room(
+     p_room_id,coalesce(p_next_state->>'winner','draw'),
+     left(coalesce(p_next_state->>'resultReason',''),250)
+   );
+ end if;
  return query select new_row.version,new_row.game_state,new_action_id;
 end;
 $$;
