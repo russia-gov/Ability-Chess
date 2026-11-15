@@ -4,6 +4,10 @@ const fs=require('node:fs');
 const lines=fs.readFileSync('index.html','utf8').split('\n');
 const windows=[
  ['Online sync',1530,1602],
+ ['Ability definitions',982,1000],
+ ['Turn reset & transitions',2390,2494],
+ ['Endgame & scoring details',2600,2648],
+ ['Capture points helpers',2310,2390],
  ['Upgrade definitions',995,1048],
  ['State normalization',1935,1998],
  ['Pure board rules',1999,2090],
