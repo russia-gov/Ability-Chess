@@ -13,6 +13,10 @@ function between(startMarker,endMarker,label){
   throw new Error('Cannot uniquely extract '+label);
  return source.slice(a,b);
 }
+const abilities=between('  const ABILITIES = [','  const PIECE_NAMES=', 'ability definitions');
+const terminal=between('  function isInsufficientMaterial(state){','  function normalizeFinishedResult(){','material and repetition rules');
+const escape=between('  function findImmediateAbilityEscapeAction(state,color){','  function evaluateGameStatus(){','ability-aware checkmate escapes');
+const teleportHelpers=between('  function pawnOnOwnSide(color,r){','  function attemptTeleportStep(r,c){','teleport helper legality');
 const upgrades=between('  const UPGRADES=[','  function upgradeTooltipText(', 'upgrade definitions');
 const board=between('  function cloneState(state){','  function humanPremoveColor(', 'pure board rules');
 const exportedFunctions=[
@@ -20,14 +24,16 @@ const exportedFunctions=[
  'typeOf','isPromotionRank','upgradeFor','upgradeDefinition','upgradeCount',
  'pseudoMoves','findKing','isSquareAttacked','inCheck','revokeCastlingRights',
  'sameSquare','squareInFortify','isFortifiedAgainstAbility','isFrozenPiece',
- 'portalExit','applyMoveToState','legalMovesFor','allLegalMoves'
+ 'portalExit','applyMoveToState','legalMovesFor','allLegalMoves',
+ 'isInsufficientMaterial','positionKey','recordPosition',
+ 'findImmediateAbilityEscapeAction','abilityCanProduceLegalContinuation','hasAnyTurnAction'
 ];
 const output=[
  "'use strict';",
  '// GENERATED from the existing browser game by scripts/extract_board_rules.js.',
  '// This module only validates/applies individual board moves, NOT whole turns,',
  '// paid abilities, rating results, or online security.',
- upgrades,board,
+ abilities,upgrades,board,terminal,teleportHelpers,escape,
  'module.exports={'+exportedFunctions.join(',')+'};',''
 ].join('\n');
 const dest='server/generated/board-rules.js';
