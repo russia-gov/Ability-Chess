@@ -13,9 +13,9 @@ const terms=[
 function lineOf(at) {let l=1;for(let i=0;i<at;i++)if(src.charCodeAt(i)===10)l++;return l;}
 function snippet(at,n=260){
   return src.slice(Math.max(0,at-110),Math.min(src.length,at+n))
-    .replace(/\\s+/g,' ').slice(0,380);
+    .replace(/\s+/g,' ').slice(0,380);
 }
-console.log('SOURCE bytes='+src.length+' lines='+src.split('\\n').length);
+console.log('SOURCE bytes='+src.length+' lines='+src.split('\n').length);
 for(const term of terms){
   let pos=0,found=[],count=0;
   while((pos=src.indexOf(term,pos))!==-1){
@@ -26,7 +26,7 @@ for(const term of terms){
   console.log('TERM '+term+' TOTAL '+count);
   for(const row of found)console.log('  LINE '+row.line+' '+row.context);
 }
-const declarations=/\\b(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\s*\\(/g;
+const declarations=/\b(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(/g;
 const funcs=[];let m;
 while((m=declarations.exec(src)))funcs.push([m[1],lineOf(m.index)]);
 console.log('FUNCTION_COUNT '+funcs.length);
