@@ -3,7 +3,11 @@
 const fs=require('node:fs');
 const lines=fs.readFileSync('index.html','utf8').split('\n');
 const windows=[
- ['Online sync',1530,1602],
+ ['Supabase RPC and authentication',1250,1410],
+ ['Online saved state',1460,1533],
+ ['Online sync',1530,1678],
+ ['Matchmaking preparation',4775,4825],
+ ['Tournament integration',5510,5600],
  ['Ability definitions',982,1000],
  ['Turn reset & transitions',2390,2494],
  ['Game init and draw positions',1860,1944],
