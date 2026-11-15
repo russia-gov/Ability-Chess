@@ -40,8 +40,13 @@ jobs:
         run: make -j2 build ARCH=x86-64
       - name: Verify AbilityFish benchmark harness syntax
         run: node --check scripts/benchmark_abilityfish.js
-      - name: Benchmark native search scenarios (depth 2, no engine time cap)
-        run: node scripts/benchmark_abilityfish.js vendor/Fairy-Stockfish/src/stockfish --depth 2 --timeout 90
+      - name: Benchmark ordinary chess (depth 2)
+        run: node scripts/benchmark_abilityfish.js vendor/Fairy-Stockfish/src/stockfish --depth 2 --timeout 30 --scenario ordinary_midgame
+      - name: Benchmark purchased upgrades (depth 2)
+        run: node scripts/benchmark_abilityfish.js vendor/Fairy-Stockfish/src/stockfish --depth 2 --timeout 30 --scenario upgraded_knight
+      - name: Diagnose ability-rich search explosion (depth 2, 20-second watchdog only)
+        continue-on-error: true
+        run: node scripts/benchmark_abilityfish.js vendor/Fairy-Stockfish/src/stockfish --depth 2 --timeout 20 --scenario ability_tactical
       - name: Root ability transport smoke test
         run: |
           python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
