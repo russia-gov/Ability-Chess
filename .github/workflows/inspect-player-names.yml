@@ -12,8 +12,8 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           s=Path('index.html').read_text().splitlines()
-          for i,line in enumerate(s):
-            if any(t in line for t in ('profilePageHandle','profilePageName','sidebar-profile-name','sidebar-profile-meta','roleTagHtml','member-row','member-meta','@'+r'${','@'+r'${escapeHtml','display_name||','display_name ||','username||','username ||','memberHandle','memberDisplayName')):
-              if 230<i<400 or 430<i<780 or i>3500:
-                print(f'{i+1}: '+line[:1300])
+          for start,end in [(470,535),(4807,4831),(4870,4937),(5688,5712),(6686,6715)]:
+            print('==== lines',start,end,'====')
+            for j in range(start-1,end):
+              print(f'{j+1}: '+s[j][:3500])
           PY
