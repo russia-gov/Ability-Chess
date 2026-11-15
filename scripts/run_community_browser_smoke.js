@@ -59,6 +59,18 @@ const server=http.createServer((req,res)=>{
     await page.waitForURL('**/community.html');
     await page.locator('.community-rail').waitFor({state:'visible'});
     await page.locator('.community-nav a.current[aria-current="page"]').waitFor({state:'visible'});
+    const railStyle=await page.locator('.community-rail').evaluate(el=>{
+      const css=getComputedStyle(el);
+      const mark=el.querySelector('.brand-mark');
+      return {width:Math.round(el.getBoundingClientRect().width),background:css.backgroundColor,
+              brandMark:!!mark,markWidth:mark?Math.round(mark.getBoundingClientRect().width):0};
+    });
+    if(railStyle.width!==220 || railStyle.background!=='rgb(24, 29, 35)'
+       || !railStyle.brandMark || railStyle.markWidth!==42)
+      throw Error('Community rail does not match main site ribbon: '+JSON.stringify(railStyle));
+    const currentBackground=await page.locator('.community-nav a.current').evaluate(el=>getComputedStyle(el).backgroundColor);
+    if(currentBackground!=='rgb(37, 45, 54)')
+      throw Error('Community active navigation does not match main site: '+currentBackground);
     if(await page.locator('#communitySidebarAdmin').isVisible())
       throw Error('Admin link visible to guest on Community');
     const gradient=await page.locator('body').evaluate(el=>getComputedStyle(el).backgroundImage);
