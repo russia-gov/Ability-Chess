@@ -1,0 +1,22 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Ability Chess · Tutorial Editor</title>
+<link rel="stylesheet" href="./assets/community.css"><link rel="stylesheet" href="./assets/learning-pages.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.90.1/dist/umd/supabase.min.js"></script>
+<script defer src="./assets/tutorial-board.js"></script><script defer src="./assets/tutorial-editor.js"></script>
+</head><body><script>if(new URLSearchParams(location.search).has('embedded'))document.body.classList.add('embedded');</script>
+<header class="site-head"><a class="brand" href="./">♞ Ability Chess</a><nav class="header-links"><a href="./tutorial.html">View tutorial</a><a href="./">Back to game</a></nav></header>
+<main><section class="hero"><div class="eyebrow">Admin · Learn</div><h1>Edit Tutorial</h1><p>Author lessons using a chess position and a visual arrow. Changes are visible to all players after saving.</p></section>
+<p class="status" id="tutorialEditorStatus" role="status" aria-live="polite">Checking admin access…</p>
+<div id="tutorialEditorApp" class="editor-layout" hidden>
+<aside class="editor-panel"><h2>Lessons</h2><button id="tutorialAdd" class="action primary" type="button">+ New lesson</button>
+<div id="tutorialLessonList" class="post-list" aria-label="Tutorial lessons"></div></aside>
+<section class="editor-panel"><form id="tutorialEditForm"><div class="field"><label for="tutorialOrder">Position in tutorial</label><input id="tutorialOrder" type="number" min="1" max="1000" value="1" required></div>
+<div class="field"><label for="tutorialTitle">Lesson title</label><input id="tutorialTitle" required maxlength="140"></div>
+<div class="field"><label for="tutorialBody">Explanation</label><textarea id="tutorialBody" rows="6" maxlength="3000" required></textarea></div>
+<div class="field"><label for="tutorialFen">Chess position (FEN)</label><input id="tutorialFen" required spellcheck="false" aria-describedby="fenHint"><small id="fenHint">Paste a FEN. The board preview shows White at the bottom.</small></div>
+<div class="form-grid"><div class="field"><label for="tutorialFrom">Arrow from</label><input id="tutorialFrom" maxlength="2" placeholder="e2" pattern="[a-h][1-8]"></div>
+<div class="field"><label for="tutorialTo">Arrow to</label><input id="tutorialTo" maxlength="2" placeholder="e4" pattern="[a-h][1-8]"></div></div>
+<div class="tutorial-editor-preview" id="tutorialEditorBoard"></div><div class="editor-actions">
+<button class="action" type="button" id="tutorialPreview">Preview board</button>
+<button class="action primary" type="submit" id="tutorialSave">Save lesson</button>
+<button class="action" type="button" id="tutorialDelete" hidden>Delete lesson</button></div>
+</form></section></div></main></body></html>
