@@ -12,8 +12,8 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           s=Path('index.html').read_text().splitlines()
-          for start,end in [(470,535),(4807,4831),(4870,4937),(5688,5712),(6686,6715)]:
-            print('==== lines',start,end,'====')
-            for j in range(start-1,end):
-              print(f'{j+1}: '+s[j][:3500])
+          for i,line in enumerate(s):
+            if len(line)>7000:continue
+            if any(t in line for t in ['memberUsername','memberDisplay','memberName','displayNameInput','usernameInput','memberHandle','create_account','create_profile','signup','signUp','memberSignUp','memberCreate','display_name:','p_display_name']):
+              print(str(i+1)+': '+line[:2600])
           PY
