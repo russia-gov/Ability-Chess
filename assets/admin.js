@@ -4,7 +4,8 @@
   function createAdminUi({ getMemberProfile, currentRoute, showScreen, updateNotificationBadge, openNotifications }) {
     let handledCommunityNav=false;
     function restoreCommunityDestination() {
-      if(handledCommunityNav)return;
+      // Initial router setup can reset the screen; navigate only after load.
+      if(handledCommunityNav||global.document.readyState!=='complete')return;
       const url=new URL(global.location.href);
       const destination=url.searchParams.get('communityNav');
       const screens=new Set(['play','abilities','analysis','settings','history','tournaments','admin']);
@@ -21,6 +22,7 @@
       if(destination==='notifications')openNotifications();
       else showScreen(destination);
     }
+    global.addEventListener('load',restoreCommunityDestination,{once:true});
     function rebuildCanonicalSidebars() {
       const memberProfile = getMemberProfile();
       const canAdmin = !!(memberProfile && (memberProfile.is_owner || memberProfile.is_staff));
