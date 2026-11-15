@@ -15,7 +15,7 @@ function between(startMarker,endMarker,label){
 }
 const upgrades=between('  const UPGRADES=[','  function upgradeTooltipText(', 'upgrade definitions');
 const board=between('  function cloneState(state){','  function humanPremoveColor(', 'pure board rules');
-const exports=[
+const exportedFunctions=[
  'cloneState','inBounds','other','algebraic','parseSq','pieceAt','colorOf',
  'typeOf','isPromotionRank','upgradeFor','upgradeDefinition','upgradeCount',
  'pseudoMoves','findKing','isSquareAttacked','inCheck','revokeCastlingRights',
@@ -28,9 +28,9 @@ const output=[
  '// This module only validates/applies individual board moves, NOT whole turns,',
  '// paid abilities, rating results, or online security.',
  upgrades,board,
- 'module.exports={'+exports.join(',')+'};',''
+ 'module.exports={'+exportedFunctions.join(',')+'};',''
 ].join('\n');
 const dest='server/generated/board-rules.js';
 fs.mkdirSync(path.dirname(dest),{recursive:true});
 fs.writeFileSync(dest,output);
-console.log('Extracted '+exports.length+' pure rule functions; '+output.length+' bytes');
+console.log('Extracted '+exportedFunctions.length+' pure rule functions; '+output.length+' bytes');
