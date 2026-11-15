@@ -42,6 +42,21 @@ jobs:
             --command 'abilitypoints 0 0' \
             --command 'abilitytimed ambush b 35 1 1' \
             --command 'go depth 3 searchmoves e4d5'
+      - name: Portal-routed queenside castling make and undo
+        shell: bash
+        env:
+          ASAN_OPTIONS: abort_on_error=1:detect_leaks=0:print_stacktrace=1
+          UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+        run: |
+          set -euo pipefail
+          python3 scripts/run_uci_search.py vendor/Fairy-Stockfish/src/stockfish \
+            --timeout 40 --expect-depth 3 \
+            --command uci \
+            --command 'position fen 4k3/8/8/8/8/8/8/R3K3 w Q - 0 1' \
+            --command 'abilityfish on' \
+            --command 'abilitypoints 0 0' \
+            --command 'abilityportal 0 2 30 w 3 1' \
+            --command 'go depth 3 searchmoves e1c1'
       - name: Nc3 parent depth-9 regression
         shell: bash
         env:
