@@ -116,10 +116,18 @@ if "ABILITYFISH_PORTAL_CPP_V1" not in cs:
     undo_repl = """  if (abilityfishActive && st->abilityfishAmbushTriggered && piece_on(to) == NO_PIECE)
       put_piece(st->abilityfishAmbushCapturer, to, st->abilityfishAmbushCapturerPromoted,
                 st->abilityfishAmbushUnpromotedCapturer);
+  // Castling's encoded 'to' is the home rook square, not the king's
+  // final square. Restore a routed king to its actual castling destination
+  // before do_castling<false> tries to move it back to the home square.
+  Square portalUndoTo = to;
+  if (abilityfishActive && type_of(m) == CASTLING)
+      portalUndoTo = make_square(to > from ? castling_kingside_file()
+                                          : castling_queenside_file(),
+                                  castling_rank(us));
   if (abilityfishActive && st->abilityfishPortalTriggered
       && st->abilityfishPortalExit != SQ_NONE && piece_on(st->abilityfishPortalExit) != NO_PIECE
-      && piece_on(to) == NO_PIECE)
-      move_piece(st->abilityfishPortalExit, to);
+      && piece_on(portalUndoTo) == NO_PIECE)
+      move_piece(st->abilityfishPortalExit, portalUndoTo);
   Piece pc = piece_on(to);
 """
     cs = replace_once(cs, undo_anchor, undo_repl, "portal undo restore")

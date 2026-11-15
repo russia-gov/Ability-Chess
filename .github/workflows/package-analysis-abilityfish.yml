@@ -29,6 +29,12 @@ on:
       - 'scripts/run_wasm_uci_smoke.js'
       - 'scripts/run_analysis_browser_smoke.js'
       - 'scripts/apply_fairy_position_hooks.py'
+      - 'scripts/prepare_fairy.py'
+      - 'scripts/apply_fairy_unified_root.py'
+      - 'scripts/apply_fairy_unified_internal.py'
+      - 'scripts/apply_fairy_king_capture_guard.py'
+      - 'scripts/apply_fairy_portal_hooks.py'
+      - 'engine/**'
       - '.github/workflows/package-analysis-abilityfish.yml'
   pull_request:
     branches: [ main ]
@@ -58,6 +64,12 @@ on:
       - 'scripts/run_wasm_uci_smoke.js'
       - 'scripts/run_analysis_browser_smoke.js'
       - 'scripts/apply_fairy_position_hooks.py'
+      - 'scripts/prepare_fairy.py'
+      - 'scripts/apply_fairy_unified_root.py'
+      - 'scripts/apply_fairy_unified_internal.py'
+      - 'scripts/apply_fairy_king_capture_guard.py'
+      - 'scripts/apply_fairy_portal_hooks.py'
+      - 'engine/**'
       - '.github/workflows/package-analysis-abilityfish.yml'
 
 permissions:
