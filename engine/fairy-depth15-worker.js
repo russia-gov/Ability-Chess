@@ -186,7 +186,10 @@ async function analyze(job) {
     const defaultMultiPV = requestedDepth > 5 ? 1 : 3;
     const multiPV = Math.max(1, Math.min(8, Number(job.multiPV ?? defaultMultiPV)));
     // Search until the requested depth; the UI may explicitly supply a time budget.
-    const defaultTimeMs = 0;
+    // Keep the first result responsive on real games: unrestricted depth-15
+    // searches with thousands of ability placements can take minutes.
+    // The engine may return a shallower best move when its time budget ends.
+    const defaultTimeMs = 8000;
     const maxTimeMs = Math.max(0, Math.min(30000, Number(job.maxTimeMs ?? defaultTimeMs)));
     const listener = (line) => {
       if (typeof line !== 'string') return;
