@@ -138,3 +138,21 @@ reducer validates and applies all move/ability/upgrade actions.
 Do not deploy this draft Edge endpoint or SQL independently: it is **not** safe
 as a replacement until the legacy bypasses, initial-state authorization and
 client integration are completed.
+
+## Further staged work (November 15, 2026)
+
+- Found a second full-board mutation bypass, public.update_ability_chess_room. The cutover revocation SQL now includes it, alongside ability_chess_update_room_action.
+- Created canonical server-owned starting positions and a staged migration that replaces client game_state in existing room, matchmaking and tournament creation RPCs. Tournament genesis uses official tournament settings. Activation and setup still require testing.
+- Added redaction of hidden Ambush targets, private log text, replay snapshots and repetition keys in staged live-room read functions and the Edge response projector, with automated tests.
+- Patched draft index.html so a rejected move cannot award material points or change halfmove state before move legality succeeds. The patch ran in GitHub Actions and is on this draft branch.
+- Added client/verified-online-transport.js: a typed, serialized, version-aware client request transport that never sends replacement board state or client-claimed results. Its tests passed, but live UI integration is not complete.
+- Prepared explicit RLS-defense table grant revocations and a post-cutover SQL audit for legacy RPC access.
+
+### Critical remaining integration work
+
+1. Replace every live online action, ability, upgrade, room setup, rematch, draw, resign, poll and result RPC path in the 7MB browser game with typed verified actions.
+2. Make room activation and authoritative clocks consistent for casual waiting rooms, direct challenges, seeks and tournaments.
+3. Run two-account browser and adversarial tests, including account-bound seats and private abilities.
+4. Coordinate Edge deployment, hardened genesis and read RPC deployment, client release and legacy revocations. Do not deploy any piece in isolation.
+
+No staged SQL was applied to the live Supabase project. This PR remains a draft.
