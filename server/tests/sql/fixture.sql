@@ -66,7 +66,12 @@ create table public.ability_chess_room_actions (
  actor_id uuid,
  actor_color text,
  action_type text,
+ action_label text,
  action_payload jsonb,
  state_snapshot jsonb,
+ created_at timestamptz not null default now(),
  unique(room_id,room_version)
 );
+
+create schema if not exists auth;
+create or replace function auth.uid() returns uuid language sql stable as $$ select null::uuid $$;
