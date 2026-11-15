@@ -39,6 +39,19 @@ revoke execute on function public.ability_chess_create_member_challenge(jsonb,js
  from public,anon,authenticated;
 revoke execute on function public.ability_chess_tournament_claim_game(uuid,jsonb,jsonb)
  from public,anon,authenticated;
+-- Defense in depth: these tables currently have RLS enabled without any
+-- client policies, but their broad table grants are unnecessary. Revoke
+-- mutation rights explicitly so future policy additions cannot accidentally
+-- reopen direct score, action-history, or tournament tampering.
+revoke insert,update,delete on public.ability_chess_rating_results
+ from anon,authenticated;
+revoke insert,update,delete on public.ability_chess_room_actions
+ from anon,authenticated;
+revoke insert,update,delete on public.ability_chess_tournament_games
+ from anon,authenticated;
+revoke insert,update,delete on public.ability_chess_tournament_entries
+ from anon,authenticated;
+
 commit;
 
 -- Verification (run separately):
