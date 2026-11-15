@@ -21,6 +21,27 @@ enum class ActionKind : uint8_t {
   Upgrade,
 };
 
+// Deterministic tactical-first ordering. Every legal action is still searched;
+// ordering only helps alpha-beta discover cutoffs earlier. Initial priorities
+// are intentionally coarse until benchmark evidence supports finer heuristics.
+constexpr int action_order_priority(ActionKind kind) {
+  switch (kind) {
+    case ActionKind::Bomb: return 0;
+    case ActionKind::Freeze: return 1;
+    case ActionKind::Recall: return 2;
+    case ActionKind::SwapFinish: return 3;
+    case ActionKind::Teleport: return 4;
+    case ActionKind::Reinforce: return 5;
+    case ActionKind::Shield: return 6;
+    case ActionKind::DoubleMove: return 7;
+    case ActionKind::Upgrade: return 8;
+    case ActionKind::Ambush: return 9;
+    case ActionKind::Fortify: return 10;
+    case ActionKind::PortalFinish: return 11;
+    default: return 12;
+  }
+}
+
 struct AbilityAction {
   ActionKind kind = ActionKind::NormalMove;
   uint8_t from = 64;
