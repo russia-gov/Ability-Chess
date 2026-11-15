@@ -31,6 +31,7 @@ if "for (const auto& abilityAction : abilityActions)" not in old_block:
 loop_begin=old_block.index("        for (const auto& abilityAction : abilityActions)")
 # Keep the body of the existing tested action search; modify only its iteration.
 action_loop=old_block[loop_begin:]
+action_loop=action_loop.rstrip()+'\n'
 if not action_loop.endswith("    }\n"):
     raise SystemExit("Original ability search has changed shape")
 # Remove the outer if block and for-loop wrapper; retain the candidate body.
