@@ -96,7 +96,8 @@ function applyAbilityIntent(state,intent){
    s.board[to.r][to.c]=moving;s.board[from.r][from.c]=null;
    if(eq(s.shielded[who],from))s.shielded[who]=null;
    demand(!R.inCheck(s,who),'Teleport leaves king in check');
-   s.enPassant=null;s.lastMove={from:{...from},to:{...to}};
+   // Match existing client behavior: teleport does not clear en passant state.
+   s.lastMove={from:{...from},to:{...to}};
    s.movesRemaining=0;commit();break;
   }
   case 'bomb':{
