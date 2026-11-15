@@ -16,6 +16,23 @@ revoke execute on function public.ability_chess_tournament_report_result(uuid,te
 -- written through the eventual trusted game finalization path.
 revoke execute on function public.ability_chess_save_game_history(text,text,text,text,text,text,jsonb,jsonb)
   from public, anon, authenticated;
+-- Revoke the legacy whole-board action endpoint: otherwise it remains a
+-- bypass around the trusted per-action validator.
+revoke execute on function public.ability_chess_update_room_action(
+ uuid,uuid,bigint,jsonb,text,text,text,jsonb)
+ from public,anon,authenticated;
+
+-- Initial positions/settings must also be minted by the trusted handler,
+-- not accepted from a custom browser request. These revocations REQUIRE
+-- moving game/challenge/tournament creation to the new endpoint first.
+revoke execute on function public.create_ability_chess_room(jsonb,jsonb,text)
+ from public,anon,authenticated;
+revoke execute on function public.ability_chess_create_or_match_seek(text,jsonb,jsonb)
+ from public,anon,authenticated;
+revoke execute on function public.ability_chess_create_member_challenge(jsonb,jsonb,uuid)
+ from public,anon,authenticated;
+revoke execute on function public.ability_chess_tournament_claim_game(uuid,jsonb,jsonb)
+ from public,anon,authenticated;
 commit;
 
 -- Verification (run separately):
@@ -26,4 +43,4 @@ commit;
 -- AND proname IN ('ability_chess_apply_rating_result',
 --  'ability_chess_apply_category_rating_result',
 --  'ability_chess_tournament_report_result','ability_chess_save_game_history');
--- All four must be false for anon and authenticated.
+-- Every revoked legacy RPC must be false for anon and authenticated.
