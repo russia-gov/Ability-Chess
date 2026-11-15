@@ -4,8 +4,25 @@
 <link rel="stylesheet" href="./assets/community.css">
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.90.1/dist/umd/supabase.min.js"></script>
 <script defer src="./assets/community-content.js"></script>
+<script defer src="./assets/community-sidebar.js"></script>
 <script defer src="./assets/community-page.js"></script></head>
-<body>
+<body class="community-page">
+<div class="community-shell">
+<aside class="community-rail" aria-label="Ability Chess site navigation">
+  <a href="./" class="community-rail-brand">♞ <span><b>Ability</b> Chess</span></a>
+  <nav id="communitySidebarNav" class="community-nav" aria-label="Main navigation">
+    <a href="./?communityNav=play"><span class="nav-icon">▶</span>Play</a>
+    <a href="./?communityNav=abilities"><span class="nav-icon">★</span>Abilities Guide</a>
+    <a href="./?communityNav=analysis"><span class="nav-icon">◩</span>Analysis</a>
+    <a href="./?communityNav=settings"><span class="nav-icon">⚙</span>Settings</a>
+    <a href="./?communityNav=history"><span class="nav-icon">◫</span>Game history</a>
+    <a href="./?communityNav=tournaments"><span class="nav-icon">♜</span>Tournaments</a>
+    <a href="./?communityNav=notifications"><span class="nav-icon">●</span>Notifications</a>
+    <a id="communitySidebarAdmin" href="./?communityNav=admin" hidden><span class="nav-icon">⚑</span>Admin</a>
+    <a href="./community.html" class="current" aria-current="page"><span class="nav-icon">◈</span>Community</a>
+  </nav>
+</aside>
+<div class="community-main">
 <header class="site-head"><a class="brand" href="./">♞ <span>Ability</span> Chess</a>
 <nav class="header-links" aria-label="Community navigation"><a href="./">Back to game</a><a href="./community.html" aria-current="page">Community</a></nav></header>
 <main>
@@ -19,4 +36,6 @@
 <div id="communityStatus" class="status" role="status"></div>
 <div id="communityFeed" class="news-list" aria-live="polite"><p class="empty">Loading community news…</p></div>
 <div id="communityDetail" hidden></div>
-</main></body></html>
+</main>
+</div>
+</div></body></html>
