@@ -1,0 +1,23 @@
+name: Extract and test browser board rules for trusted server
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/extract_board_rules.js'
+      - 'server/**'
+      - '.github/workflows/trusted-board-rules.yml'
+      - 'index.html'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/extract_board_rules.js
+      - run: node --check server/generated/board-rules.js
+      - run: node --test server/tests/*.test.js
