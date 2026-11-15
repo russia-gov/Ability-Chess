@@ -19,7 +19,8 @@ body.embedded main{width:100%;margin:8px auto 20px}body.embedded .site-head{disp
 .community-main .site-head .brand{display:none}
 .community-main main{width:min(1100px,calc(100% - 64px));margin:35px auto 80px}
 .community-rail.site-ribbon{position:sticky;top:0;height:100vh;min-height:100vh;box-sizing:border-box;overflow-y:auto;background:#181d23;border-right:1px solid rgba(255,255,255,.06);padding:20px 14px;display:flex;flex-direction:column;gap:26px}
-.community-rail-brand.brand{display:flex;align-items:center;gap:12px;padding:0;margin:0;color:var(--ink);text-decoration:none;font-size:22px;font-weight:800;letter-spacing:-.4px;white-space:nowrap}
+.community-rail-brand.brand{display:flex;align-items:center;gap:12px;padding:0;margin:0;color:var(--ink);text-decoration:none;font-size:22px;font-weight:800;letter-spacing:-.4px;white-space:normal;line-height:1.35}
+.community-rail-brand .brand-name{display:block;min-width:0;flex:1;color:var(--ink)}
 .community-rail-brand .brand-mark{width:42px;height:42px;flex:none;border-radius:12px;background:linear-gradient(145deg,#ffb84d,#d98618);display:grid;place-items:center;color:#17120a;font-size:25px;box-shadow:0 8px 24px rgba(217,134,24,.25)}
 .community-nav.home-nav{display:grid;align-content:start;gap:8px}
 .community-nav.home-nav a.home-nav-item{display:flex;align-items:center;gap:12px;width:100%;min-height:0;padding:12px 13px;box-sizing:border-box;border:0;border-radius:11px;background:transparent;color:#dce2e8;text-decoration:none;font-size:13px;font-weight:700;text-align:left;white-space:normal}
@@ -40,7 +41,26 @@ body.embedded main{width:100%;margin:8px auto 20px}body.embedded .site-head{disp
 @media(max-width:520px){
   .community-rail.site-ribbon{gap:8px}
   .community-rail-brand.brand{font-size:0;gap:0}
+  .community-rail-brand .brand-name{display:none}
   .community-rail-brand .brand-mark{width:38px;height:38px;font-size:23px}
   .community-main .site-head{justify-content:flex-end}
   .community-main .hero h1{font-size:30px}
+}
+
+/* The member footer shares the main site's account component styling. */
+.community-rail .sidebar-account{margin-top:auto}
+.community-rail .sidebar-profile-link{cursor:pointer}
+.community-rail .sidebar-profile-link:hover{background:#29333e}
+.community-rail .sidebar-avatar img{width:100%;height:100%;object-fit:cover;border-radius:7px}
+.visually-hidden{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:900px){
+  .community-rail.site-ribbon{flex-wrap:wrap}
+  .community-rail .sidebar-account{display:flex;flex:1 0 100%;width:100%;margin-top:0;gap:10px;align-items:center}
+  .community-rail .sidebar-member-search{flex:1 1 230px;min-width:0}
+  .community-rail .sidebar-profile-link{flex:0 1 240px;min-width:0}
+  .community-rail .sidebar-search-results{bottom:auto;top:calc(100% + 7px)}
+}
+@media(max-width:520px){
+  .community-rail .sidebar-account{flex-wrap:wrap}
+  .community-rail .sidebar-profile-link{flex:1 1 100%}
 }
