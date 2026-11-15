@@ -67,4 +67,35 @@ begin
   if sqlerrm <> 'Wrong player turn' then raise; end if;
  end;
 end $$;
-select 'Verified action persistence tests passed' as result;
+
+-- Settlement must be atomic with the terminal transition.
+-- Use a fresh competitive room and both player profiles from the fixture.
+insert into public.ability_chess_rooms
+ (id,status,host_color,host_user_id,guest_user_id,settings,game_state) values
+ ('00000000-0000-0000-0000-0000000000a3','active','w',
+  '00000000-0000-0000-0000-000000000003',
+  '00000000-0000-0000-0000-000000000004',
+  '{"rated":true,"ratingCategory":"rapid"}'::jsonb,
+  '{"turn":"w","over":false}'::jsonb);
+
+do $
+declare n bigint;
+begin
+ select new_version into n from public.ability_chess_commit_verified_action(
+  '00000000-0000-0000-0000-0000000000a3',
+  '00000000-0000-0000-0000-0000000000d1',
+  '00000000-0000-0000-0000-000000000003',0,
+  '{"turn":"w","over":true,"winner":"w","resultReason":"checkmate"}'::jsonb,
+  'move');
+ if n<>1 then raise exception 'Wrong terminal version'; end if;
+ if (select count(*) from public.ability_chess_verified_room_results
+     where room_id='00000000-0000-0000-0000-0000000000a3')<>1
+ then raise exception 'Terminal game missing verified result'; end if;
+ if (select count(*) from public.ability_chess_rating_results
+     where game_key='room:00000000-0000-0000-0000-0000000000a3')<>2
+ then raise exception 'Ratings did not settle atomically'; end if;
+ if (select status from public.ability_chess_rooms
+     where id='00000000-0000-0000-0000-0000000000a3')<>'finished'
+ then raise exception 'Terminal status not saved'; end if;
+end $;
+select 'Verified action persistence and atomic settlement tests passed' as result;
