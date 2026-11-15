@@ -22,6 +22,12 @@ revoke execute on function public.ability_chess_update_room_action(
  uuid,uuid,bigint,jsonb,text,text,text,jsonb)
  from public,anon,authenticated;
 
+-- Critical second legacy bypass: the original whole-room mutation RPC also
+-- accepts arbitrary board state and status from any holder of a seat token.
+revoke execute on function public.update_ability_chess_room(
+ uuid,uuid,bigint,jsonb,text)
+ from public,anon,authenticated;
+
 -- Initial positions/settings must also be minted by the trusted handler,
 -- not accepted from a custom browser request. These revocations REQUIRE
 -- moving game/challenge/tournament creation to the new endpoint first.
