@@ -46,6 +46,12 @@ if "ABILITYFISH_ROOT_SEARCH_V5" not in s:
       {
           Search::AbilityRootResult iterationAbility;
           auto abilityActions = rootPos.ability_actions();
+        // Ordering only: never discard or reduce depth for any legal action.
+        std::stable_sort(abilityActions.begin(), abilityActions.end(),
+                         [](const auto& a, const auto& b) {
+                             return abilityfish::action_order_priority(a.kind) <
+                                    abilityfish::action_order_priority(b.kind);
+                         });
           for (const auto& abilityAction : abilityActions)
           {
               StateInfo abilitySt;
