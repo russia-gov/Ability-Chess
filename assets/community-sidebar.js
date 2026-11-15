@@ -2,13 +2,13 @@
   'use strict';
   // The sidebar shares the site's existing session. Owner/staff links are
   // exposed only after the server verifies administrator access.
-  const link=document.getElementById('communitySidebarAdmin');
-  const search=document.getElementById('communityMemberSearchForm');
-  const profile=document.getElementById('communityProfileLink');
-  profile?.addEventListener('click',()=>{window.location.assign('./?sidebarAction=profile');});
-  // Search remains handled by the main site's existing member-search flow.
-  // The GET form carries the query there rather than introducing a second,
-  // differently authorized search implementation.
+  const nav=document.getElementById('communitySidebarNav');
+  const shared=window.AbilityChessAdmin?.mountSidebar;
+  if(!shared||!nav)return;
+  shared({nav,mode:'community',activeRoute:'community',canAdmin:false});
+  document.getElementById('communityProfileLink')?.addEventListener('click',()=>{
+    window.location.assign('./?sidebarAction=profile');
+  });
   if(!window.supabase?.createClient)return;
   const client=window.supabase.createClient(
     'https://cczvdpofddjghqoeiqew.supabase.co',
@@ -43,9 +43,8 @@
           }
         }
       }catch(_error){/* Cache is optional; account navigation still works. */}
-      if(!link)return;
       const {data:allowed,error:roleError}=await client.rpc('ability_chess_is_admin',{p_user_id:data.user.id});
-      if(!roleError&&allowed===true)link.hidden=false;
+      if(!roleError&&allowed===true)shared({nav,mode:'community',activeRoute:'community',canAdmin:true});
     }catch(error){
       console.debug('Community sidebar: admin link unavailable',error);
     }
