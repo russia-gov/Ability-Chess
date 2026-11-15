@@ -52,7 +52,7 @@ async function run(test){
           ready=true;
           proc.stdin.write('position fen '+test.fen+'\n');
           proc.stdin.write('abilityfish '+(test.abilities?'on':'off')+'\n');
-          proc.stdin.write('abilitypoints '+test.points.join(' ')+'\n');
+          if(test.abilities)proc.stdin.write('abilitypoints '+test.points.join(' ')+'\n');
           for(const upgrade of test.upgrades||[])proc.stdin.write(upgrade+'\n');
           started=Date.now();
           proc.stdin.write('go depth '+depth+'\n');
