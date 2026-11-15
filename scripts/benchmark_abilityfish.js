@@ -15,8 +15,10 @@ const binary=args[0];
 const option=(name,fallback)=>{const i=args.indexOf(name);return i<0?fallback:Number(args[i+1]);};
 const depth=option('--depth',5), timeoutSeconds=option('--timeout',180);
 const wanted=args.includes('--scenario')?args[args.indexOf('--scenario')+1]:null;
+const allowTimeout=args.includes('--allow-timeout');
+const reportProgress=args.includes('--report-progress');
 if(!binary||!fs.existsSync(binary)||!Number.isInteger(depth)||depth<1||depth>30||timeoutSeconds<1){
-  console.error('Usage: node scripts/benchmark_abilityfish.js ENGINE_PATH [--depth 5] [--timeout 180] [--scenario NAME]');
+  console.error('Usage: node scripts/benchmark_abilityfish.js ENGINE_PATH [--depth 15] [--timeout 120] [--scenario NAME] [--allow-timeout] [--report-progress]');
   process.exit(2);
 }
 const scenarios=[
@@ -31,14 +33,20 @@ async function run(test){
     const proc=spawn(binary,[],{stdio:['pipe','pipe','pipe']});
     let buffer='',errorBuffer='',reached=0,nodes=0,nps=0,engineTime=0,bestmove=null;
     let infoCount=0,abilityActionCount=0;
+    const depthMilestones=[];
     let started=0,ready=false,finished=false;
     const finish=(err)=>{
       if(finished)return; finished=true;clearTimeout(watchdog);
       try{proc.kill();}catch{}
       if(err)return reject(err);
-      resolve({scenario:test.name,depthRequested:depth,depthReached:reached,wallMs:Date.now()-started,engineMs:engineTime,nodes,nps,bestmove});
+      resolve({scenario:test.name,depthRequested:depth,depthReached:reached,complete:bestmove!==null,timedOut:bestmove===null,wallMs:Date.now()-started,engineMs:engineTime,nodes,nps,bestmove,depthMilestones});
     };
-    const watchdog=setTimeout(()=>finish(new Error(test.name+' exceeded watchdog '+timeoutSeconds+'s at depth '+reached+'; nodes='+nodes+'; info='+infoCount+'; abilityActions='+abilityActionCount+'; stderr='+errorBuffer.slice(-1000))),timeoutSeconds*1000);
+    const watchdog=setTimeout(()=>{
+      if(allowTimeout){
+        console.error(test.name+' watchdog at '+timeoutSeconds+'s: last reported depth '+reached+', nodes '+nodes);
+        finish();
+      }else finish(new Error(test.name+' exceeded watchdog '+timeoutSeconds+'s at depth '+reached+'; nodes='+nodes+'; info='+infoCount+'; abilityActions='+abilityActionCount+'; stderr='+errorBuffer.slice(-1000)));
+    },timeoutSeconds*1000);
     proc.on('error',finish);
     proc.on('exit',code=>{if(!finished)finish(new Error(test.name+' exited '+code+': '+errorBuffer.slice(-1000)));});
     proc.stderr.on('data',x=>{errorBuffer+=String(x);});
@@ -61,7 +69,15 @@ async function run(test){
           infoCount++;
           if(line.startsWith('info string abilityaction '))abilityActionCount++;
           const d=line.match(/^info depth (\d+)\b/);
-          if(d)reached=Math.max(reached,Number(d[1]));
+          if(d){
+            const reportedDepth=Number(d[1]);
+            if(reportedDepth>reached){
+              reached=reportedDepth;
+              const milestone={depth:reached,wallMs:Date.now()-started};
+              depthMilestones.push(milestone);
+              if(reportProgress)console.error(JSON.stringify({scenario:test.name,...milestone}));
+            }
+          }
           const n=line.match(/\bnodes (\d+)/);if(n)nodes=Number(n[1]);
           const t=line.match(/\btime (\d+)/);if(t)engineTime=Number(t[1]);
           const p=line.match(/\bnps (\d+)/);if(p)nps=Number(p[1]);
