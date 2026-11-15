@@ -1,0 +1,18 @@
+/* Hover/focus flyouts shared by the SPA and Community. Native details also supports tap/click. */
+.home-nav .sidebar-nav-group{width:100%;min-width:0}
+.home-nav .sidebar-group-toggle{display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none;list-style:none;width:100%;box-sizing:border-box;border-radius:11px;padding:12px 13px;color:#dce2e8;font-size:13px;font-weight:700}
+.home-nav .sidebar-group-toggle::-webkit-details-marker{display:none}
+.home-nav .sidebar-group-toggle::marker{content:''}
+.home-nav .sidebar-group-toggle:hover,.home-nav .sidebar-nav-group[open]>.sidebar-group-toggle,.home-nav .sidebar-nav-group.has-active-route>.sidebar-group-toggle{background:#252d36;color:#eef1f6}
+.home-nav .sidebar-group-toggle:focus-visible{outline:2px solid #b5ce8c;outline-offset:2px}
+.home-nav .sidebar-group-chevron{margin-left:auto;font-size:19px;line-height:1}
+.home-nav .sidebar-group-items{position:fixed;z-index:9999;display:grid;align-content:start;gap:5px;box-sizing:border-box;padding:12px;background:#181d23;border:1px solid #35414d;border-radius:0 12px 12px 0;box-shadow:0 16px 36px rgba(0,0,0,.42);max-height:calc(100vh - 16px);overflow-y:auto}
+.home-nav .sidebar-nav-group:not([open])>.sidebar-group-items{display:none}
+.home-nav .sidebar-group-items>.home-nav-item{width:100%;box-sizing:border-box;white-space:nowrap;text-align:left}
+.home-nav .sidebar-group-items>.home-nav-item:hover{background:#252d36;color:#eef1f6}
+@media(max-width:900px){
+  .community-nav.home-nav{flex-wrap:wrap;overflow:visible}
+  .community-nav.home-nav .sidebar-nav-group{flex:0 0 auto;width:auto}
+  .community-nav.home-nav .sidebar-group-toggle{white-space:nowrap;padding:9px 11px}
+  .community-nav.home-nav .sidebar-group-items{border-radius:11px}
+}
