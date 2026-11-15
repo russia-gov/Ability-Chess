@@ -16,10 +16,11 @@
     {route:'admin',icon:'⚑',label:'Admin',className:'admin-nav-btn'}
   ]);
   const SIDEBAR_GROUPS=Object.freeze([
-    {key:'explore',label:'Explore',icon:'▦',routes:['abilities','history','tournaments']},
-    {key:'account',label:'Account',icon:'⚙',routes:['settings','notifications','admin']}
+    {key:'play',label:'Play',icon:'▶',routes:['play','tournaments']},
+    {key:'explore',label:'Explore',icon:'▦',routes:['abilities','history']},
+    {key:'more',label:'More',icon:'⚙',routes:['settings','notifications','admin']}
   ]);
-  const SIDEBAR_PRIMARY=['play','analysis','community'];
+  const SIDEBAR_PRIMARY=['analysis','community'];
   function ensureSidebarStyles(){
     if(document.querySelector('link[data-ability-sidebar-groups]'))return;
     const link=document.createElement('link');
@@ -85,10 +86,6 @@
       return el;
     };
     nav.replaceChildren();
-    for(const route of SIDEBAR_PRIMARY){
-      const item=SIDEBAR_DESTINATIONS.find(x=>x.route===route);
-      nav.appendChild(makeItem(item));
-    }
     for(const group of SIDEBAR_GROUPS){
       const items=group.routes.map(route=>SIDEBAR_DESTINATIONS.find(x=>x.route===route))
         .filter(item=>item&&(item.route!=='admin'||canAdmin));
@@ -120,6 +117,12 @@
         nav.dataset.expandedGroups=JSON.stringify([...openGroups]);
       });
       nav.appendChild(details);
+      if(group.key==='play'){
+        for(const route of SIDEBAR_PRIMARY){
+          const item=SIDEBAR_DESTINATIONS.find(x=>x.route===route);
+          nav.appendChild(makeItem(item));
+        }
+      }
     }
   }
 
