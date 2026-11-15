@@ -2,6 +2,27 @@
   'use strict';
 
   function createAdminUi({ getMemberProfile, currentRoute, showScreen, updateNotificationBadge, openNotifications }) {
+    let handledCommunityNav=false;
+    function restoreCommunityDestination() {
+      // Initial router setup can reset the screen; navigate only after load.
+      if(handledCommunityNav||global.document.readyState!=='complete')return;
+      const url=new URL(global.location.href);
+      const destination=url.searchParams.get('communityNav');
+      const screens=new Set(['play','abilities','analysis','settings','history','tournaments','admin']);
+      if(!destination||(!screens.has(destination)&&destination!=='notifications'))return;
+      // Wait until account identity has been loaded before opening Admin.
+      if(destination==='admin'&&!getMemberProfile())return;
+      handledCommunityNav=true;
+      url.searchParams.delete('communityNav');
+      global.history.replaceState(global.history.state,'',url.pathname+url.search+url.hash);
+      if(destination==='admin'){
+        const p=getMemberProfile();
+        if(!p.is_owner&&!p.is_staff)return;
+      }
+      if(destination==='notifications')openNotifications();
+      else showScreen(destination);
+    }
+    global.addEventListener('load',restoreCommunityDestination,{once:true});
     function rebuildCanonicalSidebars() {
       const memberProfile = getMemberProfile();
       const canAdmin = !!(memberProfile && (memberProfile.is_owner || memberProfile.is_staff));
@@ -31,6 +52,7 @@
         }
       });
       updateNotificationBadge();
+      restoreCommunityDestination();
     }
 
     function installManagementPanel() {

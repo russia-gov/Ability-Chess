@@ -57,6 +57,25 @@ const server=http.createServer((req,res)=>{
     await page.goto(home,{waitUntil:'domcontentloaded'});
     await page.locator('.community-nav-btn').first().click();
     await page.waitForURL('**/community.html');
+    await page.locator('.community-rail').waitFor({state:'visible'});
+    await page.locator('.community-nav a.current[aria-current="page"]').waitFor({state:'visible'});
+    if(await page.locator('#communitySidebarAdmin').isVisible())
+      throw Error('Admin link visible to guest on Community');
+    const gradient=await page.locator('body').evaluate(el=>getComputedStyle(el).backgroundImage);
+    if(!gradient.includes('radial-gradient'))throw Error('Community background gradient was lost');
+    await page.getByText('First tournament').waitFor();
+    await page.locator('.community-nav a[href="./?communityNav=analysis"]').click();
+    await page.waitForTimeout(800);
+    const routeDebug=await page.evaluate(()=>({
+      url:location.href,
+      analysisCount:document.querySelectorAll('#analysisScreen,.analysis-screen').length,
+      active:[...document.querySelectorAll('.screen.active')].map(el=>el.id),
+      selection:[...document.querySelectorAll('.analysis-screen')].map(el=>({id:el.id,classes:el.className})),
+      nav:[...document.querySelectorAll('.analysis-nav-btn')].map(el=>el.className)
+    }));
+    if(!routeDebug.active.some(id=>/analysis/i.test(id))&&!routeDebug.selection.some(el=>/active/.test(el.classes)))
+      throw Error('Community → Analysis did not activate Analysis: '+JSON.stringify(routeDebug));
+    await page.goto(home+'community.html',{waitUntil:'domcontentloaded'});
     await page.getByText('First tournament').waitFor();
     await page.getByRole('button',{name:'Read article'}).click();
     if(await page.locator('#communityFeed').isVisible()) throw Error('News feed remained visible behind the open article');
@@ -76,8 +95,14 @@ const server=http.createServer((req,res)=>{
       user:{id:'browser-smoke-owner',aud:'authenticated',role:'authenticated'}
     })));
     await page.reload({waitUntil:'domcontentloaded'});
-    await page.locator('.admin-nav-btn').first().waitFor();
-    await page.locator('.admin-nav-btn').first().click();
+    await page.locator('.admin-nav-btn:visible').first().waitFor();
+    await page.goto(home+'community.html',{waitUntil:'domcontentloaded'});
+    await page.locator('#communitySidebarAdmin:not([hidden])').waitFor({timeout:20000});
+    await page.locator('#communitySidebarAdmin').click();
+    await page.locator('#adminScreen.active').waitFor({timeout:20000});
+    await page.goto(home,{waitUntil:'domcontentloaded'});
+    await page.locator('.admin-nav-btn:visible').first().waitFor();
+    await page.locator('.admin-nav-btn:visible').first().click();
     await page.locator('#adminScreen.active').waitFor();
     await page.locator('#adminCommunityEditorToggle').click();
     const editor=page.frameLocator('#adminCommunityEditorFrame');

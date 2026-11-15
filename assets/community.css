@@ -8,3 +8,31 @@ main{width:min(1100px,94vw);margin:35px auto 80px}.eyebrow{text-transform:upperc
 .editor-layout{display:grid;grid-template-columns:minmax(220px,270px) minmax(0,1fr);gap:18px}.editor-panel{background:var(--panel);border:1px solid var(--edge);border-radius:13px;padding:18px;min-width:0}.editor-panel h2{margin:0 0 14px;font-size:19px}.post-list{display:grid;gap:6px;margin-top:12px;max-height:560px;overflow:auto}.post-list button{padding:10px;text-align:left;color:var(--ink);background:#26313a;border:1px solid transparent;border-radius:8px}.post-list button.selected{border-color:var(--accent)}.post-list small{display:block;color:var(--muted);margin-top:4px}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.field{display:grid;gap:6px;margin-bottom:14px}.field.wide{grid-column:1/-1}.field label{font-size:12px;font-weight:700;color:var(--muted)}.field input,.field textarea,.field select{background:#101820;border:1px solid var(--edge);border-radius:8px;color:var(--ink);padding:10px 12px;width:100%;min-width:0}.field textarea{resize:vertical}.editor-toolbar{display:flex;gap:6px;flex-wrap:wrap;padding:10px;background:#121923;border:1px solid var(--edge);border-radius:10px 10px 0 0}.editor-toolbar button{padding:6px 9px;font-size:13px}.editor-toolbar select{background:#202a34;color:var(--ink);border:1px solid var(--edge);border-radius:7px;padding:6px 8px;max-width:150px}.editor-toolbar label{display:flex;gap:4px;align-items:center;color:var(--muted);font-size:12px}.editor-toolbar input[type=color]{width:30px;height:30px;cursor:pointer;padding:2px;border:1px solid var(--edge);background:transparent}.editor-body{padding:18px;min-height:280px;max-height:700px;overflow:auto;border:1px solid var(--edge);border-top:0;border-radius:0 0 10px 10px;background:#101820;line-height:1.65;overflow-wrap:anywhere}.editor-body:empty:before{content:attr(data-placeholder);color:#667888}.editor-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:16px}.status{color:var(--muted);font-size:13px;margin:12px 0;min-height:19px}.status.error{color:#ff9d99}.thumb-preview{max-width:260px;width:100%;max-height:160px;object-fit:cover;border:1px solid var(--edge);border-radius:9px;margin:8px 0}.thumb-preview[hidden]{display:none}.check-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}.check-row input{accent-color:var(--accent)}
 body.embedded main{width:100%;margin:8px auto 20px}body.embedded .site-head{display:none}body.embedded .hero{margin-bottom:10px}body.embedded .hero h1{font-size:25px}body.embedded .editor-panel{padding:14px}
 @media(max-width:760px){.editor-layout{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.editor-panel{padding:13px}.post-detail-content{padding:20px}header.site-head{padding:16px}}
+
+
+/* Keep the Community feed visually part of the main game. The existing page
+   background gradient remains untouched; navigation anchors it on the left. */
+.community-shell{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100vh}
+.community-main{min-width:0}
+.community-main .site-head{max-width:none;width:auto;margin:0 32px;padding:22px 0}
+.community-main .site-head .brand{display:none}
+.community-main main{width:min(1100px,calc(100% - 64px));margin:35px auto 80px}
+.community-rail{position:sticky;top:0;height:100vh;min-height:0;overflow-y:auto;background:linear-gradient(160deg,rgba(16,23,31,.98),rgba(17,24,31,.95));border-right:1px solid #35414d;padding:20px 13px;display:flex;flex-direction:column;gap:20px}
+.community-rail-brand{display:flex;align-items:center;gap:7px;color:#f1f3f5;text-decoration:none;padding:12px 10px 19px;border-bottom:1px solid #34404a;font-size:17px;font-weight:850;white-space:nowrap}
+.community-rail-brand b{color:#e2c887}
+.community-nav{display:flex;flex-direction:column;gap:4px}
+.community-nav a{display:flex;align-items:center;gap:12px;min-height:41px;padding:8px 12px;color:#e6edf4;font-size:13px;text-decoration:none;border:1px solid transparent;border-radius:9px;white-space:nowrap}
+.community-nav a:hover{background:#26313c;border-color:#344353}
+.community-nav a.current{background:#354d35;border-color:#637f4e;color:#fff;font-weight:750}
+.community-nav .nav-icon{display:inline-flex;width:20px;flex:none;justify-content:center;font-size:17px}
+.community-nav a[hidden]{display:none!important}
+@media(max-width:880px){
+  .community-shell{grid-template-columns:1fr}
+  .community-rail{position:relative;height:auto;overflow:visible;padding:12px 16px;gap:8px;border-right:0;border-bottom:1px solid #35414d}
+  .community-rail-brand{padding:8px 4px 10px;border:0}
+  .community-nav{flex-direction:row;flex-wrap:nowrap;gap:5px;overflow-x:auto;padding-bottom:3px}
+  .community-nav a{padding:7px 9px;min-height:37px;font-size:12px}
+  .community-main .site-head{margin:0 16px;padding:12px 0}
+  .community-main main{width:calc(100% - 32px);margin:24px auto 50px}
+}
+@media(max-width:520px){.community-main .site-head{justify-content:flex-end}.community-rail-brand{font-size:16px}.community-main .hero h1{font-size:30px}}
