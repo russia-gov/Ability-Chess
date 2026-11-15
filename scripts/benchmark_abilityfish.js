@@ -23,6 +23,7 @@ const scenarios=[
   {name:'ordinary_midgame',fen:'r1bqk2r/pppp1ppp/2n2n2/4p3/2B1P3/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 4 5',points:[0,0],abilities:false},
   {name:'ability_tactical',fen:'4k3/2p2pp1/3n4/3q4/3R4/2N5/5PPP/4K3 w - - 0 1',points:[9,8],abilities:true},
   {name:'ability_open_board',fen:'4k3/8/2n5/8/4R3/8/8/4K3 w - - 0 1',points:[12,12],abilities:true},
+  {name:'ability_sparse',fen:'4k3/8/2n5/8/3N4/8/8/4K3 w - - 0 1',points:[3,3],abilities:true},
   {name:'upgraded_knight',fen:'4k3/8/2n5/8/3N4/8/8/4K3 w - - 0 1',points:[0,0],abilities:true,upgrades:['abilityupgrade w 1 5','abilityupgrade b 1 4']}
 ];
 async function run(test){
