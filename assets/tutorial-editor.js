@@ -19,7 +19,7 @@ function read(){
  board.decode(fen);
  return {sort_order,title,body,board_fen:fen,arrow_from,arrow_to,updated_at:new Date().toISOString()};
 }
-function currentBoard(){return {board_fen:$('tutorialFen').value.trim()||board.initial,arrow_from:$('tutorialFrom').value.trim().toLowerCase(),arrow_to:$('tutorialTo').value.trim().toLowerCase()};}
+function currentBoard(){const from=$('tutorialFrom').value.trim().toLowerCase(),to=$('tutorialTo').value.trim().toLowerCase();return {board_fen:$('tutorialFen').value.trim()||board.initial,arrow_from:from&&to?from:null,arrow_to:from&&to?to:null};}
 function draw(){
  try{
   board.makeBoard($('tutorialEditorBoard'),currentBoard());
