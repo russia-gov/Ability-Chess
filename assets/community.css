@@ -46,3 +46,11 @@ body.embedded main{width:100%;margin:8px auto 20px}body.embedded .site-head{disp
   .community-main .site-head{justify-content:flex-end}
   .community-main .hero h1{font-size:30px}
 }
+
+/* The member footer shares the main site's account component styling. */
+.community-rail .sidebar-account{margin-top:auto}
+.community-rail .sidebar-profile-link{cursor:pointer}
+.community-rail .sidebar-profile-link:hover{background:#29333e}
+.community-rail .sidebar-avatar img{width:100%;height:100%;object-fit:cover;border-radius:7px}
+.visually-hidden{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:900px){.community-rail .sidebar-account{display:none}}
