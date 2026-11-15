@@ -78,7 +78,7 @@ insert into public.ability_chess_rooms
   '{"rated":true,"ratingCategory":"rapid"}'::jsonb,
   '{"turn":"w","over":false}'::jsonb);
 
-do $
+do $$
 declare n bigint;
 begin
  select new_version into n from public.ability_chess_commit_verified_action(
@@ -97,5 +97,5 @@ begin
  if (select status from public.ability_chess_rooms
      where id='00000000-0000-0000-0000-0000000000a3')<>'finished'
  then raise exception 'Terminal status not saved'; end if;
-end $;
+end $$;
 select 'Verified action persistence and atomic settlement tests passed' as result;
