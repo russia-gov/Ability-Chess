@@ -16,8 +16,8 @@
     {route:'admin',icon:'⚑',label:'Admin',className:'admin-nav-btn'}
   ]);
   const SIDEBAR_GROUPS=Object.freeze([
-    {key:'play',label:'Play',icon:'▶',routes:['play','tournaments']},
-    {key:'explore',label:'Explore',icon:'▦',routes:['abilities','history']},
+    {key:'play',label:'Play',icon:'▶',routes:['play','tournaments','history']},
+    {key:'learn',label:'Learn',icon:'▦',routes:['abilities']},
     {key:'more',label:'More',icon:'⚙',routes:['settings','notifications','admin']}
   ]);
   const SIDEBAR_PRIMARY=['analysis','community'];
