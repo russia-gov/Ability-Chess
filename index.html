@@ -4,6 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Ability Chess</title>
+<script src="assets/account-auth.js"></script>
+<script src="assets/admin.js"></script>
 <style>
 :root{
     --bg:#121417; --panel:#1d232a; --light:#f0d9b5; --dark:#b58863; --accent:#4da3ff; --text:#f2f4f8;
@@ -153,7 +155,11 @@
   .game-toast-stack{position:fixed!important;right:18px;bottom:18px;z-index:2147483646!important;display:grid;gap:10px;width:min(360px,calc(100vw - 36px));pointer-events:none}.game-toast{pointer-events:auto!important;background:#20262e;border:1px solid #465363;border-radius:14px;padding:15px;box-shadow:0 18px 55px rgba(0,0,0,.48)}.game-toast[hidden]{display:none}.game-toast h3{margin:0 0 6px;font-size:17px}.game-toast p{margin:0 0 12px;color:#c4ccd4;line-height:1.4}.game-toast-actions{display:flex;gap:8px;flex-wrap:wrap}.game-toast-actions button{flex:1}.game-toast-primary{background:linear-gradient(135deg,#d98a20,#ffb84d);border-color:#ffc76d;color:#18120a;font-weight:800}@media(max-width:560px){.game-toast-stack{right:10px;bottom:10px;width:calc(100vw - 20px)}}
   .online-modal{position:fixed;inset:0;z-index:21000;display:grid;place-items:center;background:rgba(5,8,12,.76);padding:18px}.online-modal[hidden]{display:none}.online-card{width:min(460px,100%);background:#20262e;border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:22px;box-shadow:0 22px 60px rgba(0,0,0,.45)}.online-card h2{margin:0 0 8px}.online-card p{color:var(--muted);line-height:1.45}.online-actions{display:grid;gap:10px;margin-top:16px}.online-join{display:grid;grid-template-columns:1fr auto;gap:8px}.online-join input{min-width:0;background:#13181e;color:white;border:1px solid #465363;border-radius:10px;padding:11px 12px;text-transform:uppercase;font-size:16px;font-weight:800;letter-spacing:.12em}.room-code{font-size:34px;font-weight:900;letter-spacing:.18em;text-align:center;color:var(--warn);margin:14px 0}.online-status{min-height:22px;color:#cbd3db}.online-close{margin-top:12px;width:100%}.online-host-config{margin-top:16px;padding:14px;background:#171c22;border:1px solid #3b4652;border-radius:12px}.online-host-config[hidden]{display:none}.online-host-config h3{margin:0 0 10px}.online-color-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 14px}.online-color-row label{display:flex;align-items:center;gap:8px;padding:10px;border:1px solid #465363;border-radius:10px;background:#13181e}.online-host-config .slider-row{grid-template-columns:92px 1fr 68px}.game-rule-row{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0}.game-rule-row label{display:flex;align-items:center;gap:7px;padding:9px 11px;border:1px solid #465363;border-radius:10px;background:#13181e}.game-rule-row input[type=checkbox]{width:18px;height:18px}.rule-note{font-size:12px;color:var(--muted);margin-top:6px}.online-start-btn{width:100%;background:linear-gradient(135deg,#d98a20,#ffb84d);border-color:#ffc76d;color:#18120a;font-weight:800}
 
-  .member-modal{position:fixed;inset:0;z-index:22000;display:grid;place-items:center;background:rgba(5,8,12,.8);padding:18px}.member-modal[hidden]{display:none}.member-card{width:min(920px,96vw);max-height:90vh;overflow:auto;background:#20262e;border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:22px;box-shadow:0 22px 60px rgba(0,0,0,.5)}.member-card h2{margin:0 0 8px}.member-auth{display:grid;grid-template-columns:1fr 1fr;gap:12px}.member-auth input,.member-toolbar input{min-width:0;background:#13181e;color:white;border:1px solid #465363;border-radius:10px;padding:11px 12px;font-size:15px}.member-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.member-tab.active{border-color:var(--warn);background:#3b3021}.member-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}.member-toolbar input{flex:1 1 220px}.member-list{display:grid;gap:10px}.member-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;background:#171c22;border:1px solid #354150;border-radius:12px;padding:12px}.member-name{font-weight:800}.member-meta{color:var(--muted);font-size:13px;margin-top:3px}.member-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.member-empty{color:var(--muted);padding:20px;text-align:center;background:#171c22;border-radius:12px}.member-profilebar{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;background:#171c22;border-radius:12px;padding:12px;margin-bottom:14px}.member-close{width:100%;margin-top:16px}.profile-edit{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:10px}.profile-edit input{background:#13181e;color:white;border:1px solid #465363;border-radius:10px;padding:10px}.online-member-btn{width:100%;margin-top:10px;background:#2a3d32;border-color:#49735a}.challenge-badge{display:inline-block;padding:3px 7px;border-radius:999px;background:#3b3021;color:#ffc56d;font-size:11px;font-weight:800;margin-left:6px}.role-tag{display:inline-flex;align-items:center;justify-content:center;height:1.15em;box-sizing:border-box;margin-right:6px;padding:0 5px;border-radius:3px;color:#fff;font-size:9px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;vertical-align:middle}.owner-tag{background:#c62828;border:1px solid #ef5350}.staff-tag{background:#c49a00;border:1px solid #f3cf45;color:#1b1600}.profile-role-badge{grid-column:1/-1;display:inline-flex;justify-self:start;align-items:center;gap:9px;padding:10px 14px;border-radius:10px;font-weight:900}.profile-role-badge.owner{background:#4a1717;border:1px solid #d94b4b;color:#ffdede}.profile-role-badge.staff{background:#4a3b08;border:1px solid #d8b62d;color:#fff4bd}.profile-category-stats{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.profile-rating-card{background:#151b21;border-radius:11px;padding:14px}.profile-rating-card b{display:block;font-size:22px}.profile-rating-card span,.profile-rating-card small{display:block;color:var(--muted)}.profile-rating-card small{margin-top:5px}.owner-tools{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;padding-top:8px;border-top:1px solid #354150}.profile-history{grid-column:1/-1;display:grid;gap:10px;margin-top:8px}.danger-button{background:#5c2020;border-color:#a44747}.promote-button{background:#5b4a13;border-color:#c5a533}.online-dot{color:#68d391}.member-status{min-height:22px;color:#cbd3db;margin-top:8px}@media(max-width:640px){.member-auth,.profile-edit{grid-template-columns:1fr}.member-row{grid-template-columns:1fr}.member-actions{justify-content:flex-start}}
+</style>
+<link rel="stylesheet" href="assets/account.css">
+<link rel="stylesheet" href="assets/admin.css">
+<style>
+
 
   .ability-tabs{display:flex;gap:8px;margin:10px 0}.ability-tab{flex:1}.ability-tab.active{background:#3b82f6;border-color:#60a5fa;color:white}
   .ability-panel-section,.upgrade-panel{max-height:min(52vh,500px);overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:3px 7px 8px 3px;border-radius:10px;background:#121820;border:1px solid rgba(255,255,255,.08)}
@@ -587,16 +593,16 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
 </div>
 
 <div id="tournamentsScreen" class="tournaments-screen screen"><aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item tournaments-nav-btn active" type="button"><span class="home-nav-icon">♜</span>Tournaments</button></nav></aside><main class="tournaments-main"><div class="tournament-layout"><section class="tournament-content"><h1 class="page-title">Tournaments</h1><p class="page-lead">Join an event, find games, follow standings, watch live boards, and chat with tournament members.</p><section id="tournamentSpectator" class="spectator-card"><div class="history-actions"><button id="closeSpectatorBtn" type="button">Back to tournaments</button></div><h2 id="spectatorTitle">Live game</h2><div id="spectatorMeta" class="spectator-meta"></div><div id="spectatorBoard" class="spectator-board"></div></section><div id="tournamentList" class="tournament-list"></div></section><aside id="tournamentHub" class="tournament-hub" hidden><div class="tournament-hub-head"><strong id="tournamentHubTitle">Tournament</strong><div id="tournamentHubSummary" class="history-meta"></div></div><div class="tournament-hub-tabs"><button class="tournament-hub-tab active" data-tab="standings" type="button">Standings</button><button class="tournament-hub-tab" data-tab="games" type="button">Games</button><button class="tournament-hub-tab" data-tab="chat" type="button">Chat</button></div><div id="tournamentHubBody" class="tournament-hub-body"></div></aside></div></main></div>
-<div id="adminScreen" class="admin-screen screen"><aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item admin-nav-btn active" type="button"><span class="home-nav-icon">⚑</span>Admin</button></nav></aside><main class="admin-main"><h1 class="page-title">Admin</h1><p class="page-lead">Create awards, grant awards, and—if you are the owner—create tournaments.</p><section id="adminManagementPanel" class="admin-card" style="margin:18px 0">
+<div id="adminScreen" class="admin-screen screen"><aside class="site-ribbon"><button class="brand page-home-btn" type="button"><span class="brand-mark">♞</span><span>Ability Chess</span></button><nav class="home-nav"><button class="home-nav-item page-play-btn" type="button"><span class="home-nav-icon">▶</span>Play</button><button class="home-nav-item admin-nav-btn active" type="button"><span class="home-nav-icon">⚑</span>Admin</button></nav></aside><main class="admin-main"><h1 class="page-title">Admin</h1><p class="page-lead">Create awards, grant awards, and—if you are the owner—create tournaments.</p><section id="adminManagementPanel" class="admin-card">
       <h2>Member management</h2>
       <p class="history-meta">Manage member accounts and review reported private messages.</p>
-      <div class="history-actions">
+      <div class="history-actions admin-management-actions">
         <button type="button" data-admin-management="directory">Member directory</button>
         <button type="button" data-admin-management="reports">DM reports</button>
         <button type="button" id="adminManagementClose" hidden>Close</button>
       </div>
       <iframe id="adminManagementFrame" title="Admin management" loading="lazy"
-        style="display:none;width:100%;height:min(75vh,850px);min-height:540px;margin-top:12px;border:1px solid #465363;border-radius:10px;background:#11171d"></iframe>
+        hidden></iframe>
     </section><div class="admin-grid"><section class="admin-card"><h2>Create award</h2><input id="awardNameInput" placeholder="Award name"><textarea id="awardDescriptionInput" placeholder="Description"></textarea><input id="awardImageInput" placeholder="Image URL"><button id="createAwardBtn" type="button">Create award</button><div id="awardAdminStatus"></div></section><section class="admin-card"><h2>Give award</h2><input id="awardMemberSearch" placeholder="Search member"><div id="awardMemberResults"></div><select id="awardSelect"></select><button id="giveAwardBtn" type="button">Give award</button><div id="giveAwardStatus"></div></section><section id="tournamentAdminCard" class="admin-card"><h2>Create tournament</h2><p class="tournament-create-help">Choose the basic format and when it starts. The normal game settings are ready to use unless you want to change them.</p><div class="tournament-form tournament-create-simple"><label class="full tournament-field-label">Tournament name<input id="tournamentName" placeholder="e.g. Saturday Ability Swiss"></label><label class="tournament-field-label">Format<select id="tournamentFormat"><option value="swiss">Swiss</option><option value="arena">Arena</option></select></label><label id="tournamentRoundsWrap" class="tournament-field-label">Rounds<input id="tournamentRounds" type="number" min="1" value="5"></label><label id="tournamentLengthWrap" class="tournament-field-label" hidden>Length<select id="tournamentLength"><option value="30">30 minutes</option><option value="45">45 minutes</option><option value="60" selected>1 hour</option><option value="90">90 minutes</option><option value="120">2 hours</option></select></label><label class="full tournament-field-label">Start<select id="tournamentStartMode"><option value="now">Start immediately</option><option value="10">In 10 minutes</option><option value="30" selected>In 30 minutes</option><option value="60">In 1 hour</option><option value="120">In 2 hours</option><option value="custom">Choose date and time…</option></select></label><label id="tournamentCustomStartWrap" class="full tournament-field-label" hidden>Date and time<input id="tournamentStarts" type="datetime-local"></label><div id="tournamentScheduleSummary" class="full tournament-schedule-summary"></div><details class="full tournament-advanced"><summary>Advanced game settings</summary><div class="tournament-advanced-grid"><label class="full tournament-field-label">Picture URL <span>(optional)</span><input id="tournamentPicture" placeholder="https://…"></label><label class="tournament-field-label">Base time<input id="tournamentBase" type="number" min="1" value="10"></label><label class="tournament-field-label">Increment<input id="tournamentIncrement" type="number" min="0" value="0"></label><label class="tournament-field-label">Starting points<input id="tournamentPoints" type="number" min="0" value="0"></label><label class="tournament-field-label">Max upgrades<input id="tournamentUpgrades" type="number" min="0" value="3"></label><label><input id="tournamentAbilities" type="checkbox" checked> Abilities</label><label><input id="tournamentUpgradeRules" type="checkbox" checked> Upgrades</label><label><input id="tournamentRated" type="checkbox"> Rated</label></div></details><button id="createTournamentBtn" class="full primary-button" type="button">Create tournament</button></div><div id="tournamentAdminStatus"></div></section></div></main></div>
 <div id="onlineModal" class="online-modal" hidden>
   <section class="online-card" role="dialog" aria-modal="true" aria-labelledby="onlineTitle">
@@ -1258,46 +1264,15 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   let memberChallengeInboxKey=localStorage.getItem('abilityChessChallengeInboxKey')||null;
   let pendingChallengeTarget=null, visibleOutgoingMemberChallenge=null;
   const notifiedChallengeStatuses=new Set();
+  let adminUi=null;
   try{ memberSession=JSON.parse(localStorage.getItem('abilityChessMemberSession')||'null'); }catch{}
-  function authHeaders(){ return {apikey:SUPABASE_KEY,Authorization:`Bearer ${memberSession?.access_token||SUPABASE_KEY}`,'Content-Type':'application/json'}; }
-  async function authRequest(path,body){ const res=await fetch(`${SUPABASE_URL}/auth/v1/${path}`,{method:'POST',headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify(body)}); const data=await res.json().catch(()=>null); if(!res.ok) throw new Error(data?.msg||data?.message||data?.error_description||'Authentication failed.'); return data; }
-  function appRedirectUrl(){ return `${window.location.origin}${window.location.pathname}${window.location.search}`; }
-  function clearAuthRedirectArtifacts(){
-    const url=new URL(window.location.href);
-    for(const key of ['error','error_code','error_description','code','type'])url.searchParams.delete(key);
-    url.hash='';
-    history.replaceState(history.state,'',url.pathname+(url.searchParams.toString()?`?${url.searchParams}`:''));
-  }
-  function importAuthRedirectSession(){
-    const hash=new URLSearchParams(window.location.hash.replace(/^#/,'').trim());
-    const query=new URLSearchParams(window.location.search);
-    const errorDescription=hash.get('error_description')||query.get('error_description');
-    if(errorDescription){
-      sessionStorage.setItem('abilityChessAuthMessage',decodeURIComponent(errorDescription.replace(/\+/g,' ')));
-      clearAuthRedirectArtifacts();
-      return false;
-    }
-    const accessToken=hash.get('access_token');
-    const refreshToken=hash.get('refresh_token');
-    if(!accessToken)return false;
-    const expiresIn=Number(hash.get('expires_in')||3600);
-    saveMemberSession({
-      access_token:accessToken,
-      refresh_token:refreshToken,
-      token_type:hash.get('token_type')||'bearer',
-      expires_in:expiresIn,
-      expires_at:Math.floor(Date.now()/1000)+expiresIn
+  const {authHeaders,authRequest,appRedirectUrl,clearAuthRedirectArtifacts,importAuthRedirectSession}=
+    window.AbilityChessAccountAuth.createAccountAuth({
+      supabaseUrl:SUPABASE_URL,
+      supabaseKey:SUPABASE_KEY,
+      getSession:()=>memberSession,
+      saveSession:session=>saveMemberSession(session)
     });
-    const authType=hash.get('type')||query.get('type');
-    if(authType==='recovery'){
-      sessionStorage.setItem('abilityChessRecoveryMode','1');
-      sessionStorage.setItem('abilityChessAuthMessage','Password-reset link accepted. Choose a new password below.');
-    }else{
-      sessionStorage.setItem('abilityChessAuthMessage','Email confirmed. You are now signed in.');
-    }
-    clearAuthRedirectArtifacts();
-    return true;
-  }
   async function memberRpc(name,body={},retried=false){
     const res=await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`,{method:'POST',headers:{...authHeaders(),'Cache-Control':'no-cache',Pragma:'no-cache'},cache:'no-store',body:JSON.stringify(body)});
     const data=await res.json().catch(()=>null);
@@ -5644,7 +5619,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   document.getElementById('gameChatInput')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendGameChat();}});
   setInterval(()=>{if(document.getElementById('gameScreen')?.classList.contains('active'))pollGameChat();else resetGameChatForRoom();},2000);
 
-  async function loadAdminPanel(){const screen=document.getElementById('adminScreen');if(!screen)return;if(!memberProfile||(memberProfile.is_owner||memberProfile.is_staff)!==true){showScreen('home');return;}document.getElementById('tournamentAdminCard').hidden=!memberProfile.is_owner;try{const awards=await memberRpc('ability_chess_admin_list_awards');document.getElementById('awardSelect').innerHTML=(awards||[]).map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');}catch(e){document.getElementById('awardAdminStatus').textContent=e.message;}ensureAdminFoundationCards();loadModerationFoundation();}
+  async function loadAdminPanel(){const screen=document.getElementById('adminScreen');if(!screen)return;if(!memberProfile||(memberProfile.is_owner||memberProfile.is_staff)!==true){showScreen('home');return;}document.getElementById('tournamentAdminCard').hidden=!memberProfile.is_owner;try{const awards=await memberRpc('ability_chess_admin_list_awards');document.getElementById('awardSelect').innerHTML=(awards||[]).map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');}catch(e){document.getElementById('awardAdminStatus').textContent=e.message;}if(typeof ensureAdminFoundationCards==='function')ensureAdminFoundationCards();if(typeof loadModerationFoundation==='function')loadModerationFoundation();}
   document.getElementById('createAwardBtn')?.addEventListener('click',async()=>{try{await memberRpc('ability_chess_admin_create_award',{p_name:awardNameInput.value,p_description:awardDescriptionInput.value,p_image_url:awardImageInput.value});awardAdminStatus.textContent='Award created.';loadAdminPanel();}catch(e){awardAdminStatus.textContent=e.message;}});
   let awardSearchTimer;document.getElementById('awardMemberSearch')?.addEventListener('input',()=>{clearTimeout(awardSearchTimer);awardSearchTimer=setTimeout(async()=>{const box=document.getElementById('awardMemberResults');try{const rows=await memberRpc('ability_chess_list_members_v2',{p_search:awardMemberSearch.value});box.replaceChildren();for(const m of rows||[]){const b=document.createElement('button');b.textContent=`${m.display_name} (@${m.username})`;b.addEventListener('click',()=>{selectedAwardMember=m;box.innerHTML=`Selected ${escapeHtml(m.display_name)}`;});box.appendChild(b);}}catch(e){box.textContent=e.message;}},200);});
   document.getElementById('giveAwardBtn')?.addEventListener('click',async()=>{try{if(!selectedAwardMember)throw new Error('Select a member.');await memberRpc('ability_chess_admin_give_award',{p_user_id:selectedAwardMember.id,p_award_id:awardSelect.value});giveAwardStatus.textContent='Award given.';}catch(e){giveAwardStatus.textContent=e.message;}});
@@ -5780,59 +5755,22 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   function installNotificationButtons(){ rebuildCanonicalSidebars(); }
 
   function rebuildCanonicalSidebars(){
-    const canAdmin=!!(memberProfile&&(memberProfile.is_owner||memberProfile.is_staff));
-    const items=[
-      {className:'page-play-btn',icon:'▶',label:'Play',route:'play',action:()=>showScreen('play')},
-      {className:'abilities-nav-btn',icon:'★',label:'Abilities Guide',route:'abilities',action:()=>showScreen('abilities')},
-      {className:'analysis-nav-btn',icon:'◩',label:'Analysis',route:'analysis',action:()=>showScreen('analysis')},
-      {className:'settings-nav-btn',icon:'⚙',label:'Settings',route:'settings',action:()=>showScreen('settings')},
-      {className:'history-nav-btn',icon:'◫',label:'Game history',route:'history',action:()=>showScreen('history')},
-      {className:'tournaments-nav-btn',icon:'♜',label:'Tournaments',route:'tournaments',action:()=>showScreen('tournaments')},
-      {className:'sidebar-notification-btn',icon:'●',label:'Notifications',action:openNotificationsFromSidebar,notification:true}
-    ];
-    if(canAdmin)items.push({className:'admin-nav-btn',icon:'⚑',label:'Admin',route:'admin',action:()=>showScreen('admin')});
-    document.querySelectorAll('.home-nav').forEach(nav=>{
-      nav.replaceChildren();
-      for(const item of items){
-        const b=document.createElement('button');
-        b.type='button';
-        b.className=`home-nav-item ${item.className}${item.route===currentRoute()?' active':''}`;
-        b.innerHTML=`<span class="home-nav-icon">${item.icon}</span>${item.label}${item.notification?' <span class="notification-badge" hidden></span>':''}`;
-        b.addEventListener('click',item.action);
-        nav.appendChild(b);
-      }
+    adminUi??=window.AbilityChessAdmin.createAdminUi({
+      getMemberProfile:()=>memberProfile,
+      currentRoute,
+      showScreen,
+      updateNotificationBadge,
+      openNotifications:openNotificationsFromSidebar
     });
-    updateNotificationBadge();
+    adminUi.rebuildCanonicalSidebars();
   }
-  function installSpecialNav(){ rebuildCanonicalSidebars(); }
+  function installSpecialNav(){rebuildCanonicalSidebars();}
   document.querySelectorAll('.tournaments-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('tournaments')));
   document.querySelectorAll('.admin-nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen('admin')));
   installSpecialNav();
   // ABILITY_CHESS_ADMIN_MANAGEMENT_STATIC_V2
-  document.addEventListener('click',event=>{
-    const select=event.target.closest?.('[data-admin-management]');
-    const close=event.target.closest?.('#adminManagementClose');
-    if(!select&&!close)return;
-    const panel=document.getElementById('adminManagementPanel');
-    const frame=panel?.querySelector('#adminManagementFrame');
-    const closeButton=panel?.querySelector('#adminManagementClose');
-    if(!frame||!closeButton)return;
-    if(close){
-      frame.removeAttribute('src');
-      frame.style.display='none';
-      closeButton.hidden=true;
-      return;
-    }
-    const kind=select.getAttribute('data-admin-management');
-    if(kind!=='directory'&&kind!=='reports')return;
-    frame.src=kind==='directory'
-      ? 'admin-directory.html?embedded=1'
-      : 'dm-safety.html?embedded=1#reports';
-    frame.title=kind==='directory'?'Member directory':'Reported direct messages';
-    frame.style.display='block';
-    closeButton.hidden=false;
-  });
-  const originalUpdateSidebarAccounts=updateSidebarAccounts;updateSidebarAccounts=function(){originalUpdateSidebarAccounts();document.querySelectorAll('.sidebar-avatar').forEach(a=>{if(memberProfile?.avatar_url)a.innerHTML=`<img src="${escapeHtml(memberProfile.avatar_url)}" alt="">`;});installSpecialNav();};
+  adminUi.installManagementPanel();
+  updateSidebarAccounts=adminUi.wrapUpdateSidebarAccounts(updateSidebarAccounts);
 
 
   /* ===== Dedicated analysis workspace ===== */

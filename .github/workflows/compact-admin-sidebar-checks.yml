@@ -45,3 +45,9 @@ jobs:
               subprocess.run(['node','--check',str(path)],check=True)
           print('All inline scripts parse')
           PY
+      - name: Check extracted account and admin modules
+        run: |
+          node --check assets/account-auth.js
+          node --check assets/admin.js
+          node scripts/check_account_admin_modules.js
+
