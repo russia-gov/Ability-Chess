@@ -5,7 +5,8 @@
   // Shared sidebar contract used by both the main SPA and standalone Community.
   // Main-site account handlers remain attached to their existing footer nodes.
   const SIDEBAR_DESTINATIONS=Object.freeze([
-    {route:'play',icon:'▶',label:'Play',className:'page-play-btn'},
+    {route:'online',screen:'play',icon:'♟',label:'Online',className:'page-play-btn'},
+    {route:'bots',screen:'play',icon:'♞',label:'Bots',className:'page-play-btn'},
     {route:'abilities',icon:'★',label:'Abilities Guide',className:'abilities-nav-btn'},
     {route:'analysis',icon:'◩',label:'Analysis',className:'analysis-nav-btn'},
     {route:'settings',icon:'⚙',label:'Settings',className:'settings-nav-btn'},
@@ -16,7 +17,7 @@
     {route:'admin',icon:'⚑',label:'Admin',className:'admin-nav-btn'}
   ]);
   const SIDEBAR_GROUPS=Object.freeze([
-    {key:'play',label:'Play',icon:'▶',routes:['play','tournaments','history']},
+    {key:'play',label:'Play',icon:'▶',routes:['online','bots','tournaments','history']},
     {key:'learn',label:'Learn',icon:'▦',routes:['abilities']},
     {key:'more',label:'More',icon:'⚙',routes:['settings','notifications','admin']}
   ]);
@@ -53,7 +54,7 @@
     }
     ensureSidebarStyles();
     const makeItem=item=>{
-      const active=item.route===activeRoute;
+      const active=(item.screen||item.route)===activeRoute;
       const el=document.createElement(mode==='community'?'a':'button');
       el.className='home-nav-item '+item.className+(active?' active current':'');
       if(mode==='community'){
@@ -64,7 +65,7 @@
         el.addEventListener('click',()=>{
           if(item.route==='notifications')onNotifications?.();
           else if(item.route==='community')global.location.assign('community.html');
-          else onNavigate?.(item.route);
+          else onNavigate?.(item.screen||item.route);
         });
       }
       if(active)el.setAttribute('aria-current','page');
@@ -88,7 +89,7 @@
       const details=document.createElement('details');
       details.className='sidebar-nav-group';
       details.dataset.group=group.key;
-      if(items.some(item=>item.route===activeRoute))details.classList.add('has-active-route');
+      if(items.some(item=>(item.screen||item.route)===activeRoute))details.classList.add('has-active-route');
       const summary=document.createElement('summary');
       summary.className='sidebar-group-toggle';
       summary.setAttribute('aria-label',group.label+' menu');
