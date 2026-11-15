@@ -6,12 +6,12 @@ insert into public.ability_chess_rooms (
  '00000000-0000-0000-0000-000000000003',
  '00000000-0000-0000-0000-000000000004',
  '{"rated":false}'::jsonb,
- '{"turn":"w","over":false,"ambushed":{"w":null,"b":{"r":3,"c":4}},'
+ ('{"turn":"w","over":false,"ambushed":{"w":null,"b":{"r":3,"c":4}},'
  || '"lastMessage":"Black set ambush at e5",'
  || '"log":["Black set ambush at e5"],'
  || '"positionCounts":{"ambush 3 4":1},'
  || '"lastRecordedPositionKey":"hidden 3 4",'
- || '"historySnapshots":[{"ambushed":{"b":{"r":3,"c":4}}}]}'::text::jsonb
+ || '"historySnapshots":[{"ambushed":{"b":{"r":3,"c":4}}}]}')::jsonb
 );
 insert into public.ability_chess_room_actions (
  room_id,room_version,actor_color,action_type,action_label,action_payload,state_snapshot
