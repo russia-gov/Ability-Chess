@@ -87,7 +87,7 @@ const server = http.createServer((request, response) => {
     });
     if (profileLayout.nameDisplay !== 'block' || profileLayout.ratingDisplay !== 'block' ||
         profileLayout.ratingsTop < profileLayout.nameBottom - 1 ||
-        !/^B\\s*\\d+\\s*·\\s*Z\\s*\\d+\\s*·\\s*R\\s*\\d+/.test(profileLayout.ratingsText)) {
+        !/^B\s*\d+\s*·\s*Z\s*\d+\s*·\s*R\s*\d+/.test(profileLayout.ratingsText)) {
       throw new Error('Sidebar name and ratings are not on distinct lines: '+JSON.stringify(profileLayout));
     }
 
