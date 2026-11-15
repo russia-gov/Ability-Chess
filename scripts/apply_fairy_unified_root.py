@@ -33,7 +33,7 @@ if s.count(anchor)!=1:
 # Use Root's existing alpha/beta bounds, not a second unrestricted search.
 # The ordinary move loop below this insertion continues at the updated alpha.
 root_hook=r'''    // ABILITYFISH_UNIFIED_ROOT_V1
-    if (rootNode && pos.abilityfish_active())
+    if (rootNode && thisThread->pvIdx == 0 && pos.abilityfish_active())
     {
         // Keep the prior iteration's best special action as an ordering hint.
         auto previous = thisThread->rootAbility;
@@ -159,6 +159,13 @@ root_hook=r'''    // ABILITYFISH_UNIFIED_ROOT_V1
 
 '''
 s=s.replace(anchor,root_hook+anchor,1)
+# Upgrades end the turn and must consume a ply in non-root search too.
+old_depth="depth - (consumesMove ? 1 : 0)"
+new_depth="depth - (sideChanged ? 1 : 0)"
+if s.count(old_depth)!=1:
+    raise SystemExit("Expected exactly one old synthetic child depth expression")
+s=s.replace(old_depth,new_depth,1)
+
 # A position with special-only actions must not be marked checkmate/stalemate.
 old="    if (!moveCount)\n        bestValue = excludedMove ? alpha :"
 new="    if (!moveCount && !(rootNode && thisThread->rootAbility.valid))\n        bestValue = excludedMove ? alpha :"
