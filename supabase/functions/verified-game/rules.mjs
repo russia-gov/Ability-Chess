@@ -908,10 +908,16 @@ function viewerState(state,viewerColor) {
   throw new Error('Unknown viewer side');
  const visible=structuredClone(state);
  for(const key of [
-   'positionCounts','lastRecordedPositionKey','historySnapshots',
-   'historyGameKey','log','lastMessage','historySaved',
+   'historyGameKey','historySaved',
    'syncActionId','syncSentAt'
  ])delete visible[key];
+ // Preserve collection shapes expected by existing render/log/history code
+ // while ensuring no hidden coordinates or private action names survive.
+ visible.positionCounts={};
+ visible.lastRecordedPositionKey=null;
+ visible.historySnapshots=[];
+ visible.log=[];
+ visible.lastMessage='';
  if(!visible.over&&visible.ambushed){
   const opponent=viewerColor==='w'?'b':'w';
   visible.ambushed[opponent]=null;
