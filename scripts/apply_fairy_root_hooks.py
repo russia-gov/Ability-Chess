@@ -50,9 +50,25 @@ if "ABILITYFISH_ROOT_SEARCH_V5" not in s:
           if (mainThread)
               sync_cout << "info string abilityfish rootactions depth " << rootDepth
                         << " count " << abilityActions.size() << sync_endl;
-        // Ordering only: never discard or reduce depth for any legal action.
+        // Reconsider the strongest action from the previous completed
+        // iteration first. Keep every other legal action and its full depth.
+        // Searching the previous winner first should raise alpha earlier.
+        const bool havePreviousRootAbility = rootAbility.valid;
+        const abilityfish::AbilityAction previousRootAction = rootAbility.action;
+        auto previousWinner = [&](const abilityfish::AbilityAction& action) {
+            return havePreviousRootAbility
+                && action.kind == previousRootAction.kind
+                && action.from == previousRootAction.from
+                && action.to == previousRootAction.to
+                && action.aux == previousRootAction.aux
+                && action.flags == previousRootAction.flags;
+        };
         std::stable_sort(abilityActions.begin(), abilityActions.end(),
-                         [](const auto& a, const auto& b) {
+                         [&](const auto& a, const auto& b) {
+                             const bool aWasBest = previousWinner(a);
+                             const bool bWasBest = previousWinner(b);
+                             if (aWasBest != bWasBest)
+                                 return aWasBest;
                              return abilityfish::action_order_priority(a.kind) <
                                     abilityfish::action_order_priority(b.kind);
                          });
