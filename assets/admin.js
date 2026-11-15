@@ -15,6 +15,19 @@
     {route:'notifications',icon:'●',label:'Notifications',className:'sidebar-notification-btn'},
     {route:'admin',icon:'⚑',label:'Admin',className:'admin-nav-btn'}
   ]);
+  const SIDEBAR_GROUPS=Object.freeze([
+    {key:'explore',label:'Explore',icon:'▦',routes:['abilities','history','tournaments']},
+    {key:'account',label:'Account',icon:'⚙',routes:['settings','notifications','admin']}
+  ]);
+  const SIDEBAR_PRIMARY=['play','analysis','community'];
+  function ensureSidebarStyles(){
+    if(document.querySelector('link[data-ability-sidebar-groups]'))return;
+    const link=document.createElement('link');
+    link.rel='stylesheet';
+    link.href='./assets/sidebar-groups.css';
+    link.dataset.abilitySidebarGroups='';
+    document.head.appendChild(link);
+  }
   function mountSidebar({nav,mode='game',activeRoute='play',canAdmin=false,onNavigate,onNotifications}) {
     if(!nav)return;
     const rail=nav.closest('aside');
@@ -37,9 +50,13 @@
         rail.appendChild(footer);
       }
     }
-    nav.replaceChildren();
-    for(const item of SIDEBAR_DESTINATIONS){
-      if(item.route==='admin'&&!canAdmin)continue;
+    ensureSidebarStyles();
+    // Restore user-expanded groups across SPA route and auth refreshes.
+    let expanded=[];
+    try {expanded=JSON.parse(nav.dataset.expandedGroups||'[]');}catch(_error){}
+    if(!Array.isArray(expanded))expanded=[];
+    const openGroups=new Set(expanded);
+    const makeItem=item=>{
       const active=item.route===activeRoute;
       const el=document.createElement(mode==='community'?'a':'button');
       el.className='home-nav-item '+item.className+(active?' active current':'');
@@ -65,7 +82,44 @@
         badge.hidden=true;
         el.append(badge);
       }
-      nav.appendChild(el);
+      return el;
+    };
+    nav.replaceChildren();
+    for(const route of SIDEBAR_PRIMARY){
+      const item=SIDEBAR_DESTINATIONS.find(x=>x.route===route);
+      nav.appendChild(makeItem(item));
+    }
+    for(const group of SIDEBAR_GROUPS){
+      const items=group.routes.map(route=>SIDEBAR_DESTINATIONS.find(x=>x.route===route))
+        .filter(item=>item&&(item.route!=='admin'||canAdmin));
+      if(!items.length)continue;
+      const details=document.createElement('details');
+      details.className='sidebar-nav-group';
+      details.dataset.group=group.key;
+      const containsActive=items.some(item=>item.route===activeRoute);
+      details.open=openGroups.has(group.key)||containsActive;
+      const summary=document.createElement('summary');
+      summary.className='sidebar-group-toggle';
+      const icon=document.createElement('span');
+      icon.className='home-nav-icon';
+      icon.textContent=group.icon;
+      const label=document.createElement('span');
+      label.textContent=group.label;
+      const arrow=document.createElement('span');
+      arrow.className='sidebar-group-chevron';
+      arrow.setAttribute('aria-hidden','true');
+      arrow.textContent='⌄';
+      summary.append(icon,label,arrow);
+      const contents=document.createElement('div');
+      contents.className='sidebar-group-items';
+      for(const item of items)contents.appendChild(makeItem(item));
+      details.append(summary,contents);
+      details.addEventListener('toggle',()=>{
+        if(details.open)openGroups.add(group.key);
+        else openGroups.delete(group.key);
+        nav.dataset.expandedGroups=JSON.stringify([...openGroups]);
+      });
+      nav.appendChild(details);
     }
   }
 
