@@ -251,7 +251,16 @@ ApplyResult apply_action(AbilityState& st, BoardAdapter& b, const AbilityAction&
 
 ApplyResult apply_action_reversible(AbilityState& st, BoardAdapter& board, const AbilityAction& a, ActionUndo& undo) {
   undo.state = st;
-  for (int i=0;i<64;i++) undo.board[i] = board.piece_at(Square{uint8_t(i)});
+  // State-only abilities (notably the thousands of possible Portal
+  // placements) cannot change board occupancy. Avoid a 64-square snapshot
+  // and restore for each such candidate in deep search.
+  undo.boardMayChange = a.kind == ActionKind::Bomb
+                      || a.kind == ActionKind::SwapFinish
+                      || a.kind == ActionKind::Recall
+                      || a.kind == ActionKind::Teleport
+                      || a.kind == ActionKind::Reinforce;
+  if (undo.boardMayChange)
+      for (int i=0;i<64;i++) undo.board[i] = board.piece_at(Square{uint8_t(i)});
   undo.valid = true;
   auto r = apply_action(st, board, a);
   if (!r.ok) { undo_action(st, board, undo); }
@@ -260,13 +269,14 @@ ApplyResult apply_action_reversible(AbilityState& st, BoardAdapter& board, const
 
 void undo_action(AbilityState& st, BoardAdapter& board, ActionUndo& undo) {
   if (!undo.valid) return;
-  for (int i=0;i<64;i++) {
-    Square q{uint8_t(i)};
-    auto now=board.piece_at(q);
-    const auto before=undo.board[i];
-    if (now.type!=before.type || now.side!=before.side || now.code!=before.code || now.present()!=before.present())
-      board.set_piece_exact(q,before);
-  }
+  if (undo.boardMayChange)
+      for (int i=0;i<64;i++) {
+        Square q{uint8_t(i)};
+        auto now=board.piece_at(q);
+        const auto before=undo.board[i];
+        if (now.type!=before.type || now.side!=before.side || now.code!=before.code || now.present()!=before.present())
+          board.set_piece_exact(q,before);
+      }
   st = undo.state;
   undo.valid = false;
 }
