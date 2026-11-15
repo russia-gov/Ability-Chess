@@ -4,10 +4,14 @@ const fs=require('node:fs');
 const lines=fs.readFileSync('index.html','utf8').split('\n');
 const windows=[
  ['Online sync',1530,1602],
+ ['Upgrade definitions',995,1048],
  ['State normalization',1935,1998],
+ ['Pure board rules',1999,2090],
  ['Rule transitions',2090,2190],
  ['Endgame & report',2608,2652],
  ['Ability legality',2810,2915],
+ ['Upgrade purchase',2916,2980],
+ ['Ability effects remainder',3198,3224],
  ['Abilities effects',3070,3220],
  ['Main makeMove',3258,3340]
 ];
