@@ -1,0 +1,30 @@
+name: Patch and verify atomic live game move effects
+on:
+  push:
+    branches: [security/server-authoritative-gameplay-foundation-2026]
+    paths:
+      - 'scripts/patch_make_move_atomic.js'
+      - '.github/workflows/atomic-live-move.yml'
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/patch_make_move_atomic.js --apply
+      - run: node scripts/patch_make_move_atomic.js --check
+      - name: Commit safe live game move transition on draft branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Apply move effects only after verified game transition"
+            git push origin HEAD:security/server-authoritative-gameplay-foundation-2026
+          fi
