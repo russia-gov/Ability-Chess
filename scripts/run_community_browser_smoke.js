@@ -95,14 +95,14 @@ const server=http.createServer((req,res)=>{
       user:{id:'browser-smoke-owner',aud:'authenticated',role:'authenticated'}
     })));
     await page.reload({waitUntil:'domcontentloaded'});
-    await page.locator('.admin-nav-btn').first().waitFor();
+    await page.locator('.admin-nav-btn:visible').first().waitFor();
     await page.goto(home+'community.html',{waitUntil:'domcontentloaded'});
     await page.locator('#communitySidebarAdmin:not([hidden])').waitFor({timeout:20000});
     await page.locator('#communitySidebarAdmin').click();
     await page.locator('#adminScreen.active').waitFor({timeout:20000});
     await page.goto(home,{waitUntil:'domcontentloaded'});
-    await page.locator('.admin-nav-btn').first().waitFor();
-    await page.locator('.admin-nav-btn').first().click();
+    await page.locator('.admin-nav-btn:visible').first().waitFor();
+    await page.locator('.admin-nav-btn:visible').first().click();
     await page.locator('#adminScreen.active').waitFor();
     await page.locator('#adminCommunityEditorToggle').click();
     const editor=page.frameLocator('#adminCommunityEditorFrame');
