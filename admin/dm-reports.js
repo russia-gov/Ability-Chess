@@ -2,7 +2,16 @@
 'use strict';
 const url='https://cczvdpofddjghqoeiqew.supabase.co';
 const key='sb_publishable_1j0iGD0GxwBdhac9suyPSw_5CPJGvaM';
-const client=window.supabase?.createClient?.(url,key);
+// DM review shares the same authenticated Supabase session as Ability-Chess.
+const client=window.supabase?.createClient?.(url,key,{
+  auth:{
+    storageKey:'abilityChessMemberSession',
+    storage:window.localStorage,
+    detectSessionInUrl:false,
+    persistSession:true,
+    autoRefreshToken:true
+  }
+});
 const $=id=>document.getElementById(id);
 const status=(message,error=false)=>{$('status').textContent=message;$('status').className=error?'error':'';};
 const el=(tag,value,cls='')=>{const x=document.createElement(tag);x.textContent=String(value||'');x.className=cls;return x;};
