@@ -76,15 +76,20 @@ hook = r'''    value = bestValue;
                     prepareSyntheticChild(ss+1, boardMove, PvNode ? childPv : nullptr);
 
                     const Depth childDepth = std::max(Depth(0), depth - 1);
+                    // Tighten the window as soon as a board continuation
+                    // improves this ability candidate. In particular, avoid
+                    // a new full-window search for every portal continuation.
+                    // Every legal continuation is still considered.
+                    const Value candidateAlpha=std::max(alpha,abilityValue);
                     Value boardValue;
                     if (PvNode)
                         boardValue = boardSideChanged
-                            ? -search<PV>(pos, ss+1, -beta, -alpha, childDepth, false)
-                            :  search<PV>(pos, ss+1, alpha, beta, childDepth, false);
+                            ? -search<PV>(pos, ss+1, -beta, -candidateAlpha, childDepth, false)
+                            :  search<PV>(pos, ss+1, candidateAlpha, beta, childDepth, false);
                     else
                         boardValue = boardSideChanged
-                            ? -search<NonPV>(pos, ss+1, -beta, -alpha, childDepth, false)
-                            :  search<NonPV>(pos, ss+1, alpha, beta, childDepth, false);
+                            ? -search<NonPV>(pos, ss+1, -beta, -candidateAlpha, childDepth, false)
+                            :  search<NonPV>(pos, ss+1, candidateAlpha, beta, childDepth, false);
 
                     pos.undo_move(boardMove);
 
