@@ -1,0 +1,44 @@
+name: Trusted multiplayer SQL integration tests
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'database/verified_room_finalization_staged.sql'
+      - 'server/tests/sql/**'
+      - '.github/workflows/trusted-multiplayer-sql.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-sql:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: abilitytest
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGDATABASE: abilitytest
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+      - name: Create isolated fixture schema
+        run: psql -v ON_ERROR_STOP=1 -f server/tests/sql/fixture.sql
+      - name: Apply staged migration to disposable database
+        run: psql -v ON_ERROR_STOP=1 -f database/verified_room_finalization_staged.sql
+      - name: Test ratings, tournament results, idempotency and privileges
+        run: psql -v ON_ERROR_STOP=1 -f server/tests/sql/test_verified_result.sql
