@@ -3,7 +3,18 @@
   'use strict';
   const url='https://cczvdpofddjghqoeiqew.supabase.co';
   const key='sb_publishable_1j0iGD0GxwBdhac9suyPSw_5CPJGvaM';
-  const app=window.supabase?.createClient?.(url,key);
+  // The main game stores its Supabase Auth session under this existing key.
+  // Use exactly the same storage record rather than creating a second, empty
+  // browser session (which incorrectly makes signed-in admins look anonymous).
+  const app=window.supabase?.createClient?.(url,key,{
+    auth:{
+      storageKey:'abilityChessMemberSession',
+      storage:window.localStorage,
+      detectSessionInUrl:false,
+      persistSession:true,
+      autoRefreshToken:true
+    }
+  });
   const $=id=>document.getElementById(id);
   const state={page:0,perPage:25,search:'',status:'all',total:0,items:[],busy:false,me:null,isOwner:false};
   const date=v=>v?new Date(v).toLocaleString():'—';
