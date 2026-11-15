@@ -67,6 +67,13 @@ if "ABILITYFISH_ROOT_SEARCH_V5" not in s:
 
               const bool sideChanged = rootPos.side_to_move() != abilityUs;
               const bool consumesMove = abilityAction.consumes_board_move();
+              // Reuse the best root score already established by normal moves
+              // and preceding ability actions. Full-window searches otherwise
+              // re-solve every branch from scratch at every iteration.
+              // This changes alpha/beta bounds, NOT depth or legal actions.
+              const Value rootFloor = std::max(
+                  rootMoves.empty() ? -VALUE_INFINITE : rootMoves[0].score,
+                  iterationAbility.valid ? iterationAbility.score : -VALUE_INFINITE);
               Value abilityValue = -VALUE_INFINITE;
               std::vector<Move> bestAbilityPv;
 
@@ -99,7 +106,7 @@ if "ABILITYFISH_ROOT_SEARCH_V5" not in s:
 
                       const Depth remainingDepth = std::max(Depth(0), rootDepth - 1);
                       Value boardValue = -Stockfish::search<PV>(rootPos, childSs,
-                                                                -VALUE_INFINITE, VALUE_INFINITE,
+                                                                -VALUE_INFINITE, -std::max(rootFloor, abilityValue),
                                                                 remainingDepth, false);
                       rootPos.undo_move(boardMove);
                       if (Threads.stop) break;
@@ -133,8 +140,8 @@ if "ABILITYFISH_ROOT_SEARCH_V5" not in s:
 
                   const Depth childDepth = std::max(Depth(0), rootDepth - 1);
                   abilityValue = sideChanged
-                      ? -Stockfish::search<PV>(rootPos, abilitySs, -VALUE_INFINITE, VALUE_INFINITE, childDepth, false)
-                      :  Stockfish::search<PV>(rootPos, abilitySs, -VALUE_INFINITE, VALUE_INFINITE, childDepth, false);
+                      ? -Stockfish::search<PV>(rootPos, abilitySs, -VALUE_INFINITE, -rootFloor, childDepth, false)
+                      :  Stockfish::search<PV>(rootPos, abilitySs, rootFloor, VALUE_INFINITE, childDepth, false);
                   for (Move* m = abilityPv; *m != MOVE_NONE; ++m)
                       bestAbilityPv.push_back(*m);
               }
@@ -142,7 +149,7 @@ if "ABILITYFISH_ROOT_SEARCH_V5" not in s:
               rootPos.undo_ability_action(abilityUndo);
               if (Threads.stop) break;
 
-              if (!iterationAbility.valid || abilityValue > iterationAbility.score)
+              if (abilityValue > rootFloor)
               {
                   iterationAbility.valid = true;
                   iterationAbility.action = abilityAction;
