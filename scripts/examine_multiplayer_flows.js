@@ -8,6 +8,7 @@ const windows=[
  ['Turn reset & transitions',2390,2494],
  ['Game init and draw positions',1860,1944],
  ['Legal moves extra and scoring helpers',2187,2204],
+ ['Insufficient material and repetition',2655,2700],
  ['Endgame ability escapes',2700,2821],
  ['Upgrade complete conditions',2970,2985],
  ['Endgame & scoring details',2600,2648],
