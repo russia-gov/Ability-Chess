@@ -17,7 +17,7 @@ const SERVICE_KEY=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')||'';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const cors={
  'Access-Control-Allow-Origin':'*',
- 'Access-Control-Allow-Headers':'authorization,apikey,content-type,x-client-info',
+ 'Access-Control-Allow-Headers':'authorization,apikey,content-type,x-client-info,cache-control',
  'Access-Control-Allow-Methods':'GET,POST,OPTIONS',
  'Cache-Control':'no-store',
  'Vary':'Origin'
