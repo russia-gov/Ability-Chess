@@ -101,9 +101,12 @@ const timeout=18000;
 async function makePlayer(browser,color,port){
  const context=await browser.newContext();
  await context.addInitScript(({roomId,token,color})=>{
-  localStorage.setItem('abilityChessOnline',JSON.stringify({
-    id:roomId,token,color,role:color==='w'?'host':'guest',
-    version:1,waiting:false
+  const session={id:roomId,token,color,role:color==='w'?'host':'guest',
+    version:1,waiting:false};
+  localStorage.setItem('abilityChessOnline',JSON.stringify(session));
+  localStorage.setItem('abilityChessActiveGameV2',JSON.stringify({
+    version:2,mode:'online',onlineSession:session,
+    state:{board:[],turn:'w',over:false}
   }));
  },{roomId,token:tokens[color],color});
  const page=await context.newPage();
