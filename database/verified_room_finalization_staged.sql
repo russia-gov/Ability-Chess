@@ -179,7 +179,7 @@ begin
   perform public.ability_chess_record_verified_history(p_room_id);
   return true;
 end;
-$;
+$$;
 
 revoke all on function public.ability_chess_finalize_verified_room(uuid,text,text)
   from public,anon,authenticated;
