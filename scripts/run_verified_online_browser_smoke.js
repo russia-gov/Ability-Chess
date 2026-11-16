@@ -114,6 +114,12 @@ async function makePlayer(browser,color,port){
  page.on('pageerror',e=>errors.push(String(e)));
  await routes(page);
  await page.goto('http://127.0.0.1:'+port+'/index.html',{waitUntil:'domcontentloaded'});
+ if(!await page.locator('#gameScreen.active').isVisible()){
+  await page.locator('#welcomeMorePlayBtn').click();
+  const hub=await page.evaluate(()=>[...document.querySelectorAll('button')].filter(x=>x.offsetParent!==null)
+    .map(x=>({id:x.id,text:x.textContent.trim().slice(0,65)})).slice(0,40));
+  console.log('ONLINE PLAY HUB '+JSON.stringify({color,hub}));
+ }
  try{await page.locator('#gameScreen.active').waitFor({timeout:8000});}
  catch(error){
   const info=await page.evaluate(()=>({
