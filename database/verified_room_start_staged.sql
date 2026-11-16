@@ -32,6 +32,10 @@ begin
  cfg:=coalesce(p_settings,'{}'::jsonb);
  if jsonb_typeof(cfg)<>'object' then raise exception 'Invalid settings';end if;
  rated:=coalesce((cfg->>'rated')::boolean,false);
+ -- A casual room host cannot unilaterally turn an accepted game into a
+ -- rated match. Rated games must originate from a dedicated consensual
+ -- matchmaking or member challenge flow.
+ if rated then raise exception 'Rated matches must use rated matchmaking'; end if;
  if rated and (r.host_user_id is null or r.guest_user_id is null) then
     raise exception 'Rated games require two signed-in players';
  end if;
