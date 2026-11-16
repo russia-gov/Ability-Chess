@@ -1,0 +1,23 @@
+name: Inventory live game rules for authoritative multiplayer
+on:
+  workflow_dispatch:
+  push:
+    branches: [security/server-authoritative-gameplay-foundation-2026]
+    paths:
+      - 'scripts/inventory_multiplayer_rules.js'
+      - 'scripts/examine_multiplayer_flows.js'
+      - 'scripts/scan_online_mutations.js'
+      - '.github/workflows/inventory-multiplayer-rules.yml'
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/inventory_multiplayer_rules.js
+      - run: node scripts/examine_multiplayer_flows.js
+      - run: node scripts/scan_online_mutations.js

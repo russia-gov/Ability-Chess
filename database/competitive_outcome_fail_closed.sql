@@ -1,0 +1,61 @@
+-- Stage 1 fail-closed gate for client-reported competitive outcomes.
+-- DO NOT apply until the frontend explicitly marks rated games/tournaments unavailable,
+-- or the replacement server-authoritative action/result pipeline is deployed.
+-- This migration intentionally does not modify existing rows or ratings.
+--
+-- Risk: the current browser invokes these RPCs to award ratings/report tournament
+-- scores. After revocation, those calls fail rather than accepting forged claims.
+begin;
+revoke execute on function public.ability_chess_apply_rating_result(text,text,integer)
+  from public, anon, authenticated;
+revoke execute on function public.ability_chess_apply_category_rating_result(text,text,integer,text)
+  from public, anon, authenticated;
+revoke execute on function public.ability_chess_tournament_report_result(uuid,text,text)
+  from public, anon, authenticated;
+-- Client-supplied replay/result is unverified too. Keep only private history
+-- written through the eventual trusted game finalization path.
+revoke execute on function public.ability_chess_save_game_history(text,text,text,text,text,text,jsonb,jsonb)
+  from public, anon, authenticated;
+-- Revoke the legacy whole-board action endpoint: otherwise it remains a
+-- bypass around the trusted per-action validator.
+revoke execute on function public.ability_chess_update_room_action(
+ uuid,uuid,bigint,jsonb,text,text,text,jsonb)
+ from public,anon,authenticated;
+
+-- Critical second legacy bypass: the original whole-room mutation RPC also
+-- accepts arbitrary board state and status from any holder of a seat token.
+revoke execute on function public.update_ability_chess_room(
+ uuid,uuid,bigint,jsonb,text)
+ from public,anon,authenticated;
+
+-- Existing matchmaking, challenge and tournament creation RPCs remain
+-- callable ONLY after database/legacy_room_genesis_hardening_staged.sql
+-- and database/verified_challenge_activation_staged.sql have replaced their
+-- implementations. The hardened functions ignore untrusted p_game_state and
+-- generate official starting positions; revoking them would break matchmaking.
+-- Deployment must ensure the function replacements are installed FIRST.
+
+-- Defense in depth: these tables currently have RLS enabled without any
+-- client policies, but their broad table grants are unnecessary. Revoke
+-- mutation rights explicitly so future policy additions cannot accidentally
+-- reopen direct score, action-history, or tournament tampering.
+revoke insert,update,delete on public.ability_chess_rating_results
+ from anon,authenticated;
+revoke insert,update,delete on public.ability_chess_room_actions
+ from anon,authenticated;
+revoke insert,update,delete on public.ability_chess_tournament_games
+ from anon,authenticated;
+revoke insert,update,delete on public.ability_chess_tournament_entries
+ from anon,authenticated;
+
+commit;
+
+-- Verification (run separately):
+-- SELECT proname,
+--   has_function_privilege('anon',oid,'EXECUTE') AS anon_execute,
+--   has_function_privilege('authenticated',oid,'EXECUTE') AS authenticated_execute
+-- FROM pg_proc WHERE pronamespace='public'::regnamespace
+-- AND proname IN ('ability_chess_apply_rating_result',
+--  'ability_chess_apply_category_rating_result',
+--  'ability_chess_tournament_report_result','ability_chess_save_game_history');
+-- Every revoked legacy RPC must be false for anon and authenticated.

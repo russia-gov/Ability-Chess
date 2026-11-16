@@ -487,6 +487,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
 
 </style>
 <!-- ABILITY_CHESS_SINGLE_PUBLIC_NAME_V1 -->
+  <script src="client/verified-online-transport.js"></script>
 </head>
 <body>
 <div id="homeScreen" class="home-screen minimal-home screen">
@@ -1254,7 +1255,28 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     connectionStatus.textContent=status==='connected'?'Connected':status==='reconnecting'?'Reconnecting…':'Disconnected';
   }
 
+  // Compatibility wrapper for old room/lobby callers. They now receive a
+  // per-seat filtered, authenticated server read instead of a raw snapshot.
+  async function verifiedRoomReadLegacyShape(body){
+    if(memberSession?.refresh_token&&Date.now()/1000>Number(memberSession.expires_at||0)-45)
+      await refreshMemberToken();
+    const query='?roomId='+encodeURIComponent(body.p_room_id)
+      +'&seatToken='+encodeURIComponent(body.p_seat_token);
+    const response=await fetch(SUPABASE_URL+'/functions/v1/verified-game'+query,{
+      headers:{apikey:SUPABASE_KEY,
+        Authorization:'Bearer '+(memberSession?.access_token||SUPABASE_KEY)},
+      cache:'no-store'
+    });
+    const data=await response.json().catch(()=>({error:'Invalid verified server response'}));
+    if(!response.ok)throw Error(data.error||'Verified room read failed');
+    return [{state:data.state,room_settings:data.settings,
+      room_status:data.roomStatus,room_version:data.roomVersion,
+      opponent_joined:data.opponentJoined,
+      state_updated_at:data.stateUpdatedAt,server_now:data.serverNow}];
+  }
   async function supabaseRpc(name,body){
+    if(VERIFIED_ONLINE_GAMEPLAY&&name==='ability_chess_get_room_live')
+      return verifiedRoomReadLegacyShape(body);
     const res=await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`,{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${memberSession?.access_token||SUPABASE_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
     const data=await res.json().catch(()=>null); if(!res.ok) throw new Error(data?.message||data?.hint||'Online request failed.'); return data;
   }
@@ -1467,6 +1489,106 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   }
 
   async function openMemberLobby(){memberModal.hidden=false;memberStatus.textContent='';renderMemberAuth();if(memberSession){if(Date.now()/1000>(memberSession.expires_at||0)-30)await refreshMemberToken();await loadMyProfile();renderMemberTabs();await loadMemberList();startMemberPolling();}}
+  // The browser requests legal actions but never supplies the resulting position.
+  const VERIFIED_ONLINE_GAMEPLAY = true;
+  let verifiedOnlineTransport=null;
+  let verifiedOnlineBusy=false;
+  let verifiedRematch=null;
+  function renderVerifiedRematchPanel(){
+    const screen=document.getElementById('gameScreen');
+    if(!screen)return;
+    let panel=document.getElementById('verifiedRematchPanel');
+    if(!verifiedOnlineGame()||!game?.over||!verifiedRematch){panel?.remove();return;}
+    if(!panel){panel=document.createElement('div');panel.id='verifiedRematchPanel';
+      panel.style.cssText='position:fixed;bottom:16px;right:16px;z-index:1200;max-width:min(92vw,360px);padding:14px 18px;border-radius:12px;border:1px solid var(--border,#777);background:var(--card,#222);color:var(--text,#fff);box-shadow:0 8px 25px #0005';
+      screen.appendChild(panel);}
+    panel.replaceChildren();
+    const msg=document.createElement('div');msg.style.marginBottom='10px';
+    const offered=verifiedRematch.status==='offered';
+    const own=verifiedRematch.offeredBy===game.playerColor;
+    msg.textContent=offered?(own?'Rematch offered. Waiting for your opponent.':'Your opponent offers a casual rematch with colors reversed.'):
+      'Play another casual game with the same opponent?';
+    panel.appendChild(msg);
+    const add=(label,action)=>{const button=document.createElement('button');
+      button.textContent=label;button.type='button';button.style.cssText='margin:0 8px 4px 0;padding:8px 12px;border-radius:7px';
+      button.onclick=()=>{button.disabled=true;verifiedOnlineSubmit({type:action}).finally(()=>{button.disabled=false;});};
+      panel.appendChild(button);};
+    if(offered){
+      if(!own)add('Accept rematch','acceptRematch');
+      add(own?'Cancel offer':'Decline','declineRematch');
+    }else add('Offer rematch','offerRematch');
+  }
+  function handleVerifiedRematch(info){
+    if(info?.status==='ready'&&info.room?.id&&info.room?.token&&info.room?.state){
+      const next=info.room;
+      if(onlineSession?.id===next.id)return;
+      onlineSession={...onlineSession,id:next.id,token:next.token,
+        color:next.color,version:next.version,waiting:false};
+      localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));
+      verifiedRematch=null;
+      game.playerColor=next.color;
+      game.hostColor=next.settings?.hostColor||next.color;
+      restoreOnlineState(next.state);
+      document.getElementById('verifiedRematchPanel')?.remove();
+      return;
+    }
+    verifiedRematch=info;
+    renderVerifiedRematchPanel();
+  }
+
+  function verifiedOnlineGame(){
+    return VERIFIED_ONLINE_GAMEPLAY && game?.mode==='online' && !!onlineSession?.id;
+  }
+  function getVerifiedTransport(){
+    if(!verifiedOnlineTransport){
+      const Transport=window.AbilityChessVerifiedOnlineTransport?.Transport;
+      if(!Transport)throw Error('Verified online gameplay transport unavailable');
+      verifiedOnlineTransport=new Transport({
+        endpoint:SUPABASE_URL+'/functions/v1/verified-game',apiKey:SUPABASE_KEY,
+        getAccessToken:()=>memberSession?.access_token||null,
+        getSession:()=>onlineSession,
+        onState:(state,result)=>{
+          if(!onlineSession||!game||game.mode!=='online')return;
+          onlineSession.version=Number(result.version??result.roomVersion);
+          onlineSession.waiting=result.status==='waiting'||result.roomStatus==='waiting';
+          if(result.settings?.hostColor)game.hostColor=result.settings.hostColor;
+          localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));
+          restoreOnlineState(state);
+          if(state?.over&&memberSession?.access_token)loadMyProfile().catch(()=>{});
+          renderVerifiedRematchPanel();
+        },
+        onRematch:(info)=>handleVerifiedRematch(info)
+      });
+    }
+    return verifiedOnlineTransport;
+  }
+  async function verifiedOnlineSubmit(action){
+    if(!verifiedOnlineGame())return;
+    if(verifiedOnlineBusy){game.lastMessage='Waiting for server confirmation.';render();return;}
+    verifiedOnlineBusy=true;
+    try{
+      if(memberSession?.refresh_token&&Date.now()/1000>Number(memberSession.expires_at||0)-45)
+        await refreshMemberToken();
+      await getVerifiedTransport().submit(action);
+      onlineLastSuccess=Date.now();setOnlineConnectionStatus('connected');
+    }catch(e){
+      console.warn('Server did not accept the online action',e);
+      if(game)game.lastMessage=e.message||'Action was not accepted.';
+      setOnlineConnectionStatus('reconnecting');render();
+    }finally{verifiedOnlineBusy=false;}
+  }
+  async function verifiedOnlinePoll(){
+    if(!verifiedOnlineGame()||verifiedOnlineBusy||onlinePollInFlight)return;
+    onlinePollInFlight=true;
+    try{
+      if(memberSession?.refresh_token&&Date.now()/1000>Number(memberSession.expires_at||0)-45)
+        await refreshMemberToken();
+      await getVerifiedTransport().refresh();
+      onlineLastSuccess=Date.now();setOnlineConnectionStatus('connected');
+    }catch(e){setOnlineConnectionStatus('reconnecting');}
+    finally{onlinePollInFlight=false;}
+  }
+
   function markOnlineMutation(){
     if(game?.mode==='online') onlineLocalRevision++;
   }
@@ -1502,7 +1624,10 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
       ? game.premoveQueue.map(pm=>({from:{...pm.from},to:{...pm.to},promotion:pm.promotion||null}))
       : (game?.premove ? [{from:{...game.premove.from},to:{...game.premove.to},promotion:game.premove.promotion||null}] : []);
     const hostColor=state?.hostColor || 'w';
-    const keepColor=onlineSession?.role==='host' ? hostColor : other(hostColor);
+    // Tournament seat color is the server-assigned color, not the host/guest label.
+    const keepColor=onlineSession?.mode==='tournament' && ['w','b'].includes(onlineSession.color)
+      ? onlineSession.color
+      : onlineSession?.role==='host' ? hostColor : other(hostColor);
     const opponentColor=other(keepColor);
     const oldMove=previousGame?.lastMoveByColor?.[opponentColor];
     const newMove=state?.lastMoveByColor?.[opponentColor];
@@ -1547,6 +1672,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     try{return await supabaseRpc('ability_chess_get_room_actions',{p_room_id:onlineSession.id,p_seat_token:onlineSession.token,p_after_version:Number(afterVersion||0)})||[];}catch{return [];}
   }
   async function syncOnlineState(){
+    if(VERIFIED_ONLINE_GAMEPLAY)return;
     if(!onlineSession||!game||game.mode!=='online') return;
     if(onlineSyncing){ onlineSyncQueued=true; return; }
     onlineSyncing=true;
@@ -1603,6 +1729,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     }
   }
   async function pollOnlineRoom(){
+    if(VERIFIED_ONLINE_GAMEPLAY&&game?.onlineStarted===true){await verifiedOnlinePoll();return;}
     if(!onlineSession||onlinePollInFlight) return;
     onlinePollInFlight=true;
     const revisionAtStart=onlineLocalRevision;
@@ -1687,7 +1814,12 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
       onlineSession.color=hostColor;
       onlineSession.waiting=false;
       localStorage.setItem('abilityChessOnline',JSON.stringify(onlineSession));
-      await syncOnlineState();
+      if(VERIFIED_ONLINE_GAMEPLAY){
+        const result=await getVerifiedTransport().submit({type:'configureRoom',hostColor,
+          settings:{base,increment,startingPoints,upgradeLimit,abilitiesEnabled,upgradesEnabled}});
+        onlineSession.waiting=false;onlineSession.color=hostColor;
+        restoreOnlineState(result.state);
+      }else await syncOnlineState();
       gameModeLabel.innerHTML=`Mode: <b>Online — ${hostColor==='w'?'White':'Black'}</b>`;
       onlineModal.hidden=true;
       showScreen('game');
@@ -2506,6 +2638,10 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     return game.opponentName||visibleMemberChallenge?.other_display_name||visibleMemberChallenge?.other_username||'Online opponent';
   }
   async function saveFinishedGameToHistory(){
+    if(verifiedOnlineGame()){
+      if(game?.over){game.historySaved=true;if(memberSession?.access_token)loadMyProfile().catch(()=>{});}
+      return;
+    }
     if(!memberSession?.access_token||!game?.over||game.historySaved)return;
     normalizeFinishedResult();
     game.historySaved=true;
@@ -2613,6 +2749,12 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   }
 
   function endGame(winner, reason, detail){
+    if(verifiedOnlineGame()){
+      if(reason==='timeout'&&winner===game.playerColor)
+        verifiedOnlineSubmit({type:'claimTimeout'});
+      else if(game)game.lastMessage='Waiting for verified result confirmation.';
+      return;
+    }
     if (!game || game.over) return;
     game.over=true;
     game.winner=winner ?? null;
@@ -2893,10 +3035,15 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     game.activeAbility=id; game.awaitingAbilityTarget=true; game.abilitySelection=null;
     game.selected=null; game.selectedAsPremove=false; game.legalMoves=[];
     if(id==='double'){
+      if(verifiedOnlineGame()){
+        game.activeAbility=null;game.awaitingAbilityTarget=false;
+        verifiedOnlineSubmit({type:'ability',id:'double'});return;
+      }
       game.points[game.turn]-=def.cost; game.abilityUsed=true; game.movesRemaining=2; game.doubleMoveActive=true;
       game.activeAbility=null; game.awaitingAbilityTarget=false;
       log(`${game.turn==='w'?'White':'Black'} used Double Move.`); game.lastMessage='Double Move active. Make two legal moves.';
     } else if(id==='recall') {
+      if(verifiedOnlineGame()){verifiedOnlineSubmit({type:'ability',id:'recall'});return;}
       applyRecall();
     } else {
       const prompts={teleport:'Teleport: choose one of your non-king pieces.',bomb:'Bomb: choose one of your pieces.',shield:'Shield: choose one of your pieces.',freeze:'Freeze: choose an enemy non-king piece.',swap:'Swap: choose the first of two non-king pieces.',reinforce:'Reinforce: choose one of your pawns beyond the halfway line.',portal:'Portal: choose the first empty portal square.',ambush:'Ambush: choose one of your non-king pieces.',fortify:'Fortify: choose one of the four squares in a 2×2 area containing your king.'};
@@ -2937,6 +3084,11 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   }
 
   function completeUpgradePurchase(up,color,replacedType=null){
+    if(verifiedOnlineGame()){
+      closeUpgradeReplaceDialog();
+      verifiedOnlineSubmit({type:'upgrade',id:up.id,
+        ...(replacedType?{replaceType:replacedType}:{})});return;
+    }
     ensureUpgradeState(game);const owned=game.upgrades[color];
     if(replacedType){
       const oldId=owned[replacedType],oldUp=upgradeDefinition(oldId);
@@ -3030,6 +3182,13 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
       return;
     }
 
+    // A verified Double Move has already spent points on the server and cannot
+    // be refunded by editing browser-side state.
+    if(verifiedOnlineGame()&&game.doubleMoveActive&&game.abilityUsed
+       &&Number(game.movesRemaining)===2){
+      game.lastMessage='Double Move is already committed to the server.';
+      render();return;
+    }
     // Double Move is "armed" when purchased, but it has no board effect until
     // the first move is actually played. While both moves remain, allow the
     // player to back out and restore the spent points/ability allowance.
@@ -3206,12 +3365,28 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   function applyAmbush(r,c){ const p=pieceAt(game.board,r,c); if(!p||colorOf(p)!==game.turn||typeOf(p)==='k'){game.lastMessage='Choose one of your non-king pieces.';return;} game.ambushed[game.turn]={r,c}; completeAbility('ambush',4,'Ambush set. Now make your normal move.'); }
   function applySwap(r,c){ const p=pieceAt(game.board,r,c); if(!game.abilitySelection){if(!p||colorOf(p)!==game.turn||typeOf(p)==='k'){game.lastMessage='Choose one of your non-king pieces.';return;} game.abilitySelection={r,c};game.lastMessage='Swap: choose the second non-king piece.';return;} const a=game.abilitySelection; if(!p||colorOf(p)!==game.turn||typeOf(p)==='k'||sameSquare(a,{r,c})){game.lastMessage='Choose a different non-king piece.';return;} const next=cloneState(game); [next.board[a.r][a.c],next.board[r][c]]=[next.board[r][c],next.board[a.r][a.c]]; if(inCheck(next,game.turn)){playFailureSound();game.lastMessage='That swap would leave your king under attack.';return;} game.board=next.board; if(game.shielded[game.turn]&&(sameSquare(game.shielded[game.turn],a)||sameSquare(game.shielded[game.turn],{r,c})))game.shielded[game.turn]=null; if(game.ambushed[game.turn]&&sameSquare(game.ambushed[game.turn],a))game.ambushed[game.turn]={r,c};else if(game.ambushed[game.turn]&&sameSquare(game.ambushed[game.turn],{r,c}))game.ambushed[game.turn]=a; completeAbility('swap',4,'Pieces swapped. Now make your normal move.'); }
   function applyRecall(){ const m=game.lastMoveByColor?.[game.turn]; if(!m||typeOf(m.piece)==='k'){game.lastMessage='No eligible piece can be recalled.';game.activeAbility=null;game.awaitingAbilityTarget=false;render();return;} const current=pieceAt(game.board,m.to.r,m.to.c); if(current!==m.resultPiece||pieceAt(game.board,m.from.r,m.from.c)){game.lastMessage='The recalled piece or its previous square is unavailable.';game.activeAbility=null;game.awaitingAbilityTarget=false;render();return;} const next=cloneState(game); next.board[m.from.r][m.from.c]=current; next.board[m.to.r][m.to.c]=null; if(inCheck(next,game.turn)){playFailureSound();game.lastMessage='Recall would leave your king under attack.';game.activeAbility=null;game.awaitingAbilityTarget=false;render();return;} game.board=next.board; if(game.shielded[game.turn]&&sameSquare(game.shielded[game.turn],m.to))game.shielded[game.turn]=null; completeAbility('recall',4,`Recalled ${current.toUpperCase()} to ${algebraic(m.from.r,m.from.c)}. Now make your normal move.`); }
-  function applyReinforce(r,c){ const p=pieceAt(game.board,r,c); const crossed=p&&typeOf(p)==='p'&&colorOf(p)===game.turn&&((game.turn==='w'&&r<=3)||(game.turn==='b'&&r>=4)); if(!crossed){game.lastMessage='Choose one of your pawns that has crossed the halfway line.';return;} const ans=window.prompt('Reinforce to knight or bishop? Enter N or B.','N'); if(ans===null)return; const t=String(ans).trim().toLowerCase(); if(t!=='n'&&t!=='b'){game.lastMessage='Choose N for knight or B for bishop.';return;} const next=cloneState(game);next.board[r][c]=game.turn+t; if(!allLegalMoves(next,game.turn).length){playFailureSound();game.lastMessage='Reinforce must leave a legal follow-up move.';return;} game.board=next.board; completeAbility('reinforce',5,`Pawn reinforced as a ${t==='b'?'bishop':'knight'}. Now make your normal move.`); }
+  function applyReinforce(r,c){ const p=pieceAt(game.board,r,c); const crossed=p&&typeOf(p)==='p'&&colorOf(p)===game.turn&&((game.turn==='w'&&r<=3)||(game.turn==='b'&&r>=4)); if(!crossed){game.lastMessage='Choose one of your pawns that has crossed the halfway line.';return;} const ans=window.prompt('Reinforce to knight or bishop? Enter N or B.','N'); if(ans===null)return; const t=String(ans).trim().toLowerCase(); if(t!=='n'&&t!=='b'){game.lastMessage='Choose N for knight or B for bishop.';return;} if(verifiedOnlineGame()){
+      verifiedOnlineSubmit({type:'ability',id:'reinforce',target:{r,c},promoteTo:t});return;
+    }
+    const next=cloneState(game);next.board[r][c]=game.turn+t; if(!allLegalMoves(next,game.turn).length){playFailureSound();game.lastMessage='Reinforce must leave a legal follow-up move.';return;} game.board=next.board; completeAbility('reinforce',5,`Pawn reinforced as a ${t==='b'?'bishop':'knight'}. Now make your normal move.`); }
   function applyPortal(r,c){ if(pieceAt(game.board,r,c)){game.lastMessage='Portal squares must be empty.';return;} if(isFortifiedAgainstAbility(game,r,c,game.turn)){game.lastMessage='That square is protected by Fortify.';return;} if(!game.abilitySelection){game.abilitySelection={r,c};game.lastMessage='Portal: choose the second empty square.';return;} if(sameSquare(game.abilitySelection,{r,c})){game.lastMessage='Choose a different empty square.';return;} game.portals[game.turn]={a:{...game.abilitySelection},b:{r,c},turnsRemaining:3}; completeAbility('portal',5,'Portal pair active for three of your turns and usable by both players in either direction. Now make your normal move.'); }
   function applyFortify(r,c){ const king=findKing(game,game.turn); if(!king){return;} const candidates=[]; for(const top of [r-1,r])for(const left of [c-1,c]){const squares=[{r:top,c:left},{r:top,c:left+1},{r:top+1,c:left},{r:top+1,c:left+1}];if(squares.every(s=>inBounds(s.r,s.c))&&squares.some(s=>sameSquare(s,king)))candidates.push(squares);} if(!candidates.length){game.lastMessage='Choose a square in a 2×2 area that contains your king.';return;} game.fortified[game.turn]={squares:candidates[0]}; completeAbility('fortify',4,'Fortify active until your next turn. Now make your normal move.'); }
 
   function handleAbilityClick(r,c){
     const id=game.activeAbility;
+    if(verifiedOnlineGame()){
+      const target={r,c};
+      if(id==='teleport'&&!game.selected)return attemptTeleportStep(r,c),render();
+      if(id==='swap'&&!game.abilitySelection)return applySwap(r,c),render();
+      if(id==='portal'&&!game.abilitySelection)return applyPortal(r,c),render();
+      if(id==='reinforce')return applyReinforce(r,c),render();
+      const action={type:'ability',id};
+      if(id==='teleport'){action.from={...game.selected};action.to=target;}
+      else if(id==='swap'||id==='portal'){
+        action.from={...game.abilitySelection};action.to=target;
+      }else action.target=target;
+      verifiedOnlineSubmit(action);return;
+    }
     if(id==='teleport') return attemptTeleportStep(r,c),render();
     if(id==='bomb') return applyBomb(r,c),render();
     if(id==='shield') return applyShield(r,c),render();
@@ -3261,6 +3436,13 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     const piece = pieceAt(game.board, originalMove.from.r, originalMove.from.c);
     if (!piece) return;
     const move = choosePromotion(originalMove, piece);
+    if(verifiedOnlineGame()){
+      verifiedOnlineSubmit({type:'move',from:{r:move.from.r,c:move.from.c},
+        to:{r:move.to.r,c:move.to.c},
+        ...(piece[1]==='p'&&isPromotionRank(piece[0],move.to.r)
+          ?{promotion:move.promotion||'q'}:{})});
+      return;
+    }
     const capturedAt = move.enPassant ? (move.capturedAt || {r:move.from.r,c:move.to.c}) : {r:move.to.r,c:move.to.c};
     const target = pieceAt(game.board, capturedAt.r, capturedAt.c);
     if (game.doubleMoveActive && target && typeOf(target)==='k') {
@@ -3273,13 +3455,13 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
       render();
       return;
     }
+    // Validate the complete move before changing score, clock, or animation.
+    const next = applyMoveToState(game, move);
+    if (!next) return;
     if (animate) queueMoveAnimation(move);
     else pendingMoveAnimation = null;
     if (target) addPoints(game.turn, target);
-
     game.halfmoveClock = (piece[1]==='p' || target) ? 0 : Number(game.halfmoveClock||0)+1;
-    const next = applyMoveToState(game, move);
-    if (!next) return;
     game.board = next.board;
     game.castlingRights = next.castlingRights;
     game.enPassant = next.enPassant;
@@ -5033,6 +5215,9 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   }
 
   function beginOnlineRematch(){
+    if(verifiedOnlineGame()){
+      verifiedOnlineSubmit({type:'acceptRematch'});return;
+    }
     if(!game || game.mode!=='online' || !onlineSession) return;
     // Capture the synchronized challenge settings before newGame() clears the finished position.
     const preserved={...currentRematchSettings(),...(game.rematchChallenge?.settings||{})};
@@ -5055,6 +5240,9 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   }
 
   function offerOnlineRematch(){
+    if(verifiedOnlineGame()){
+      verifiedOnlineSubmit({type:'offerRematch'});return;
+    }
     if(!game || game.mode!=='online' || !game.over || game.rematchChallenge) return;
     game.rematchChallenge={from:game.playerColor,createdAt:Date.now(),settings:currentRematchSettings()};
     render(); queueMicrotask(syncOnlineState);
@@ -5063,6 +5251,9 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   newGameBtn.addEventListener('click', () => { getAudioContext(); if(game?.mode==='online'){showHome();return;} newGame(); });
   offerDrawBtn.addEventListener('click',()=>{
     if(!game || game.over || game.mode==='bot') return;
+    if(verifiedOnlineGame()){
+      verifiedOnlineSubmit({type:game.drawOffer===game.playerColor?'cancelDraw':'offerDraw'});return;
+    }
     const offering=drawActorColor(); if(!offering) return;
     if(game.drawOffer===offering){
       game.drawOffer=null; game.lastMessage=`${offering==='w'?'White':'Black'} canceled the draw offer.`; log(`${offering==='w'?'White':'Black'} canceled the draw offer.`);
@@ -5074,12 +5265,14 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   });
   acceptDrawBtn.addEventListener('click',()=>{
     if(!game || game.over || !game.drawOffer) return;
+    if(verifiedOnlineGame()){verifiedOnlineSubmit({type:'acceptDraw'});return;}
     const actor=drawActorColor();
     if(!actor || actor===game.drawOffer) return;
     endGame(null,'agreement','The players agreed to a draw.');
   });
   declineDrawBtn.addEventListener('click',()=>{
     if(!game || game.over || !game.drawOffer) return;
+    if(verifiedOnlineGame()){verifiedOnlineSubmit({type:'declineDraw'});return;}
     const actor=drawActorColor();
     if(!actor || actor===game.drawOffer) return;
     const declining=actor;
@@ -5091,6 +5284,7 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
   });
   resignBtn.addEventListener('click',()=>{
     if(!game || game.over) return;
+    if(verifiedOnlineGame()){verifiedOnlineSubmit({type:'resign'});return;}
     const resigning=game.mode==='bot'?'w':game.mode==='online'?game.playerColor:game.turn;
     const winner=other(resigning);
     endGame(winner,'resignation',`${resigning==='w'?'White':'Black'} resigned. ${winner==='w'?'White':'Black'} wins.`);

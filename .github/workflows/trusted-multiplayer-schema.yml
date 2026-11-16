@@ -1,0 +1,30 @@
+name: Trusted multiplayer state schema checks
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'server/**'
+      - 'scripts/extract_board_rules.js'
+      - 'index.html'
+      - '.github/workflows/trusted-multiplayer-schema.yml'
+  push:
+    branches: [security/server-authoritative-gameplay-foundation-2026]
+    paths:
+      - 'server/**'
+      - 'scripts/extract_board_rules.js'
+      - 'index.html'
+      - '.github/workflows/trusted-multiplayer-schema.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  state-schema:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Generate board rules used by server tests
+        run: node scripts/extract_board_rules.js
+      - run: node --test server/tests/*.test.js

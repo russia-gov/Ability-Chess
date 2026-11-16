@@ -1,0 +1,53 @@
+name: Hardened game creation adversarial PostgreSQL tests
+on:
+  push:
+    branches: [security/server-authoritative-gameplay-foundation-2026]
+    paths:
+      - 'database/canonical_initial_game_state_staged.sql'
+      - 'database/legacy_room_genesis_hardening_staged.sql'
+      - 'database/verified_challenge_activation_staged.sql'
+      - 'server/tests/sql/genesis*'
+      - 'server/tests/sql/test_room_genesis.sql'
+      - '.github/workflows/verified-room-genesis.yml'
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  genesis:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: abilitytest
+          POSTGRES_PASSWORD: postgres
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGDATABASE: abilitytest
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+      - name: Create disposable production-shaped room tables
+        run: |
+          psql -v ON_ERROR_STOP=1 -f server/tests/sql/fixture.sql
+          psql -v ON_ERROR_STOP=1 -f server/tests/sql/genesis_fixture.sql
+      - name: Compile hardened creation and activation functions
+        run: |
+          psql -v ON_ERROR_STOP=1 -f database/canonical_initial_game_state_staged.sql
+          psql -v ON_ERROR_STOP=1 -f database/legacy_room_genesis_hardening_staged.sql
+          psql -v ON_ERROR_STOP=1 -f server/tests/sql/genesis_existing_rpcs.sql
+          psql -v ON_ERROR_STOP=1 -f database/verified_challenge_activation_staged.sql
+      - name: Attempt forged room, challenge, matchmaking and tournament creation
+        run: psql -v ON_ERROR_STOP=1 -f server/tests/sql/test_room_genesis.sql

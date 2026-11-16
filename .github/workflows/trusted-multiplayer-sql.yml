@@ -1,0 +1,79 @@
+name: Trusted multiplayer SQL integration tests
+on:
+  push:
+    branches: [security/server-authoritative-gameplay-foundation-2026]
+    paths:
+      - 'database/**'
+      - 'server/tests/sql/**'
+      - '.github/workflows/trusted-multiplayer-sql.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'database/verified_room_finalization_staged.sql'
+      - 'database/verified_game_history_staged.sql'
+      - 'database/canonical_initial_game_state_staged.sql'
+      - 'database/hidden_state_read_hardening_staged.sql'
+      - 'database/verified_auxiliary_read_hardening_staged.sql'
+      - 'database/verified_room_start_staged.sql'
+      - 'database/legacy_room_genesis_hardening_staged.sql'
+      - 'database/verified_room_action_commit_staged.sql'
+      - 'database/verified_rematch_staged.sql'
+      - 'server/tests/sql/**'
+      - '.github/workflows/trusted-multiplayer-sql.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-sql:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: abilitytest
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGDATABASE: abilitytest
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+      - name: Create isolated fixture schema
+        run: psql -v ON_ERROR_STOP=1 -f server/tests/sql/fixture.sql
+      - name: Add room-code column to disposable rematch fixture
+        run: psql -v ON_ERROR_STOP=1 -c "ALTER TABLE public.ability_chess_rooms ADD COLUMN room_code text NOT NULL UNIQUE DEFAULT substr(md5(random()::text),1,8)"
+      - name: Add minimal existing matchmaking tables for supplementary read definitions
+        run: |
+          psql -v ON_ERROR_STOP=1 -c "CREATE TABLE public.ability_chess_live_seeks (id uuid primary key, seeker_token uuid, seeker_id uuid, status text, expires_at timestamptz, room_id uuid, host_seat_token uuid)"
+          psql -v ON_ERROR_STOP=1 -c "CREATE TABLE public.ability_chess_tournaments (id uuid primary key, name text)"
+      - name: Apply staged migrations to disposable database
+        run: |
+          psql -v ON_ERROR_STOP=1 -f database/canonical_initial_game_state_staged.sql
+          psql -v ON_ERROR_STOP=1 -f database/verified_room_finalization_staged.sql
+          psql -v ON_ERROR_STOP=1 -f database/verified_game_history_staged.sql
+          psql -v ON_ERROR_STOP=1 -f database/verified_room_start_staged.sql
+          psql -v ON_ERROR_STOP=1 -f database/verified_room_action_commit_staged.sql
+          psql -v ON_ERROR_STOP=1 -f database/verified_rematch_staged.sql
+          psql -v ON_ERROR_STOP=1 -f database/hidden_state_read_hardening_staged.sql
+          psql -v ON_ERROR_STOP=1 -f database/verified_auxiliary_read_hardening_staged.sql
+      - name: Test ratings, tournaments, identity, idempotency and version checks
+        run: |
+          psql -v ON_ERROR_STOP=1 -f server/tests/sql/test_canonical_genesis.sql
+          psql -v ON_ERROR_STOP=1 -f server/tests/sql/test_verified_result.sql
+          psql -v ON_ERROR_STOP=1 -f server/tests/sql/test_verified_action.sql
+          psql -v ON_ERROR_STOP=1 -f server/tests/sql/test_hidden_game_reads.sql
+          psql -v ON_ERROR_STOP=1 -f server/tests/sql/test_auxiliary_reads.sql
+          psql -v ON_ERROR_STOP=1 -f server/tests/sql/test_verified_start.sql
+          psql -v ON_ERROR_STOP=1 -f server/tests/sql/test_verified_rematch.sql

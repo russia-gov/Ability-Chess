@@ -1,0 +1,34 @@
+name: Apply secure verified rematch interface
+on:
+  push:
+    branches: [security/server-authoritative-gameplay-foundation-2026]
+    paths:
+      - 'scripts/patch_verified_rematch_ui.js'
+      - '.github/workflows/verified-rematch-ui.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  patch-rematch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check scripts/patch_verified_rematch_ui.js
+      - run: node scripts/patch_verified_rematch_ui.js --apply
+      - name: Ensure safe rematch actions replaced same-room reset
+        run: |
+          node -e "const s=require('fs').readFileSync('index.html','utf8');for(const t of ['function renderVerifiedRematchPanel(){','type:\x27offerRematch\x27','type:\x27acceptRematch\x27','onRematch:(info)=>handleVerifiedRematch(info)'])if(!s.includes(t))throw Error('Missing rematch adapter: '+t)"
+      - name: Commit rematch UI on draft branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Connect secure online rematch offer and room handoff"
+            git push origin HEAD:security/server-authoritative-gameplay-foundation-2026
+          fi
