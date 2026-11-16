@@ -1558,7 +1558,10 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
       ? game.premoveQueue.map(pm=>({from:{...pm.from},to:{...pm.to},promotion:pm.promotion||null}))
       : (game?.premove ? [{from:{...game.premove.from},to:{...game.premove.to},promotion:game.premove.promotion||null}] : []);
     const hostColor=state?.hostColor || 'w';
-    const keepColor=onlineSession?.role==='host' ? hostColor : other(hostColor);
+    // Tournament seat color is the server-assigned color, not the host/guest label.
+    const keepColor=onlineSession?.mode==='tournament' && ['w','b'].includes(onlineSession.color)
+      ? onlineSession.color
+      : onlineSession?.role==='host' ? hostColor : other(hostColor);
     const opponentColor=other(keepColor);
     const oldMove=previousGame?.lastMoveByColor?.[opponentColor];
     const newMove=state?.lastMoveByColor?.[opponentColor];
@@ -3113,6 +3116,13 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
       return;
     }
 
+    // A verified Double Move has already spent points on the server and cannot
+    // be refunded by editing browser-side state.
+    if(verifiedOnlineGame()&&game.doubleMoveActive&&game.abilityUsed
+       &&Number(game.movesRemaining)===2){
+      game.lastMessage='Double Move is already committed to the server.';
+      render();return;
+    }
     // Double Move is "armed" when purchased, but it has no board effect until
     // the first move is actually played. While both moves remain, allow the
     // player to back out and restore the spent points/ability allowance.
