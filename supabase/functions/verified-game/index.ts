@@ -60,7 +60,7 @@ function protectedRoom(room){
 function authorize(room,token,userId){
  const seat=seatFor(room,token);
  if(!seat)throw new Error('Invalid seat token');
- if(seat.userId!==userId && (seat.userId!=null||userId!=null))
+ if(seat.userId!=null && seat.userId!==userId)
   throw new Error('This account does not own the room seat');
  if(protectedRoom(room)&&(!seat.userId||!room.host_user_id||!room.guest_user_id))
   throw new Error('Competitive games require two authenticated seats');
