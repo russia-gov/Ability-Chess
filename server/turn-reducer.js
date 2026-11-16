@@ -14,6 +14,18 @@ const {applyUpgradeIntent}=require('./upgrade-intent.js');
 const {validateGameStateStructure}=require('./game-state-schema.js');
 const VALUES={p:1,n:3,b:3,r:5,q:9,k:0};
 const requireLegal=(v,msg)=>{if(!v)throw new Error(msg)};
+// The extracted browser cloneState intentionally omits some online-room fields.
+// They are authoritative database metadata and must survive every action and
+// every finishTurn clone. Otherwise the server rejects the second game move.
+const ROOM_FIELDS=['onlineStarted','mode','hostColor','rated',
+ 'ratingCategory','initialTime','startingPoints'];
+function preserveRoomFields(source,target){
+ for(const key of ROOM_FIELDS){
+  if(Object.prototype.hasOwnProperty.call(source,key))
+   target[key]=structuredClone(source[key]);
+ }
+ return target;
+}
 function copyMetadata(state){
  const s=R.cloneState(state);
  s.lastRecordedPositionKey=state.lastRecordedPositionKey??null;
@@ -106,6 +118,7 @@ function applyGameAction(trustedState,action){
   default:throw new Error('Unsupported gameplay action: '+action.type);
  }
  if(endsTurn)s=finishTurn(s);
+ preserveRoomFields(trustedState,s);
  if(endsTurn||s.over)adjudicate(s);
  const after=validateGameStateStructure(s);
  requireLegal(after.length===0,'Reducer produced invalid state: '+after.join('; '));
