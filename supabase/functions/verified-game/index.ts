@@ -117,7 +117,7 @@ async function rematchAction(room:RoomRecord,token:string,userId:string|null,ope
  if(r.rematch_status==='ready'){
   rematch.room={id:r.room_id,token:r.seat_token,
    color:r.assigned_color,version:Number(r.room_version),
-   settings:r.room_settings};
+   settings:r.room_settings,state:r.state};
  }
  return rematch;
 }
