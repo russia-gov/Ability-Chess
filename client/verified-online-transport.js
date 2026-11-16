@@ -55,19 +55,20 @@
   }
   async refresh(){
    const session=this.session();
+   const requestedRoomId=session.id;
    const query='?roomId='+encodeURIComponent(session.id)
     +'&seatToken='+encodeURIComponent(session.token);
    const answer=await this.request('GET',query);
    const nextVersion=Number(answer.roomVersion);
    // Rematch offers are metadata, not a game-version change. Notify even
    // when the completed source position remains identical.
-   if(session.id===this.session().id && Object.prototype.hasOwnProperty.call(answer,'rematch'))
+   if(requestedRoomId===this.session().id && Object.prototype.hasOwnProperty.call(answer,'rematch'))
     this.notifyRematch(answer);
    // Unchanged-version polls must not clear the user's in-progress selection
    // of a multi-click ability or restart move animations every 700 ms.
    // A poll can finish after a newer action response. Never roll back the
    // board or the optimistic-concurrency version to that older snapshot.
-   if(session.id===this.session().id && Number.isSafeInteger(nextVersion)&&nextVersion>Number(session.version)){
+   if(requestedRoomId===this.session().id && Number.isSafeInteger(nextVersion)&&nextVersion>Number(session.version)){
     session.version=nextVersion;
     this.onState(answer.state,answer);
    }
