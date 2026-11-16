@@ -54,6 +54,10 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f server/tests/sql/fixture.sql
       - name: Add room-code column to disposable rematch fixture
         run: psql -v ON_ERROR_STOP=1 -c "ALTER TABLE public.ability_chess_rooms ADD COLUMN room_code text NOT NULL UNIQUE DEFAULT substr(md5(random()::text),1,8)"
+      - name: Add minimal existing matchmaking tables for supplementary read definitions
+        run: |
+          psql -v ON_ERROR_STOP=1 -c "CREATE TABLE public.ability_chess_live_seeks (id uuid primary key, seeker_token uuid, seeker_id uuid, status text, expires_at timestamptz, room_id uuid, host_seat_token uuid)"
+          psql -v ON_ERROR_STOP=1 -c "CREATE TABLE public.ability_chess_tournaments (id uuid primary key, name text)"
       - name: Apply staged migrations to disposable database
         run: |
           psql -v ON_ERROR_STOP=1 -f database/canonical_initial_game_state_staged.sql
