@@ -10,6 +10,7 @@ on:
     branches: [main]
     paths:
       - 'database/verified_room_finalization_staged.sql'
+      - 'database/verified_game_history_staged.sql'
       - 'database/canonical_initial_game_state_staged.sql'
       - 'database/hidden_state_read_hardening_staged.sql'
       - 'database/verified_room_start_staged.sql'
@@ -53,6 +54,7 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -f database/canonical_initial_game_state_staged.sql
           psql -v ON_ERROR_STOP=1 -f database/verified_room_finalization_staged.sql
+          psql -v ON_ERROR_STOP=1 -f database/verified_game_history_staged.sql
           psql -v ON_ERROR_STOP=1 -f database/verified_room_start_staged.sql
           psql -v ON_ERROR_STOP=1 -f database/verified_room_action_commit_staged.sql
           psql -v ON_ERROR_STOP=1 -f database/hidden_state_read_hardening_staged.sql
