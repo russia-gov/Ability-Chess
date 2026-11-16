@@ -13,10 +13,10 @@
  if(root)root.AbilityChessVerifiedOnlineTransport=exported;
 })(typeof window!=='undefined'?window:null,function(){
  const VALID_TYPES=new Set([
-  'move','ability','upgrade','resign','offerDraw','acceptDraw','claimTimeout','configureRoom','cancelDraw','declineDraw'
+  'move','ability','upgrade','resign','offerDraw','acceptDraw','claimTimeout','configureRoom','cancelDraw','declineDraw','offerRematch','acceptRematch','declineRematch'
  ]);
  class Transport {
-  constructor({endpoint,apiKey,getAccessToken,getSession,onState,fetchImpl}){
+  constructor({endpoint,apiKey,getAccessToken,getSession,onState,onRematch,fetchImpl}){
    if(!/^https:\/\//.test(String(endpoint||'')))throw Error('HTTPS endpoint required');
    if(typeof onState!=='function')throw Error('State handler required');
    this.endpoint=endpoint.replace(/\/$/,'');
@@ -24,6 +24,8 @@
    this.getAccessToken=getAccessToken||(()=>null);
    this.getSession=getSession;
    this.onState=onState;
+   this.onRematch=typeof onRematch==='function'?onRematch:null;
+   this.lastRematchKey=null;
    // Browser fetch must retain its global receiver; an unbound reference
    // throws 'Illegal invocation' in Chromium during actual online moves.
    this.fetchImpl=fetchImpl||((url,options)=>fetch(url,options));
@@ -57,15 +59,28 @@
     +'&seatToken='+encodeURIComponent(session.token);
    const answer=await this.request('GET',query);
    const nextVersion=Number(answer.roomVersion);
+   // Rematch offers are metadata, not a game-version change. Notify even
+   // when the completed source position remains identical.
+   if(session.id===this.session().id && Object.prototype.hasOwnProperty.call(answer,'rematch'))
+    this.notifyRematch(answer);
    // Unchanged-version polls must not clear the user's in-progress selection
    // of a multi-click ability or restart move animations every 700 ms.
    // A poll can finish after a newer action response. Never roll back the
    // board or the optimistic-concurrency version to that older snapshot.
-   if(Number.isSafeInteger(nextVersion)&&nextVersion>Number(session.version)){
+   if(session.id===this.session().id && Number.isSafeInteger(nextVersion)&&nextVersion>Number(session.version)){
     session.version=nextVersion;
     this.onState(answer.state,answer);
    }
    return answer;
+  }
+  notifyRematch(answer){
+   const info=answer.rematch;
+   const key=info?JSON.stringify([
+     info.status,info.offeredBy,info.room?.id
+   ]):'none';
+   if(key===this.lastRematchKey)return;
+   this.lastRematchKey=key;
+   this.onRematch?.(info,answer);
   }
   submit(action){
    if(!action||typeof action!=='object'||!VALID_TYPES.has(action.type))
@@ -83,6 +98,7 @@
       expectedVersion:Number(session.version),action
      });
      const returnedVersion=Number(answer.version);
+     if(session.id!==this.session().id)return answer;
      if(!Number.isSafeInteger(returnedVersion)||returnedVersion<=Number(session.version)){
       // A concurrent poll may already have supplied an even newer position.
       // Do not replace it with a stale response to this action.
@@ -91,6 +107,7 @@
      }
      session.version=returnedVersion;
      this.onState(answer.state,answer);
+     if(Object.prototype.hasOwnProperty.call(answer,'rematch'))this.notifyRematch(answer);
      return answer;
     }catch(error){
      // A timeout might mean the server committed but the response was lost.
