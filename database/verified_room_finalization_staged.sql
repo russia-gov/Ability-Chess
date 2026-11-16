@@ -175,9 +175,11 @@ begin
       raise exception 'Tournament entries missing';
     end if;
   end if;
+  -- History is built from trusted room actions, never from a browser replay.
+  perform public.ability_chess_record_verified_history(p_room_id);
   return true;
 end;
-$$;
+$;
 
 revoke all on function public.ability_chess_finalize_verified_room(uuid,text,text)
   from public,anon,authenticated;
