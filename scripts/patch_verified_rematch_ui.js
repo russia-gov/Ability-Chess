@@ -66,9 +66,10 @@ once("          if(state?.over&&memberSession?.access_token)loadMyProfile().catc
 once("          renderVerifiedRematchPanel();\n        }\n      });",
 "          renderVerifiedRematchPanel();\n        },\n        onRematch:(info)=>handleVerifiedRematch(info)\n      });",
 'listen for rematch status');
-once("      game.lastMessage='Start a new verified game from the online lobby.';render();return;",
-"      verifiedOnlineSubmit({type:'acceptRematch'});return;",
-'enable accepting a rematch');
+// The original staging guard appears in both rematch handlers.
+const guard="      game.lastMessage='Start a new verified game from the online lobby.';render();return;";
+if(html.split(guard).length-1!==2)throw Error('Expected both staged rematch guards');
+html=html.replace(guard,"      verifiedOnlineSubmit({type:'acceptRematch'});return;");
 once("      game.lastMessage='Start a new verified game from the online lobby.';render();return;",
 "      verifiedOnlineSubmit({type:'offerRematch'});return;",
 'enable offering a rematch');
