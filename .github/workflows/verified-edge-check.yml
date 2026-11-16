@@ -1,7 +1,7 @@
 name: Verified Supabase Edge function runtime checks
 on:
   push:
-    branches: [security/server-authoritative-gameplay-foundation-2026]
+    branches: [main, security/server-authoritative-gameplay-foundation-2026]
     paths:
       - 'supabase/functions/verified-game/**'
       - 'scripts/build_verified_edge_module.js'
