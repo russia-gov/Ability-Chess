@@ -1,0 +1,29 @@
+name: Verified Supabase Edge function runtime checks
+on:
+  push:
+    branches: [security/server-authoritative-gameplay-foundation-2026]
+    paths:
+      - 'supabase/functions/verified-game/**'
+      - 'scripts/build_verified_edge_module.js'
+      - 'server/**'
+      - '.github/workflows/verified-edge-check.yml'
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  edge-check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: |
+          node scripts/extract_board_rules.js
+          node scripts/build_verified_edge_module.js
+      - run: deno check supabase/functions/verified-game/index.ts
+      - run: node --test server/tests/*.test.js
