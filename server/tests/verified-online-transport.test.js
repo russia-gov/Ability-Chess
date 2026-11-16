@@ -154,3 +154,20 @@ test('rematch room handoff cannot be undone by the old poll response',async()=>{
  assert.equal(session.version,0);
  assert.deepEqual(applied,[]);
 });
+
+test('same-version rematch acknowledgement updates pending offer immediately',async()=>{
+ const session={id:'finished-room',token:'seat',version:7},offers=[],states=[];
+ const client=new Transport({
+  endpoint:'https://example.test/game',apiKey:'pub',
+  getSession:()=>session,onState:state=>states.push(state),
+  onRematch:info=>offers.push(info),
+  fetchImpl:async(url,opts)=>json(200,{
+   version:7,state:{over:true},
+   rematch:{status:'offered',offeredBy:'w'}
+  })
+ });
+ await client.submit({type:'offerRematch'});
+ assert.equal(session.version,7);
+ assert.deepEqual(offers,[{status:'offered',offeredBy:'w'}]);
+ assert.deepEqual(states,[]);
+});
