@@ -3,6 +3,13 @@
 const fs=require('node:fs');
 const lines=fs.readFileSync('index.html','utf8').split('\n');
 const windows=[
+ ['Critical online setup',1660,1710],
+ ['Critical online restore',1770,1830],
+ ['Online result and flags',2500,2525],
+ ['Online abilities and effects',2860,2969],
+ ['Ability effect finish',3025,3229],
+ ['Move action full',3258,3350],
+ ['Draw resignation rematch',5030,5118],
  ['Supabase RPC and authentication',1250,1410],
  ['Online saved state',1460,1533],
  ['Online sync',1530,1678],
