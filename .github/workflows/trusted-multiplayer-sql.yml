@@ -51,6 +51,8 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
       - name: Create isolated fixture schema
         run: psql -v ON_ERROR_STOP=1 -f server/tests/sql/fixture.sql
+      - name: Add room-code column to disposable rematch fixture
+        run: psql -v ON_ERROR_STOP=1 -c "ALTER TABLE public.ability_chess_rooms ADD COLUMN room_code text NOT NULL UNIQUE DEFAULT substr(md5(random()::text),1,8)"
       - name: Apply staged migrations to disposable database
         run: |
           psql -v ON_ERROR_STOP=1 -f database/canonical_initial_game_state_staged.sql
