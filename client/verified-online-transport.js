@@ -24,7 +24,9 @@
    this.getAccessToken=getAccessToken||(()=>null);
    this.getSession=getSession;
    this.onState=onState;
-   this.fetchImpl=fetchImpl||fetch;
+   // Browser fetch must retain its global receiver; an unbound reference
+   // throws 'Illegal invocation' in Chromium during actual online moves.
+   this.fetchImpl=fetchImpl||((url,options)=>fetch(url,options));
    this.tail=Promise.resolve();
   }
   async request(method,path,body){
