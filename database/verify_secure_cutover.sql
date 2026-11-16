@@ -10,11 +10,7 @@ declare
    'public.ability_chess_apply_rating_result(text,text,integer)',
    'public.ability_chess_apply_category_rating_result(text,text,integer,text)',
    'public.ability_chess_tournament_report_result(uuid,text,text)',
-   'public.ability_chess_save_game_history(text,text,text,text,text,text,jsonb,jsonb)',
-   'public.create_ability_chess_room(jsonb,jsonb,text)',
-   'public.ability_chess_create_or_match_seek(text,jsonb,jsonb)',
-   'public.ability_chess_create_member_challenge(jsonb,jsonb,uuid)',
-   'public.ability_chess_tournament_claim_game(uuid,jsonb,jsonb)'
+   'public.ability_chess_save_game_history(text,text,text,text,text,text,jsonb,jsonb)'
   ];
   name text;
   protected_table text;
@@ -28,6 +24,19 @@ begin
     or has_function_privilege('authenticated',f,'EXECUTE') then
     raise exception 'Untrusted client still allowed to execute %',name;
   end if;
+ end loop;
+ -- The public creation functions must remain callable for matchmaking,
+ -- but may no longer use client-supplied p_game_state as the official board.
+ foreach name in array array[
+  'public.create_ability_chess_room(jsonb,jsonb,text)',
+  'public.ability_chess_create_or_match_seek(text,jsonb,jsonb)',
+  'public.ability_chess_tournament_claim_game(uuid,jsonb,jsonb)'
+ ] loop
+   f:=to_regprocedure(name);
+   if f is null or
+    position('ability_chess_initial_state' in pg_get_functiondef(f::oid))=0 then
+    raise exception 'Matchmaking creation RPC not using trusted genesis: %',name;
+   end if;
  end loop;
  foreach protected_table in array array[
    'public.ability_chess_rating_results',
