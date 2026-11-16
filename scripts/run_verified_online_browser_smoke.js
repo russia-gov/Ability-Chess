@@ -111,7 +111,18 @@ async function makePlayer(browser,color,port){
  page.on('pageerror',e=>errors.push(String(e)));
  await routes(page);
  await page.goto('http://127.0.0.1:'+port+'/index.html',{waitUntil:'domcontentloaded'});
- await page.locator('#gameScreen.active').waitFor({timeout});
+ try{await page.locator('#gameScreen.active').waitFor({timeout:8000});}
+ catch(error){
+  const info=await page.evaluate(()=>({
+   currentURL:location.href,
+   storedRoom:localStorage.getItem('abilityChessOnline'),
+   visibleScreens:[...document.querySelectorAll('.screen')].filter(x=>x.classList.contains('active')).map(x=>x.id),
+   buttons:[...document.querySelectorAll('button')].filter(x=>x.offsetParent!==null)
+     .map(x=>({id:x.id,text:x.textContent.trim().slice(0,48)})).slice(0,25)
+  }));
+  console.error('ONLINE RESUME DEBUG '+JSON.stringify({color,info,errors}));
+  throw error;
+ }
  if(errors.length)throw Error('Browser runtime errors: '+errors.join('; '));
  return {page,context,errors};
 }
