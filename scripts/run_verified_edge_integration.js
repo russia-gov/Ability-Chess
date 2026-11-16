@@ -122,6 +122,16 @@ async function ready(){
 async function run(){
  let checks=0;
  const check=(cond,msg)=>{assert.ok(cond,msg);checks++};
+ const preflight=await fetch(EDGE,{method:'OPTIONS',headers:{
+  Origin:'https://abilitychess.com',
+  'Access-Control-Request-Method':'GET',
+  'Access-Control-Request-Headers':'authorization,apikey,content-type,cache-control'
+ }});
+ const allowedHeaders=(preflight.headers.get('access-control-allow-headers')||'').toLowerCase().split(',').map(s=>s.trim());
+ check(preflight.status===204,'Edge CORS preflight succeeds');
+ check(['authorization','apikey','content-type','cache-control'].every(h=>allowedHeaders.includes(h)),
+  'CORS preflight permits all real browser transport headers');
+
  let r=await read('w');check(r.status===200,'white authenticated GET');
  r=await read('b');check(r.status===200,'black authenticated GET');
  r=await read('x',TOKENS.w);check(r.status===403,'unidentified caller rejected');
