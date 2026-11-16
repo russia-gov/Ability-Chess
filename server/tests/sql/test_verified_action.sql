@@ -19,7 +19,10 @@ insert into public.ability_chess_rooms
   '00000000-0000-0000-0000-000000000004',
   '{"rated":true,"ratingCategory":"rapid"}'::jsonb,
   '{"turn":"w","over":false}'::jsonb);
-do $$
+-- Simulate a player whose current turn began well before this commit.
+update public.ability_chess_rooms set updated_at=now()-interval '90 seconds'
+ where id='00000000-0000-0000-0000-0000000000a2';
+do $
 declare ver bigint;aid bigint;
 begin
  begin
@@ -40,6 +43,13 @@ begin
    '00000000-0000-0000-0000-000000000003',0,
    '{"turn":"b","over":false}'::jsonb,'move');
  if ver<>1 or aid is null then raise exception 'Expected one verified version'; end if;
+ -- A verified action must reset the timestamp used by the server's
+ -- remaining-clock calculation; otherwise the next turn loses old elapsed time.
+ if (select updated_at from public.ability_chess_rooms
+     where id='00000000-0000-0000-0000-0000000000a2')
+    < now() - interval '5 seconds' then
+   raise exception 'Verified action left a stale clock baseline';
+ end if;
  if (select count(*) from public.ability_chess_room_actions
      where room_id='00000000-0000-0000-0000-0000000000a2')<>1 then
     raise exception 'Expected exactly one authoritative action event';
