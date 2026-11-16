@@ -174,6 +174,44 @@ async function run(){
  check(r.status===409,'expired player cannot move');
  r=await request('b',{type:'claimTimeout'});
  check(r.status===200&&room.game_state.winner==='b','opponent can claim timeout');
+ // Exercise every paid ability and a permanent upgrade through the
+ // deployed Edge reducer, not merely through the independent Node rule tests.
+ const cases=[
+  {id:'double',action:{type:'ability',id:'double'}},
+  {id:'shield',action:{type:'ability',id:'shield',target:{r:6,c:0}}},
+  {id:'ambush',action:{type:'ability',id:'ambush',target:{r:6,c:0}}},
+  {id:'freeze',action:{type:'ability',id:'freeze',target:{r:1,c:0}}},
+  {id:'swap',action:{type:'ability',id:'swap',from:{r:7,c:0},to:{r:7,c:1}}},
+  {id:'recall',action:{type:'ability',id:'recall'},
+   setup:s=>{s.board[5][0]='wp';s.board[6][0]=null;
+     s.lastMoveByColor.w={piece:'wp',from:{r:6,c:0},to:{r:5,c:0},resultPiece:'wp'};}},
+  {id:'reinforce',action:{type:'ability',id:'reinforce',
+    target:{r:3,c:0},promoteTo:'n'},
+   setup:s=>{s.board[3][0]='wp';s.board[6][0]=null;}},
+  {id:'portal',action:{type:'ability',id:'portal',from:{r:5,c:5},to:{r:4,c:6}}},
+  {id:'fortify',action:{type:'ability',id:'fortify',target:{r:6,c:4}}},
+  {id:'teleport',action:{type:'ability',id:'teleport',from:{r:7,c:1},to:{r:5,c:2}}},
+  {id:'bomb',action:{type:'ability',id:'bomb',target:{r:6,c:0}}},
+  {id:'vanguard',action:{type:'upgrade',id:'vanguard'}}
+ ];
+ for(const scenario of cases){
+  reset();room.game_state.points={w:30,b:30};
+  if(scenario.setup)scenario.setup(room.game_state);
+  const result=await request('w',scenario.action);
+  check(result.status===200,
+    'Edge '+scenario.id+' accepted: '+result.status+' '+JSON.stringify(result.body).slice(0,220));
+  check(room.version===2,'Edge '+scenario.id+' committed exactly once');
+  check(room.game_state.points.w<30,'Edge '+scenario.id+' used authoritative points');
+  check(room.game_state.onlineStarted===true,'Edge '+scenario.id+' preserved online session');
+ }
+ reset();
+ room.game_state.board=Array.from({length:8},()=>Array(8).fill(null));
+ room.game_state.board[7][4]='wk';room.game_state.board[0][4]='bk';
+ room.game_state.board[1][0]='wp';
+ let promoted=await request('w',{type:'move',from:{r:1,c:0},
+  to:{r:0,c:0},promotion:'q'});
+ check(promoted.status===200&&room.game_state.board[0][0]==='wq',
+  'Edge validates and applies explicit promotion');
  console.log('PASS: '+checks+' actual Deno Edge/Auth/REST integration assertions (all local mocks)');
 }
 (async()=>{
