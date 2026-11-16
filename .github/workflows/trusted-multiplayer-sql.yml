@@ -16,6 +16,7 @@ on:
       - 'database/verified_room_start_staged.sql'
       - 'database/legacy_room_genesis_hardening_staged.sql'
       - 'database/verified_room_action_commit_staged.sql'
+      - 'database/verified_rematch_staged.sql'
       - 'server/tests/sql/**'
       - '.github/workflows/trusted-multiplayer-sql.yml'
   workflow_dispatch:
@@ -57,6 +58,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f database/verified_game_history_staged.sql
           psql -v ON_ERROR_STOP=1 -f database/verified_room_start_staged.sql
           psql -v ON_ERROR_STOP=1 -f database/verified_room_action_commit_staged.sql
+          psql -v ON_ERROR_STOP=1 -f database/verified_rematch_staged.sql
           psql -v ON_ERROR_STOP=1 -f database/hidden_state_read_hardening_staged.sql
       - name: Test ratings, tournaments, identity, idempotency and version checks
         run: |
@@ -65,3 +67,4 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f server/tests/sql/test_verified_action.sql
           psql -v ON_ERROR_STOP=1 -f server/tests/sql/test_hidden_game_reads.sql
           psql -v ON_ERROR_STOP=1 -f server/tests/sql/test_verified_start.sql
+          psql -v ON_ERROR_STOP=1 -f server/tests/sql/test_verified_rematch.sql
