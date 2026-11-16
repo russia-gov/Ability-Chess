@@ -21,7 +21,7 @@ begin
  select * into target_seek from public.ability_chess_live_seeks s where s.queue_key=p_queue_key and s.status='waiting' and s.expires_at>now() and s.rated=is_rated and (auth.uid() is null or s.seeker_id is distinct from auth.uid()) order by abs(s.seeker_rating-my_rating),s.created_at limit 1 for update skip locked;
  if found then select * into target_room from public.ability_chess_rooms r where r.id=target_seek.room_id for update;
   if found and target_room.status='waiting' and target_room.guest_token is null and target_room.expires_at>now() then updated_settings:=coalesce(target_room.settings,'{}'::jsonb)||jsonb_build_object('hostRating',target_seek.seeker_rating,'guestRating',my_rating,'rated',is_rated,'ratingCategory',cat);
-   update public.ability_chess_rooms set guest_token=new_guest_token,guest_user_id=auth.uid(),status='active',settings=updated_settings,version=version+1 where id=target_room.id returning * into target_room;
+   update public.ability_chess_rooms set guest_token=new_guest_token,guest_user_id=auth.uid(),status='active',settings=updated_settings,game_state=target_room.game_state||jsonb_build_object('onlineStarted',true,'hostColor',target_room.host_color,'mode','online','rated',is_rated,'ratingCategory',cat),version=version+1 where id=target_room.id returning * into target_room;
    update public.ability_chess_live_seeks set status='matched',matched_user_id=auth.uid() where id=target_seek.id;
    return query select target_seek.id,target_seek.seeker_token,true,target_room.id,new_guest_token,case when target_room.host_color='w' then 'b' else 'w' end,target_room.game_state,target_room.settings,target_room.version,target_seek.seeker_rating; return;
   else update public.ability_chess_live_seeks set status='expired' where id=target_seek.id; end if;
@@ -111,9 +111,9 @@ begin
  if r.id is null then raise exception 'Could not create tournament game'; end if;
  if random()<0.5 then mycolor:='w';oppcolor:='b'; else mycolor:='b';oppcolor:='w'; end if;
  white_user:=case when mycolor='w' then auth.uid() else opp.user_id end; black_user:=case when mycolor='b' then auth.uid() else opp.user_id end;
- update public.ability_chess_rooms set host_user_id=case when mycolor='w' then auth.uid() else opp.user_id end,guest_user_id=case when mycolor='b' then auth.uid() else opp.user_id end where id=r.id;
- update public.ability_chess_tournament_entries set pairing_status='paired',current_room_id=r.id,seat_token=case when mycolor='w' then hosttok else guesttok end,assigned_color=mycolor,games_started=games_started+1,last_pairing_at=now() where tournament_id=t.id and user_id=auth.uid();
- update public.ability_chess_tournament_entries set pairing_status='paired',current_room_id=r.id,seat_token=case when oppcolor='w' then hosttok else guesttok end,assigned_color=oppcolor,games_started=games_started+1,last_pairing_at=now() where tournament_id=t.id and user_id=opp.user_id;
+ update public.ability_chess_rooms set host_color=mycolor,host_user_id=auth.uid(),guest_user_id=opp.user_id,game_state=r.game_state||jsonb_build_object('onlineStarted',true,'hostColor',mycolor,'mode','online','rated',t.rated,'ratingCategory',case when t.base_minutes*60+40*t.increment_seconds<180 then 'bullet' when t.base_minutes*60+40*t.increment_seconds<600 then 'blitz' else 'rapid' end) where id=r.id;
+ update public.ability_chess_tournament_entries set pairing_status='paired',current_room_id=r.id,seat_token=hosttok,assigned_color=mycolor,games_started=games_started+1,last_pairing_at=now() where tournament_id=t.id and user_id=auth.uid();
+ update public.ability_chess_tournament_entries set pairing_status='paired',current_room_id=r.id,seat_token=guesttok,assigned_color=oppcolor,games_started=games_started+1,last_pairing_at=now() where tournament_id=t.id and user_id=opp.user_id;
  insert into public.ability_chess_tournament_games(tournament_id,room_id,white_id,black_id,round_number,white_score_before,black_score_before)
  values(t.id,r.id,white_user,black_user,target_round,case when white_user=auth.uid() then me.score else opp.score end,case when black_user=auth.uid() then me.score else opp.score end);
  insert into public.ability_chess_notifications(user_id,type,title,body,href,data)
