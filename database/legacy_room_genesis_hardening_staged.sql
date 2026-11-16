@@ -12,7 +12,7 @@ CREATE OR REPLACE FUNCTION public.ability_chess_create_or_match_seek(p_queue_key
  SECURITY DEFINER
  SET search_path TO 'public'
 AS $function$
-declare target_seek public.ability_chess_live_seeks%rowtype; target_room public.ability_chess_rooms%rowtype; new_guest_token uuid:=gen_random_uuid(); alphabet constant text:='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; candidate text; host_token_value uuid; i integer; my_rating integer:=1200; is_rated boolean:=coalesce((p_settings->>'rated')::boolean,false); cat text:=lower(coalesce(p_settings->>'ratingCategory','rapid')); updated_settings jsonb;
+declare target_seek public.ability_chess_live_seeks%rowtype; target_room public.ability_chess_rooms%rowtype; new_guest_token uuid:=gen_random_uuid(); alphabet constant text:='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; candidate text; host_token_value uuid; i integer; my_rating integer:=1200; is_rated boolean:=coalesce((p_settings->>'rated')::boolean,false); cat text:=case when coalesce((p_settings->>'base')::integer,10)*60 + 40*coalesce((p_settings->>'increment')::integer,0) < 180 then 'bullet' when coalesce((p_settings->>'base')::integer,10)*60 + 40*coalesce((p_settings->>'increment')::integer,0) < 600 then 'blitz' else 'rapid' end; updated_settings jsonb;
 begin
  if cat not in('bullet','blitz','rapid') then cat:='rapid'; end if;
  if auth.uid() is not null then if cat='bullet' then select coalesce(p.bullet_rating,1200) into my_rating from public.ability_chess_profiles p where p.id=auth.uid(); elsif cat='blitz' then select coalesce(p.blitz_rating,1200) into my_rating from public.ability_chess_profiles p where p.id=auth.uid(); else select coalesce(p.rapid_rating,1200) into my_rating from public.ability_chess_profiles p where p.id=auth.uid(); end if; end if;
@@ -20,7 +20,7 @@ begin
  update public.ability_chess_live_seeks set status='expired' where status='waiting' and expires_at<=now();
  select * into target_seek from public.ability_chess_live_seeks s where s.queue_key=p_queue_key and s.status='waiting' and s.expires_at>now() and s.rated=is_rated and (auth.uid() is null or s.seeker_id is distinct from auth.uid()) order by abs(s.seeker_rating-my_rating),s.created_at limit 1 for update skip locked;
  if found then select * into target_room from public.ability_chess_rooms r where r.id=target_seek.room_id for update;
-  if found and target_room.status='waiting' and target_room.guest_token is null and target_room.expires_at>now() then updated_settings:=coalesce(target_room.settings,'{}'::jsonb)||jsonb_build_object('hostRating',target_seek.seeker_rating,'guestRating',my_rating,'rated',is_rated,'ratingCategory',cat);
+  if found and target_room.status='waiting' and target_room.guest_token is null and target_room.expires_at>now() then cat:=coalesce(target_room.settings->>'ratingCategory',cat); updated_settings:=coalesce(target_room.settings,'{}'::jsonb)||jsonb_build_object('hostRating',target_seek.seeker_rating,'guestRating',my_rating,'rated',is_rated,'ratingCategory',cat);
    update public.ability_chess_rooms set guest_token=new_guest_token,guest_user_id=auth.uid(),status='active',settings=updated_settings,game_state=target_room.game_state||jsonb_build_object('onlineStarted',true,'hostColor',target_room.host_color,'mode','online','rated',is_rated,'ratingCategory',cat),version=version+1 where id=target_room.id returning * into target_room;
    update public.ability_chess_live_seeks set status='matched',matched_user_id=auth.uid() where id=target_seek.id;
    return query select target_seek.id,target_seek.seeker_token,true,target_room.id,new_guest_token,case when target_room.host_color='w' then 'b' else 'w' end,target_room.game_state,target_room.settings,target_room.version,target_seek.seeker_rating; return;
@@ -104,7 +104,7 @@ begin
    candidate:=''; for i in 1..6 loop candidate:=candidate||substr(alphabet,1+floor(random()*length(alphabet))::int,1); end loop;
    begin
      insert into public.ability_chess_rooms(room_code,host_token,guest_token,host_color,status,game_state,settings,host_user_id,guest_user_id)
-     values(candidate,hosttok,guesttok,'w','active',public.ability_chess_initial_state(jsonb_build_object('base',t.base_minutes,'increment',t.increment_seconds,'startingPoints',t.starting_points,'upgradeLimit',t.max_upgrades,'abilitiesEnabled',t.abilities_enabled,'upgradesEnabled',t.upgrades_enabled,'rated',t.rated)),jsonb_build_object('base',t.base_minutes,'increment',t.increment_seconds,'startingPoints',t.starting_points,'upgradeLimit',t.max_upgrades,'abilitiesEnabled',t.abilities_enabled,'upgradesEnabled',t.upgrades_enabled,'rated',t.rated,'tournamentId',t.id,'tournamentName',t.name,'tournamentFormat',t.format,'tournamentRound',target_round),auth.uid(),opp.user_id)
+     values(candidate,hosttok,guesttok,'w','active',public.ability_chess_initial_state(jsonb_build_object('base',t.base_minutes,'increment',t.increment_seconds,'startingPoints',t.starting_points,'upgradeLimit',t.max_upgrades,'abilitiesEnabled',t.abilities_enabled,'upgradesEnabled',t.upgrades_enabled,'rated',t.rated)),jsonb_build_object('base',t.base_minutes,'increment',t.increment_seconds,'startingPoints',t.starting_points,'upgradeLimit',t.max_upgrades,'abilitiesEnabled',t.abilities_enabled,'upgradesEnabled',t.upgrades_enabled,'rated',t.rated,'tournamentId',t.id,'tournamentName',t.name,'tournamentFormat',t.format,'tournamentRound',target_round,'ratingCategory',case when t.base_minutes*60+40*t.increment_seconds<180 then 'bullet' when t.base_minutes*60+40*t.increment_seconds<600 then 'blitz' else 'rapid' end),auth.uid(),opp.user_id)
      returning * into r; exit;
    exception when unique_violation then null; end;
  end loop;
@@ -134,7 +134,7 @@ declare alphabet constant text:='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; candidate te
 begin
  if p_host_color not in('w','b') then raise exception 'Invalid host color'; end if;
  for attempt in 1..20 loop candidate:=''; for i in 1..6 loop candidate:=candidate||substr(alphabet,1+floor(random()*length(alphabet))::int,1); end loop;
-  begin insert into public.ability_chess_rooms(room_code,host_color,game_state,settings,host_user_id) values(candidate,p_host_color,public.ability_chess_initial_state(p_settings),coalesce(p_settings,'{}'::jsonb),auth.uid()) returning * into new_room;
+  begin insert into public.ability_chess_rooms(room_code,host_color,game_state,settings,host_user_id) values(candidate,p_host_color,public.ability_chess_initial_state(p_settings),coalesce(p_settings,'{}'::jsonb)||jsonb_build_object('ratingCategory',case when coalesce((p_settings->>'base')::integer,10)*60 + 40*coalesce((p_settings->>'increment')::integer,0) < 180 then 'bullet' when coalesce((p_settings->>'base')::integer,10)*60 + 40*coalesce((p_settings->>'increment')::integer,0) < 600 then 'blitz' else 'rapid' end),auth.uid()) returning * into new_room;
    return query select new_room.id,new_room.room_code,new_room.host_token,new_room.host_color,new_room.game_state,new_room.settings,new_room.version; return;
   exception when unique_violation then null; end;
  end loop;
