@@ -27,7 +27,25 @@ const state={board:b,turn:'w',over:false,winner:null,mode:'online',
  abilityUsed:false,movesRemaining:1,doubleMoveActive:false,
  activeAbility:null,awaitingAbilityTarget:false,abilitySelection:null,
  clocks:{w:1200,b:1200},initialTime:1200,increment:0,drawOffer:null};
+const initialState=structuredClone(state);
 const serverState={version:1,state,actions:[],legacyUpdates:[]};
+const newRoomId='00000000-0000-0000-0000-0000000000aa';
+const newTokens={
+ w:'00000000-0000-0000-0000-0000000000e1',
+ b:'00000000-0000-0000-0000-0000000000e2'
+};
+const rematch={offeredBy:null,ready:false,newState:null,requests:[]};
+function rematchInfo(color){
+ if(!serverState.state.over)return null;
+ if(rematch.ready){
+  return {status:'ready',offeredBy:rematch.offeredBy,
+   room:{id:newRoomId,token:newTokens[color],color:color==='w'?'b':'w',
+    version:0,state:structuredClone(rematch.newState),
+    settings:{...settings,hostColor:'b'}}};
+ }
+ return {status:rematch.offeredBy?'offered':'none',
+  offeredBy:rematch.offeredBy};
+}
 const settings={base:20,increment:0,startingPoints:6,hostColor:'w',
  abilitiesEnabled:true,upgradesEnabled:true,upgradeLimit:3,rated:false};
 const mime={'.html':'text/html; charset=utf-8','.js':'application/javascript',
@@ -70,15 +88,42 @@ async function routes(page){
   if(method==='GET'){
    const u=new URL(route.request().url());
    const seat=u.searchParams.get('seatToken');
-   if(!Object.values(tokens).includes(seat))return json(route,{error:'Invalid seat'},403);
+   if(u.searchParams.get('roomId')===newRoomId){
+    if(!Object.values(newTokens).includes(seat))
+     return json(route,{error:'Invalid rematch seat'},403);
+    return json(route,{roomVersion:0,roomStatus:'active',
+     state:structuredClone(rematch.newState),settings:{...settings,hostColor:'b'},rematch:null});
+   }
+   const color=seat===tokens.w?'w':seat===tokens.b?'b':null;
+   if(!color)return json(route,{error:'Invalid seat'},403);
    return json(route,{roomVersion:serverState.version,
-    roomStatus:'active',state:structuredClone(serverState.state),settings});
+    roomStatus:serverState.state.over?'finished':'active',
+    state:structuredClone(serverState.state),settings,
+    rematch:rematchInfo(color)});
   }
   const req=route.request().postDataJSON();
   if(!req||req.roomId!==roomId||req.expectedVersion!==serverState.version)
     return json(route,{error:'Game version conflict'},409);
-  if(req.action?.type!=='move')return json(route,{error:'Only moves mocked'},400);
   const color=req.seatToken===tokens.w?'w':req.seatToken===tokens.b?'b':null;
+  if(['offerRematch','acceptRematch','declineRematch'].includes(req.action?.type)){
+   if(!color||!serverState.state.over)return json(route,{error:'Rematch not allowed'},403);
+   rematch.requests.push(req.action.type);
+   if(req.action.type==='offerRematch'){
+    if(rematch.offeredBy&&rematch.offeredBy!==color)
+     return json(route,{error:'Accept existing offer'},409);
+    rematch.offeredBy=color;
+   }else if(req.action.type==='acceptRematch'){
+    if(!rematch.offeredBy||rematch.offeredBy===color)
+     return json(route,{error:'No opponent offer'},409);
+    rematch.ready=true;
+    rematch.newState=structuredClone(initialState);
+    rematch.newState.hostColor='b';
+    delete rematch.newState.playerColor;
+   }else rematch.offeredBy=null;
+   return json(route,{version:serverState.version,status:'finished',
+    state:structuredClone(serverState.state),rematch:rematchInfo(color)});
+  }
+  if(req.action?.type!=='move')return json(route,{error:'Only moves mocked'},400);
   if(!color||color!==serverState.state.turn)return json(route,{error:'Wrong seat or turn'},403);
   if(req.board||req.game_state||req.action.board||req.action.state||req.action.winner)
     return json(route,{error:'Browser submitted forged state'},400);
@@ -188,11 +233,41 @@ async function makePlayer(browser,color,port){
   await waitForActions(2);
   if(serverState.actions.length!==2||serverState.version!==3)
     throw Error('Black reply failed to commit with expected version');
+  // Complete the original game in the mocked authoritative service.
+  serverState.state.over=true;serverState.state.winner='w';
+  serverState.state.resultReason='test-finish';serverState.version++;
+  await white.page.locator('#verifiedRematchPanel button').filter({hasText:'Offer rematch'})
+   .waitFor({timeout:16000});
+  await white.page.evaluate(()=>{
+   [...document.querySelectorAll('#verifiedRematchPanel button')]
+    .find(b=>b.textContent==='Offer rematch').click();
+  });
+  await black.page.locator('#verifiedRematchPanel button').filter({hasText:'Accept rematch'})
+   .waitFor({timeout:16000});
+  await black.page.evaluate(()=>{
+   [...document.querySelectorAll('#verifiedRematchPanel button')]
+    .find(b=>b.textContent==='Accept rematch').click();
+  });
+  await white.page.waitForFunction(expected=>{
+   const session=JSON.parse(localStorage.getItem('abilityChessOnline')||'{}');
+   return session.id===expected;
+  },newRoomId,{timeout:16000});
+  await black.page.waitForFunction(expected=>{
+   const session=JSON.parse(localStorage.getItem('abilityChessOnline')||'{}');
+   return session.id===expected;
+  },newRoomId,{timeout:16000});
+  if(rematch.requests.join(',')!=='offerRematch,acceptRematch')
+   throw Error('Rematch did not require mutual consent');
+  const resultSessions=await Promise.all([white.page,black.page].map(
+   page=>page.evaluate(()=>JSON.parse(localStorage.getItem('abilityChessOnline')))));
+  if(resultSessions[0].token===resultSessions[1].token
+     ||resultSessions.some(x=>Object.values(tokens).includes(x.token)))
+    throw Error('Replacement room did not rotate seat tokens');
   if(serverState.legacyUpdates.length)throw Error('Legacy game mutation or rating API called');
   if(white.errors.length||black.errors.length)
     throw Error('Page errors during play: '+[...white.errors,...black.errors].join('; '));
   await white.context.close();await black.context.close();
-  console.log('PASS: two browsers played e2e4 and e7e5 via typed verified Edge actions, no legacy state writes');
+  console.log('PASS: two browsers played moves, accepted a fresh-room rematch and rotated seats without legacy writes');
  }finally{
   if(browser)await browser.close();
   await new Promise(resolve=>server.close(resolve));
