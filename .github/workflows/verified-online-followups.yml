@@ -1,0 +1,27 @@
+name: Protect verified online turn staging
+on:
+  push:
+    branches: [security/server-authoritative-gameplay-foundation-2026]
+    paths:
+      - 'scripts/patch_verified_online_followups.js'
+      - '.github/workflows/verified-online-followups.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/patch_verified_online_followups.js --apply
+      - name: Commit tournament seat and ability safeguards on draft branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Preserve assigned tournament colors and block client-only ability refunds"
+            git push origin HEAD:security/server-authoritative-gameplay-foundation-2026
+          fi
