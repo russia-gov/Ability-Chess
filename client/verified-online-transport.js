@@ -54,8 +54,13 @@
    const query='?roomId='+encodeURIComponent(session.id)
     +'&seatToken='+encodeURIComponent(session.token);
    const answer=await this.request('GET',query);
-   session.version=Number(answer.roomVersion);
-   this.onState(answer.state,answer);
+   const nextVersion=Number(answer.roomVersion);
+   // Unchanged-version polls must not clear the user's in-progress selection
+   // of a multi-click ability or restart move animations every 700 ms.
+   if(nextVersion!==Number(session.version)){
+    session.version=nextVersion;
+    this.onState(answer.state,answer);
+   }
    return answer;
   }
   submit(action){
