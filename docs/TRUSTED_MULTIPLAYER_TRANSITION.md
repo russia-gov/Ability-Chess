@@ -156,3 +156,13 @@ client integration are completed.
 4. Coordinate Edge deployment, hardened genesis and read RPC deployment, client release and legacy revocations. Do not deploy any piece in isolation.
 
 No staged SQL was applied to the live Supabase project. This PR remains a draft.
+
+## Latest staged verification
+
+- Browser online gameplay now submits typed legal actions via verified Edge transport; two isolated Chromium sessions successfully played e2–e4 and e7–e5 without legacy board or rating mutation RPCs.
+- Deno verified-game Edge runtime type check passes.
+- Disposable PostgreSQL tests pass for canonical room startup, ratings, tournament points, seat identity, hidden Ambush, and verified per-player history from server action snapshots.
+- Adversarial room genesis PostgreSQL tests pass across direct room creation, accepted challenges, rated matchmaking and randomly colored tournament pairings, rejecting player-forged starting boards.
+- Tournament token-return and SQL function quoting issues caught in CI were fixed in this draft.
+
+These checks are necessary but insufficient for live launch: the full mixed-ability two-account integration, authoritative clocks, rematch replacement, Supabase staging deployment and coordinated legacy endpoint revocation remain release gates. The production Supabase project has not been changed.
