@@ -59,7 +59,9 @@
    const nextVersion=Number(answer.roomVersion);
    // Unchanged-version polls must not clear the user's in-progress selection
    // of a multi-click ability or restart move animations every 700 ms.
-   if(nextVersion!==Number(session.version)){
+   // A poll can finish after a newer action response. Never roll back the
+   // board or the optimistic-concurrency version to that older snapshot.
+   if(Number.isSafeInteger(nextVersion)&&nextVersion>Number(session.version)){
     session.version=nextVersion;
     this.onState(answer.state,answer);
    }
@@ -80,7 +82,14 @@
       roomId:session.id,seatToken:session.token,
       expectedVersion:Number(session.version),action
      });
-     session.version=Number(answer.version);
+     const returnedVersion=Number(answer.version);
+     if(!Number.isSafeInteger(returnedVersion)||returnedVersion<=Number(session.version)){
+      // A concurrent poll may already have supplied an even newer position.
+      // Do not replace it with a stale response to this action.
+      if(!Number.isSafeInteger(returnedVersion))throw Error('Invalid game version response');
+      return answer;
+     }
+     session.version=returnedVersion;
      this.onState(answer.state,answer);
      return answer;
     }catch(error){
