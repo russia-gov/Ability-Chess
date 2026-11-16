@@ -210,7 +210,7 @@ Deno.serve(async req=>{
     resultReason:'resignation'};
    actionType='resign';
   }else if(action.type==='offerDraw'){
-   if(seat.color!==current.turn)return fail(403,'Not your turn');
+   // Either player may offer a draw, including while the opponent is to move.
    if(current.drawOffer===seat.color)return fail(409,'Draw already offered');
    next={...current,drawOffer:seat.color};actionType='draw';
   }else if(action.type==='acceptDraw'){
