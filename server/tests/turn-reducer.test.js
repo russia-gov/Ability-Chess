@@ -76,3 +76,24 @@ test('portal duration decrements only after the owner turns',()=>{
  const second=applyGameAction(first.state,move(1,3,2,3));
  assert.equal(second.state.portals.w.turnsRemaining,2);
 });
+
+test('online room metadata survives ordinary, ability and upgrade transitions',()=>{
+ const initial=base();
+ Object.assign(initial,{onlineStarted:true,mode:'online',hostColor:'b',
+  rated:true,ratingCategory:'blitz',initialTime:600,startingPoints:4});
+ const a=applyGameAction(initial,move(6,0,4,0));
+ const b=applyGameAction(a.state,move(1,3,2,3));
+ const c=applyGameAction(b.state,{type:'ability',id:'shield',target:sq(4,0)});
+ const d=applyGameAction(c.state,move(7,4,6,4));
+ const e=applyGameAction(d.state,{type:'upgrade',id:'vanguard'});
+ for(const result of [a,b,c,d,e]){
+  const state=result.state;
+  assert.equal(state.onlineStarted,true);
+  assert.equal(state.mode,'online');
+  assert.equal(state.hostColor,'b');
+  assert.equal(state.rated,true);
+  assert.equal(state.ratingCategory,'blitz');
+  assert.equal(state.initialTime,600);
+  assert.equal(state.startingPoints,4);
+ }
+});
