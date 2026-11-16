@@ -27,7 +27,7 @@ create table public.ability_chess_live_seeks(
  id uuid primary key default gen_random_uuid(),
  queue_key text not null, room_id uuid not null references public.ability_chess_rooms(id),
  seeker_id uuid,seeker_rating integer not null default 1200,
- seek_token uuid not null default gen_random_uuid(),
+ seeker_token uuid not null default gen_random_uuid(),
  host_seat_token uuid,matched_user_id uuid,
  rated boolean not null default false,status text not null default 'waiting',
  expires_at timestamptz not null default now()+interval '1 day',
