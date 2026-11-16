@@ -4,6 +4,8 @@ const fs=require('node:fs');
 const lines=fs.readFileSync('index.html','utf8').split('\n');
 const windows=[
  ['Critical online setup',1660,1710],
+ ['Persisted game resurrection',1850,1930],
+ ['Initial route selection',5440,5480],
  ['Critical online restore',1770,1830],
  ['Online result and flags',2500,2525],
  ['Online abilities and effects',2860,2969],
