@@ -22,7 +22,7 @@ insert into public.ability_chess_rooms
 -- Simulate a player whose current turn began well before this commit.
 update public.ability_chess_rooms set updated_at=now()-interval '90 seconds'
  where id='00000000-0000-0000-0000-0000000000a2';
-do $
+do $$
 declare ver bigint;aid bigint;
 begin
  begin
