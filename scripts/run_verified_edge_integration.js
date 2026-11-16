@@ -124,7 +124,7 @@ async function run(){
  const check=(cond,msg)=>{assert.ok(cond,msg);checks++};
  let r=await read('w');check(r.status===200,'white authenticated GET');
  r=await read('b');check(r.status===200,'black authenticated GET');
- r=await read('x');check(r.status===403,'unidentified caller rejected');
+ r=await read('x',TOKENS.w);check(r.status===403,'unidentified caller rejected');
  r=await request('b',{type:'move',from:{r:6,c:4},to:{r:4,c:4}});
  check(r.status===403,'opponent cannot move white pieces');
  r=await request('w',{type:'move',from:{r:6,c:4},to:{r:2,c:4}});
