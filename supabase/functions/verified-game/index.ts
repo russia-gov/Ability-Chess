@@ -102,6 +102,25 @@ async function commit(room:RoomRecord,seat:Seat,userId:string|null,token:string,
   state:viewerState(rows[0].updated_state,seat.color),
   status:rows[0].updated_state?.over?'finished':'active'};
 }
+// Rematches are negotiated in a service-only, transactionally locked RPC.
+ // Only the caller's new seat token is returned; the completed room is immutable.
+async function rematchAction(room:RoomRecord,token:string,userId:string|null,operation:string){
+ const rows=await rest('/rest/v1/rpc/ability_chess_verified_rematch',{
+  method:'POST',body:JSON.stringify({
+   p_room_id:room.id,p_seat_token:token,
+   p_actor_user_id:userId,p_operation:operation
+  })
+ });
+ if(!Array.isArray(rows)||rows.length!==1)throw new Error('Invalid rematch response');
+ const r=rows[0];
+ const rematch:any={status:r.rematch_status,offeredBy:r.offered_by};
+ if(r.rematch_status==='ready'){
+  rematch.room={id:r.room_id,token:r.seat_token,
+   color:r.assigned_color,version:Number(r.room_version),
+   settings:r.room_settings};
+ }
+ return rematch;
+}
 Deno.serve(async req=>{
  if(req.method==='OPTIONS')return new Response(null,{status:204,headers:cors});
  if(!SERVICE_KEY||!URL_BASE)return fail(503,'Trusted gameplay service is not configured');
@@ -124,10 +143,13 @@ Deno.serve(async req=>{
   const seat=authorize(room,input.seatToken,userId);
   if(req.method==='GET'){
    const viewed=enforceClock(room,room.game_state);
+   const rematch=room.status==='finished'&&room.game_state?.over===true
+     &&!protectedRoom(room)
+     ?await rematchAction(room,input.seatToken,userId,'status'):null;
    return reply({roomVersion:room.version,roomStatus:room.status,
      opponentJoined:!!room.guest_token,serverNow:new Date().toISOString(),
      stateUpdatedAt:room.updated_at,
-     state:viewerState(viewed,seat.color),settings:room.settings});
+     state:viewerState(viewed,seat.color),settings:room.settings,rematch});
   }
   if(!Number.isSafeInteger(input.expectedVersion)||input.expectedVersion<0)
    return fail(400,'Expected game version is required');
@@ -136,6 +158,17 @@ Deno.serve(async req=>{
   const action=input.action;
   if(!action||typeof action!=='object'||typeof action.type!=='string')
    return fail(400,'Typed action is required');
+  if(['offerRematch','acceptRematch','declineRematch'].includes(action.type)){
+   if(room.status!=='finished'||room.game_state?.over!==true
+      ||protectedRoom(room))return fail(409,'Only finished casual games can rematch');
+   // The RPC locks the finished source room and the offer row, enforcing
+   // seat/account ownership, consent and single-room creation under races.
+   const operation=action.type==='offerRematch'?'offer':
+     action.type==='acceptRematch'?'accept':'decline';
+   const rematch=await rematchAction(room,input.seatToken,userId,operation);
+   return reply({version:room.version,status:'finished',
+      state:viewerState(room.game_state,seat.color),rematch});
+  }
   if(action.type==='configureRoom'){
    if(room.host_token!==input.seatToken)
     return fail(403,'Only the host can configure a room');
