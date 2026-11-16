@@ -7,8 +7,6 @@ alter table public.ability_chess_rooms alter column guest_token drop default;
 alter table public.ability_chess_rooms alter column host_token set default gen_random_uuid();
 alter table public.ability_chess_rooms alter column status set default 'waiting';
 alter table public.ability_chess_rooms alter column host_color set default 'w';
-alter table public.ability_chess_profiles add column username text;
-alter table public.ability_chess_profiles add column display_name text;
 alter table public.ability_chess_tournament_games
  add column round_number integer, add column white_score_before numeric,
  add column black_score_before numeric,
