@@ -124,6 +124,8 @@ async function routes(page){
     state:structuredClone(serverState.state),rematch:rematchInfo(color)});
   }
   if(req.action?.type!=='move')return json(route,{error:'Only moves mocked'},400);
+  // Simulate a slow server to ensure the drag snaps before confirmation.
+  if(serverState.actions.length===0)await new Promise(resolve=>setTimeout(resolve,1100));
   if(!color||color!==serverState.state.turn)return json(route,{error:'Wrong seat or turn'},403);
   if(req.board||req.game_state||req.action.board||req.action.state||req.action.winner)
     return json(route,{error:'Browser submitted forged state'},400);
@@ -222,6 +224,14 @@ async function makePlayer(browser,color,port){
    to:document.querySelector('#board [data-r="4"][data-c="4"]')?.className,
    status:document.querySelector('#gameMessage')?.textContent||''
   }))));
+  // Before server acknowledgement, the DOM should already show e4.
+  if(serverState.actions.length!==0)throw Error('Delayed route completed before snap assertion');
+  const preview=await white.page.evaluate(()=>({
+    src:!!document.querySelector('#board [data-r="6"][data-c="4"] .piece-svg'),
+    dest:!!document.querySelector('#board [data-r="4"][data-c="4"] .piece-svg')
+  }));
+  if(preview.src||!preview.dest)
+    throw Error('Verified move did not snap visually before server acknowledgement: '+JSON.stringify(preview));
   await waitForActions(1);
   if(serverState.actions.length!==1||serverState.actions[0].action.type!=='move')
     throw Error('White move was not sent through the verified action endpoint');
