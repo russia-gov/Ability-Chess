@@ -6,6 +6,7 @@ on:
       - 'supabase/functions/verified-game/**'
       - 'scripts/build_verified_edge_module.js'
       - 'server/**'
+      - 'scripts/run_verified_edge_integration.js'
       - '.github/workflows/verified-edge-check.yml'
   pull_request:
     branches: [main]
@@ -27,3 +28,5 @@ jobs:
           node scripts/build_verified_edge_module.js
       - run: deno check supabase/functions/verified-game/index.ts
       - run: node --test server/tests/*.test.js
+      - name: Exercise real Edge/Auth/REST handler with two mock accounts
+        run: node scripts/run_verified_edge_integration.js
