@@ -163,13 +163,14 @@ async function run(){
   'white may decline and the turn remains black');
  r=await request('w',{type:'move',from:{r:6,c:3},to:{r:4,c:3}},1);
  check(r.status===409,'stale version rejected');
+ const beforeRaceVersion=room.version, beforeRaceCount=commits.length;
  const [a,b]=await Promise.all([
   request('b',{type:'move',from:{r:1,c:4},to:{r:3,c:4}}),
   request('b',{type:'move',from:{r:1,c:3},to:{r:3,c:3}})
  ]);
  console.log('CONCURRENT ACTION RESULTS '+JSON.stringify({a,b}));
  check([a.status,b.status].sort().join(',')==='200,409','same-version action race commits only once');
- check(room.version===3&&commits.length===2,'concurrent actions did not duplicate');
+ check(room.version===beforeRaceVersion+1&&commits.length===beforeRaceCount+1,'concurrent actions did not duplicate');
  // The next player can offer a draw without asserting a browser-made outcome.
  r=await request('w',{type:'offerDraw'});
  check(r.status===200&&room.game_state.drawOffer==='w','draw offer trusted');
