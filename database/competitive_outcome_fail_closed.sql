@@ -28,17 +28,13 @@ revoke execute on function public.update_ability_chess_room(
  uuid,uuid,bigint,jsonb,text)
  from public,anon,authenticated;
 
--- Initial positions/settings must also be minted by the trusted handler,
--- not accepted from a custom browser request. These revocations REQUIRE
--- moving game/challenge/tournament creation to the new endpoint first.
-revoke execute on function public.create_ability_chess_room(jsonb,jsonb,text)
- from public,anon,authenticated;
-revoke execute on function public.ability_chess_create_or_match_seek(text,jsonb,jsonb)
- from public,anon,authenticated;
-revoke execute on function public.ability_chess_create_member_challenge(jsonb,jsonb,uuid)
- from public,anon,authenticated;
-revoke execute on function public.ability_chess_tournament_claim_game(uuid,jsonb,jsonb)
- from public,anon,authenticated;
+-- Existing matchmaking, challenge and tournament creation RPCs remain
+-- callable ONLY after database/legacy_room_genesis_hardening_staged.sql
+-- and database/verified_challenge_activation_staged.sql have replaced their
+-- implementations. The hardened functions ignore untrusted p_game_state and
+-- generate official starting positions; revoking them would break matchmaking.
+-- Deployment must ensure the function replacements are installed FIRST.
+
 -- Defense in depth: these tables currently have RLS enabled without any
 -- client policies, but their broad table grants are unnecessary. Revoke
 -- mutation rights explicitly so future policy additions cannot accidentally
