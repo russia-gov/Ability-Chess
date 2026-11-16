@@ -113,7 +113,7 @@ async function makePlayer(browser,color,port){
  const errors=[];
  page.on('pageerror',e=>errors.push(String(e)));
  await routes(page);
- await page.goto('http://127.0.0.1:'+port+'/index.html',{waitUntil:'domcontentloaded'});
+ await page.goto('http://127.0.0.1:'+port+'/index.html?page=game',{waitUntil:'domcontentloaded'});
  if(!await page.locator('#gameScreen.active').isVisible()){
   await page.locator('#welcomeMorePlayBtn').click();
   const hub=await page.evaluate(()=>[...document.querySelectorAll('button')].filter(x=>x.offsetParent!==null)
