@@ -1,0 +1,29 @@
+name: Migrate room reads and reconnect to verified Edge endpoint
+on:
+  push:
+    branches: [security/server-authoritative-gameplay-foundation-2026]
+    paths:
+      - 'scripts/patch_verified_online_room_reads.js'
+      - '.github/workflows/verified-room-reads.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/patch_verified_online_room_reads.js --apply
+      - run: |
+          node -e "const s=require('fs').readFileSync('index.html','utf8');if(!s.includes('verifiedRoomReadLegacyShape(body)'))process.exit(1)"
+      - name: Commit verified waiting-room and reconnect reads
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Fetch authenticated online room state from verified Edge endpoint"
+            git push origin HEAD:security/server-authoritative-gameplay-foundation-2026
+          fi
