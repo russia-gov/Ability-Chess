@@ -25,6 +25,23 @@ begin
     raise exception 'Untrusted client still allowed to execute %',name;
   end if;
  end loop;
+ -- Rematch offers and new-room seat minting must remain service-only.
+ f:=to_regprocedure('public.ability_chess_verified_rematch(uuid,uuid,uuid,text)');
+ if f is null then raise exception 'Verified rematch API missing'; end if;
+ if has_function_privilege('anon',f,'EXECUTE')
+   or has_function_privilege('authenticated',f,'EXECUTE') then
+   raise exception 'Rematch room creation exposed to untrusted clients';
+ end if;
+ if has_table_privilege('anon','public.ability_chess_verified_rematches','SELECT')
+   or has_table_privilege('authenticated','public.ability_chess_verified_rematches','SELECT')
+   or has_table_privilege('anon','public.ability_chess_verified_rematches','INSERT')
+   or has_table_privilege('authenticated','public.ability_chess_verified_rematches','INSERT')
+   or has_table_privilege('anon','public.ability_chess_verified_rematches','UPDATE')
+   or has_table_privilege('authenticated','public.ability_chess_verified_rematches','UPDATE')
+   or not (select relrowsecurity from pg_class
+       where oid='public.ability_chess_verified_rematches'::regclass) then
+   raise exception 'Rematch offers table lacks private RLS/grants';
+ end if;
  -- The public creation functions must remain callable for matchmaking,
  -- but may no longer use client-supplied p_game_state as the official board.
  foreach name in array array[
