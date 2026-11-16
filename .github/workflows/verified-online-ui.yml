@@ -1,0 +1,31 @@
+name: Integrate verified server actions into online gameplay
+on:
+  push:
+    branches: [security/server-authoritative-gameplay-foundation-2026]
+    paths:
+      - 'scripts/patch_verified_online_ui.js'
+      - '.github/workflows/verified-online-ui.yml'
+permissions:
+  contents: write
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check scripts/patch_verified_online_ui.js
+      - run: node scripts/patch_verified_online_ui.js --apply
+      - name: Check all sensitive online actions have typed intercepts
+        run: |
+          node -e "const s=require('fs').readFileSync('index.html','utf8'); for(const x of ['const VERIFIED_ONLINE_GAMEPLAY = true;','verifiedOnlineSubmit({type:\'move\'','verifiedOnlineSubmit({type:\'resign\'','verifiedOnlineSubmit({type:\'ability\',id:\'reinforce\'','if(VERIFIED_ONLINE_GAMEPLAY)return;'])if(!s.includes(x))process.exit(1)"
+      - name: Commit staged website online migration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Route actual online game actions to verified server endpoint"
+            git push origin HEAD:security/server-authoritative-gameplay-foundation-2026
+          fi
