@@ -111,7 +111,7 @@ begin
  if r.id is null then raise exception 'Could not create tournament game'; end if;
  if random()<0.5 then mycolor:='w';oppcolor:='b'; else mycolor:='b';oppcolor:='w'; end if;
  white_user:=case when mycolor='w' then auth.uid() else opp.user_id end; black_user:=case when mycolor='b' then auth.uid() else opp.user_id end;
- update public.ability_chess_rooms set host_color=mycolor,host_user_id=auth.uid(),guest_user_id=opp.user_id,game_state=r.game_state||jsonb_build_object('onlineStarted',true,'hostColor',mycolor,'mode','online','rated',t.rated,'ratingCategory',case when t.base_minutes*60+40*t.increment_seconds<180 then 'bullet' when t.base_minutes*60+40*t.increment_seconds<600 then 'blitz' else 'rapid' end) where id=r.id;
+ update public.ability_chess_rooms set host_color=mycolor,host_user_id=auth.uid(),guest_user_id=opp.user_id,game_state=r.game_state||jsonb_build_object('onlineStarted',true,'hostColor',mycolor,'mode','online','rated',t.rated,'ratingCategory',case when t.base_minutes*60+40*t.increment_seconds<180 then 'bullet' when t.base_minutes*60+40*t.increment_seconds<600 then 'blitz' else 'rapid' end) where id=r.id returning * into r;
  update public.ability_chess_tournament_entries set pairing_status='paired',current_room_id=r.id,seat_token=hosttok,assigned_color=mycolor,games_started=games_started+1,last_pairing_at=now() where tournament_id=t.id and user_id=auth.uid();
  update public.ability_chess_tournament_entries set pairing_status='paired',current_room_id=r.id,seat_token=guesttok,assigned_color=oppcolor,games_started=games_started+1,last_pairing_at=now() where tournament_id=t.id and user_id=opp.user_id;
  insert into public.ability_chess_tournament_games(tournament_id,room_id,white_id,black_id,round_number,white_score_before,black_score_before)
@@ -119,7 +119,7 @@ begin
  insert into public.ability_chess_notifications(user_id,type,title,body,href,data)
  values(opp.user_id,'tournament_pairing','Tournament game ready',t.name||' paired you with '||(select username from public.ability_chess_profiles where id=auth.uid()),'/game',jsonb_build_object('roomId',r.id,'tournamentId',t.id))
  on conflict do nothing;
- return query select true,r.id,case when mycolor='w' then hosttok else guesttok end,mycolor,r.game_state,r.settings,r.version;
+ return query select true,r.id,hosttok,mycolor,r.game_state,r.settings,r.version;
 end$function$
 ;
 
