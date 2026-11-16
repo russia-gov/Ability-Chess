@@ -1255,7 +1255,28 @@ button.danger,button.danger-button{background:#462326!important;border-color:#7a
     connectionStatus.textContent=status==='connected'?'Connected':status==='reconnecting'?'Reconnecting…':'Disconnected';
   }
 
+  // Compatibility wrapper for old room/lobby callers. They now receive a
+  // per-seat filtered, authenticated server read instead of a raw snapshot.
+  async function verifiedRoomReadLegacyShape(body){
+    if(memberSession?.refresh_token&&Date.now()/1000>Number(memberSession.expires_at||0)-45)
+      await refreshMemberToken();
+    const query='?roomId='+encodeURIComponent(body.p_room_id)
+      +'&seatToken='+encodeURIComponent(body.p_seat_token);
+    const response=await fetch(SUPABASE_URL+'/functions/v1/verified-game'+query,{
+      headers:{apikey:SUPABASE_KEY,
+        Authorization:'Bearer '+(memberSession?.access_token||SUPABASE_KEY)},
+      cache:'no-store'
+    });
+    const data=await response.json().catch(()=>({error:'Invalid verified server response'}));
+    if(!response.ok)throw Error(data.error||'Verified room read failed');
+    return [{state:data.state,room_settings:data.settings,
+      room_status:data.roomStatus,room_version:data.roomVersion,
+      opponent_joined:data.opponentJoined,
+      state_updated_at:data.stateUpdatedAt,server_now:data.serverNow}];
+  }
   async function supabaseRpc(name,body){
+    if(VERIFIED_ONLINE_GAMEPLAY&&name==='ability_chess_get_room_live')
+      return verifiedRoomReadLegacyShape(body);
     const res=await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`,{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${memberSession?.access_token||SUPABASE_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
     const data=await res.json().catch(()=>null); if(!res.ok) throw new Error(data?.message||data?.hint||'Online request failed.'); return data;
   }
