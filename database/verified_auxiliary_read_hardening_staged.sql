@@ -37,7 +37,7 @@ begin
   order by e.last_pairing_at desc nulls last
   limit 1;
 end
-$function$
+$function$;
 
 -- Hardened: ability_chess_poll_seek
 CREATE OR REPLACE FUNCTION public.ability_chess_poll_seek(p_seek_id uuid, p_seek_token uuid)
@@ -54,7 +54,7 @@ begin
  select * into r from public.ability_chess_rooms where id=s.room_id;
  if s.status='matched' then opp:=nullif(r.settings->>'guestRating','')::integer; end if;
  return query select s.status,(s.status='matched'),r.id,s.host_seat_token,r.host_color,public.ability_chess_viewer_state(r.game_state,r.host_color),r.settings,r.version,opp;
-end;$function$
+end;$function$;
 
 -- Hardened: ability_chess_resume_my_active_room
 CREATE OR REPLACE FUNCTION public.ability_chess_resume_my_active_room()
@@ -80,7 +80,7 @@ begin
     return query select r.id,r.guest_token,case when r.host_color='w' then 'b' else 'w' end,'guest'::text,public.ability_chess_viewer_state(r.game_state,(case when r.host_color='w' then 'b' else 'w' end)),r.settings,r.status,r.version,r.updated_at,now();
   end if;
 end;
-$function$
+$function$;
 
 -- Hardened: ability_chess_tournament_game_context
 CREATE OR REPLACE FUNCTION public.ability_chess_tournament_game_context(p_room_id uuid)
@@ -102,7 +102,7 @@ begin
  cat:=lower(coalesce(rm.settings->>'ratingCategory','rapid'));
  return query select gid,tid,rm.id,rm.status,rm.settings,(case when participant then public.ability_chess_viewer_state(rm.game_state,(case when auth.uid()=white_user then 'w' else 'b' end)) else public.ability_chess_viewer_state(public.ability_chess_viewer_state(rm.game_state,'w'),'b') end),wp.id,wp.username,wp.display_name,wp.avatar_url,case cat when 'bullet' then wp.bullet_rating when 'blitz' then wp.blitz_rating else wp.rapid_rating end,bp.id,bp.username,bp.display_name,bp.avatar_url,case cat when 'bullet' then bp.bullet_rating when 'blitz' then bp.blitz_rating else bp.rapid_rating end,participant
  from public.ability_chess_profiles wp,public.ability_chess_profiles bp where wp.id=white_user and bp.id=black_user;
-end$function$
+end$function$;
 
 -- Hardened: ability_chess_tournament_spectate
 CREATE OR REPLACE FUNCTION public.ability_chess_tournament_spectate(p_game_id uuid)
@@ -145,7 +145,7 @@ begin
   return query
   select public.ability_chess_viewer_state(public.ability_chess_viewer_state(game_room.game_state,'w'),'b'), game_room.settings, game_room.status, game_room.version;
 end
-$function$
+$function$;
 
 -- Hardened: get_ability_chess_room
 CREATE OR REPLACE FUNCTION public.get_ability_chess_room(p_room_id uuid, p_seat_token uuid)
@@ -164,7 +164,7 @@ begin
  then raise exception 'Account does not own competitive seat'; end if;
   return query select public.ability_chess_viewer_state(target.game_state,(case when p_seat_token=target.host_token then target.host_color else (case when target.host_color='w' then 'b' else 'w' end) end)),target.settings,target.status,target.version,(target.guest_token is not null);
 end;
-$function$
+$function$;
 
 -- Hardened: reconnect_ability_chess_room
 CREATE OR REPLACE FUNCTION public.reconnect_ability_chess_room(p_room_code text, p_seat_token uuid)
@@ -188,6 +188,6 @@ begin
     raise exception 'Invalid seat token';
   end if;
 end;
-$function$
+$function$;
 
 commit;
