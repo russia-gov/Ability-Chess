@@ -144,6 +144,23 @@ async function run(){
  r=await request('w',{type:'move',from:{r:6,c:4},to:{r:4,c:4}});
  check(r.status===200&&r.body.state.turn==='b','actual reducer applied e2-e4');
  check(room.version===2&&commits.length===1,'only legal move committed');
+ // White has just moved: an off-turn draw offer is still legal.
+ r=await request('w',{type:'offerDraw'});
+ check(r.status===200&&room.game_state.drawOffer==='w',
+  'white can offer draw while black is to move');
+ r=await read('b');
+ check(r.status===200&&r.body.state.drawOffer==='w',
+  'black receives the off-turn draw offer');
+ r=await request('b',{type:'declineDraw'});
+ check(r.status===200&&room.game_state.drawOffer===null,
+  'black may decline without altering turn');
+ // On-turn offers must also be accepted without changing who moves.
+ r=await request('b',{type:'offerDraw'});
+ check(r.status===200&&room.game_state.drawOffer==='b',
+  'black can offer while black is to move');
+ r=await request('w',{type:'declineDraw'});
+ check(r.status===200&&room.game_state.drawOffer===null&&room.game_state.turn==='b',
+  'white may decline and the turn remains black');
  r=await request('w',{type:'move',from:{r:6,c:3},to:{r:4,c:3}},1);
  check(r.status===409,'stale version rejected');
  const [a,b]=await Promise.all([
