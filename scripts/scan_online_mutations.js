@@ -10,6 +10,7 @@ const terms=[
  /endGame\s*\(/,
  /function (?:apply|attempt|complete|tryUse|handleAbility|makeMove|finishTurn|purchaseUpgrade|startConfiguredOnlineGame)/,
  /reportTournament/,/submit.*Result/,
+ /resumeActiveOnlineRoom\s*\(/,/restorePersistedActiveGame\s*\(/,
  /id=["']board/, /boardEl[.]addEventListener/,/boardEl[.]append/, /className=.*square/, /classList[.]add\(['"]square/, /dataset[.](?:r|c|row|col)/, /function renderBoard/
 ];
 for(let i=0;i<lines.length;i++){
