@@ -104,6 +104,11 @@
       // A concurrent poll may already have supplied an even newer position.
       // Do not replace it with a stale response to this action.
       if(!Number.isSafeInteger(returnedVersion))throw Error('Invalid game version response');
+      // A rematch offer/accept/decline changes negotiated room metadata,
+      // not the already-finalized game's position or version.
+      if(returnedVersion===Number(session.version)
+         && Object.prototype.hasOwnProperty.call(answer,'rematch'))
+       this.notifyRematch(answer);
       return answer;
      }
      session.version=returnedVersion;
