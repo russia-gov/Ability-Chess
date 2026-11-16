@@ -61,3 +61,47 @@ test('rejects forged client state and unrecognized actions locally',async()=>{
  await assert.rejects(client.submit({type:'move',board:[]}),/not accepted/);
  await assert.rejects(client.submit({type:'cheat'}),/Unsupported/);
 });
+
+test('delayed poll cannot revert a newer committed move',async()=>{
+ const session={id:'r',token:'t',version:1},states=[];
+ let releasePoll;
+ const pollResponse=new Promise(resolve=>{releasePoll=resolve});
+ const client=new Transport({
+  endpoint:'https://example.test/game',apiKey:'pub',
+  getSession:()=>session,onState:(state)=>states.push(state),
+  fetchImpl:async(url,opts)=>{
+   if(opts.method==='GET')return pollResponse;
+   return json(200,{version:2,state:{turn:'b',move:'e4'}});
+  }
+ });
+ const pendingPoll=client.refresh();
+ await client.submit({type:'move',from:{r:6,c:4},to:{r:4,c:4}});
+ assert.equal(session.version,2);
+ releasePoll(json(200,{roomVersion:1,state:{turn:'w',move:'stale'}}));
+ await pendingPoll;
+ assert.equal(session.version,2);
+ assert.deepEqual(states,[{turn:'b',move:'e4'}]);
+});
+test('delayed move response cannot revert a newer room refresh',async()=>{
+ const session={id:'r',token:'t',version:1},states=[];
+ let releaseMove;
+ const moveResponse=new Promise(resolve=>{releaseMove=resolve});
+ const client=new Transport({
+  endpoint:'https://example.test/game',apiKey:'pub',
+  getSession:()=>session,onState:(state)=>states.push(state),
+  fetchImpl:async(url,opts)=>{
+   if(opts.method==='POST')return moveResponse;
+   return json(200,{roomVersion:3,state:{turn:'w',move:'newer'}});
+  }
+ });
+ const pendingMove=client.submit({type:'move',from:{r:6,c:4},to:{r:4,c:4}});
+ // Allow the queued action to start before refreshing.
+ await Promise.resolve();
+ await Promise.resolve();
+ await client.refresh();
+ assert.equal(session.version,3);
+ releaseMove(json(200,{version:2,state:{turn:'b',move:'older'}}));
+ await pendingMove;
+ assert.equal(session.version,3);
+ assert.deepEqual(states,[{turn:'w',move:'newer'}]);
+});
