@@ -52,6 +52,14 @@ begin
  then raise exception 'Ratings did not use identical original Elo snapshots'; end if;
  if (select count(*) from public.ability_chess_rating_results) <> 2
  then raise exception 'Both players must get rating records'; end if;
+ if (select count(*) from public.ability_chess_game_history
+    where game_key='room:00000000-0000-0000-0000-0000000000a1') <> 2
+ then raise exception 'Both players must get server-verified game histories';end if;
+ if (select count(*) from public.ability_chess_game_history
+     where result='win' and player_color='w'
+       and game_key='room:00000000-0000-0000-0000-0000000000a1')<>1
+ then raise exception 'Verified winner did not receive winning history';end if;
+
  if (select count(*) from public.ability_chess_profiles
       where games_played=1) <> 2
  then raise exception 'Both players must have one completed game'; end if;
