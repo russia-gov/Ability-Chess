@@ -63,8 +63,8 @@ once('  let verifiedOnlineBusy=false;','  let verifiedOnlineBusy=false;\n'+helpe
 once("          if(state?.over&&memberSession?.access_token)loadMyProfile().catch(()=>{});",
 "          if(state?.over&&memberSession?.access_token)loadMyProfile().catch(()=>{});\n          renderVerifiedRematchPanel();",
 'render controls after terminal snapshot');
-once("        },\n      });\n    }\n    return verifiedOnlineTransport;",
-"        },\n        onRematch:(info)=>handleVerifiedRematch(info),\n      });\n    }\n    return verifiedOnlineTransport;",
+once("          renderVerifiedRematchPanel();\n        }\n      });",
+"          renderVerifiedRematchPanel();\n        },\n        onRematch:(info)=>handleVerifiedRematch(info)\n      });",
 'listen for rematch status');
 once("      game.lastMessage='Start a new verified game from the online lobby.';render();return;",
 "      verifiedOnlineSubmit({type:'acceptRematch'});return;",
