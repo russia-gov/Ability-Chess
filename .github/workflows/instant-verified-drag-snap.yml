@@ -1,0 +1,40 @@
+name: Instant online drag snap integration
+on:
+  push:
+    branches: [fix/instant-verified-drag-snap]
+    paths:
+      - 'scripts/patch_verified_drag_snap.js'
+      - 'scripts/run_verified_online_browser_smoke.js'
+      - '.github/workflows/instant-verified-drag-snap.yml'
+permissions:
+  contents: write
+jobs:
+  patch-test-commit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply limited UI patch
+        run: |
+          node --check scripts/patch_verified_drag_snap.js
+          node scripts/patch_verified_drag_snap.js
+          git diff --check
+      - name: Install browser runner
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Test two clients and instant snap before delayed response
+        run: node scripts/run_verified_online_browser_smoke.js
+      - name: Commit verified UI change to this branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Show verified online move on release before server confirmation"
+            git push origin HEAD:fix/instant-verified-drag-snap
+          fi
