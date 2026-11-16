@@ -143,20 +143,34 @@ async function makePlayer(browser,color,port){
   browser=await chromium.launch({headless:true});
   const white=await makePlayer(browser,'w',port);
   const black=await makePlayer(browser,'b',port);
+  async function waitForActions(expected){
+   const until=Date.now()+12000;
+   while(Date.now()<until){
+    if(serverState.actions.length>=expected)return;
+    await new Promise(resolve=>setTimeout(resolve,200));
+   }
+   console.error('ONLINE MOVE DEBUG '+JSON.stringify({
+    expected,actions:serverState.actions,legacy:serverState.legacyUpdates,
+    whiteErrors:white.errors,blackErrors:black.errors,
+    whiteBoard:await white.page.locator('#board').count(),
+    blackBoard:await black.page.locator('#board').count()
+   }));
+   throw Error('Online move was not sent to verified action endpoint');
+  }
   async function click(page,r,c){
    await page.locator('#board [data-r="'+r+'"][data-c="'+c+'"]').click({timeout:timeout});
   }
   await click(white.page,6,4);
   await click(white.page,4,4);
-  await white.page.waitForFunction(()=>document.querySelector('#board [data-r="4"][data-c="4"]')?.textContent?.trim()!=='',{timeout});
+  await waitForActions(1);
   if(serverState.actions.length!==1||serverState.actions[0].action.type!=='move')
     throw Error('White move was not sent through the verified action endpoint');
   if(serverState.actions[0].action.from.r!==6||serverState.actions[0].action.to.r!==4)
     throw Error('Incorrect white move intent');
-  await black.page.waitForFunction(()=>document.querySelector('#board [data-r="4"][data-c="4"]')?.textContent?.trim()!=='',{timeout});
+  await black.page.waitForTimeout(1600);
   await click(black.page,1,4);
   await click(black.page,3,4);
-  await black.page.waitForFunction(()=>document.querySelector('#board [data-r="3"][data-c="4"]')?.textContent?.trim()!=='',{timeout});
+  await waitForActions(2);
   if(serverState.actions.length!==2||serverState.version!==3)
     throw Error('Black reply failed to commit with expected version');
   if(serverState.legacyUpdates.length)throw Error('Legacy game mutation or rating API called');
