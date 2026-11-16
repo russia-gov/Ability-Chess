@@ -12,6 +12,7 @@ const windows=[
  ['Ability effect finish',3025,3229],
  ['Move action full',3258,3350],
  ['Draw resignation rematch',5030,5118],
+ ['Game config slider limits',580,830],
  ['Supabase RPC and authentication',1250,1410],
  ['Online saved state',1460,1533],
  ['Online sync',1530,1678],
