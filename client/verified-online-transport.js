@@ -13,7 +13,7 @@
  if(root)root.AbilityChessVerifiedOnlineTransport=exported;
 })(typeof window!=='undefined'?window:null,function(){
  const VALID_TYPES=new Set([
-  'move','ability','upgrade','resign','offerDraw','acceptDraw','claimTimeout'
+  'move','ability','upgrade','resign','offerDraw','acceptDraw','claimTimeout','configureRoom','cancelDraw','declineDraw'
  ]);
  class Transport {
   constructor({endpoint,apiKey,getAccessToken,getSession,onState,fetchImpl}){
