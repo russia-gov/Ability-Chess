@@ -18,6 +18,7 @@ create table public.ability_chess_profiles (
 );
 create table public.ability_chess_rooms (
  id uuid primary key,
+ room_code text not null unique default substr(md5(random()::text),1,8),
  status text,
  host_color text,
  host_user_id uuid,
