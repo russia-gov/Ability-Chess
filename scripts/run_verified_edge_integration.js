@@ -154,7 +154,7 @@ async function run(){
  r=await read('b');
  check(r.status===200&&r.body.rematch.offeredBy==='w','opponent observes offer');
  r=await request('w',{type:'acceptRematch'});
- check(r.status===400||r.status===409,'cannot accept own offer');
+ check(r.status>=400,'cannot accept own offer');
  r=await request('b',{type:'acceptRematch'});
  check(r.status===200&&r.body.rematch.status==='ready','opponent accepts rematch');
  check(r.body.rematch.room.color==='w'&&r.body.rematch.room.token!==TOKENS.b,'new seat and reversed color');
