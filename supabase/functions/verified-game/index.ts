@@ -3,6 +3,15 @@
 // The generated rules.mjs is produced by scripts/build_verified_edge_module.js.
 import {applyGameAction,viewerState} from './rules.mjs';
 
+type GameState = Record<string, any>;
+type Seat = {color:'w'|'b';userId:string|null};
+type RoomRecord = {
+ id:string; status:string; version:number; expires_at:string;updated_at:string;
+ host_token:string;guest_token:string|null;host_color:'w'|'b';
+ host_user_id:string|null;guest_user_id:string|null;
+ settings:Record<string, any>;game_state:GameState;
+};
+
 const URL_BASE=Deno.env.get('SUPABASE_URL')||'';
 const SERVICE_KEY=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')||'';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -13,16 +22,16 @@ const cors={
  'Cache-Control':'no-store',
  'Vary':'Origin'
 };
-const reply=(data,status=200)=>new Response(JSON.stringify(data),{
+const reply=(data:unknown,status=200)=>new Response(JSON.stringify(data),{
  status,headers:{...cors,'Content-Type':'application/json'}
 });
-const fail=(status,message)=>reply({error:message},status);
+const fail=(status:number,message:string)=>reply({error:message},status);
 const authHeaders={
  apikey:SERVICE_KEY,Authorization:'Bearer '+SERVICE_KEY,
  'Content-Type':'application/json'
 };
-async function rest(url,options={}){
- const response=await fetch(URL_BASE+url,{...options,headers:{...authHeaders,...options.headers}});
+async function rest(url:string,options:RequestInit={}):Promise<any>{
+ const response=await fetch(URL_BASE+url,{...options,headers:{...authHeaders,...(options.headers as Record<string,string>||{})}});
  const text=await response.text();
  let data;
  try{data=text?JSON.parse(text):null;}catch{data={message:'Invalid server JSON response'};}
@@ -30,12 +39,12 @@ async function rest(url,options={}){
   +(data?.message||data?.error||'Unknown'));
  return data;
 }
-async function readRoom(roomId){
+async function readRoom(roomId:string):Promise<RoomRecord>{
  const rows=await rest('/rest/v1/ability_chess_rooms?select=*&id=eq.'+encodeURIComponent(roomId));
  if(!Array.isArray(rows)||rows.length!==1)throw new Error('Room not found');
  return rows[0];
 }
-async function currentUser(req){
+async function currentUser(req:Request):Promise<string|null>{
  const header=req.headers.get('Authorization')||'';
  const match=header.match(/^Bearer\s+(\S+)$/i);
  if(!match)return null;
@@ -47,17 +56,17 @@ async function currentUser(req){
  if(!response.ok)throw new Error('Authentication service unavailable');
  const user=await response.json();return UUID.test(user?.id||'')?user.id:null;
 }
-function seatFor(room,token){
+function seatFor(room:RoomRecord,token:string):Seat|null{
  if(token===room.host_token)return {color:room.host_color,userId:room.host_user_id};
  if(token===room.guest_token && room.guest_token)return {
   color:room.host_color==='w'?'b':'w',userId:room.guest_user_id
  };
  return null;
 }
-function protectedRoom(room){
+function protectedRoom(room:RoomRecord):boolean{
  return room.settings?.rated===true || !!room.settings?.tournamentId;
 }
-function authorize(room,token,userId){
+function authorize(room:RoomRecord,token:string,userId:string|null):Seat{
  const seat=seatFor(room,token);
  if(!seat)throw new Error('Invalid seat token');
  if(seat.userId!=null && seat.userId!==userId)
@@ -66,20 +75,20 @@ function authorize(room,token,userId){
   throw new Error('Competitive games require two authenticated seats');
  return seat;
 }
-function estimateClock(row,state){
+function estimateClock(row:RoomRecord,state:GameState):number|null{
  if(!state.clocks||!Number.isFinite(Number(state.clocks[state.turn])))
   return null;
  const age=Math.max(0,(Date.now()-new Date(row.updated_at).getTime())/1000);
  return Number(state.clocks[state.turn])-age;
 }
-function enforceClock(row,state){
+function enforceClock(row:RoomRecord,state:GameState):GameState{
  const remaining=estimateClock(row,state);
  if(remaining===null)return state;
  const out=structuredClone(state);
  out.clocks[out.turn]=Math.max(0,remaining);
  return out;
 }
-async function commit(room,seat,userId,token,expectedVersion,state,actionType,action){
+async function commit(room:RoomRecord,seat:Seat,userId:string|null,token:string,expectedVersion:number,state:GameState,actionType:string,action:Record<string,unknown>){
  const rows=await rest('/rest/v1/rpc/ability_chess_commit_verified_action',{
   method:'POST',
   body:JSON.stringify({
@@ -99,7 +108,7 @@ Deno.serve(async req=>{
  if(!['GET','POST'].includes(req.method))return fail(405,'Unsupported method');
  try{
   const userId=await currentUser(req);
-  let input;
+  let input:any;
   if(req.method==='GET'){
    const url=new URL(req.url);
    input={roomId:url.searchParams.get('roomId'),seatToken:url.searchParams.get('seatToken')};
@@ -157,7 +166,7 @@ Deno.serve(async req=>{
   if(remaining!==null){
    current.clocks[current.turn]=Math.max(0,remaining);
   }
-  let next,actionType;
+  let next:GameState,actionType:string;
   if(action.type==='claimTimeout'){
    if(remaining===null||remaining>0)return fail(409,'No player has timed out');
    if(seat.color===current.turn)return fail(403,'Cannot claim own timeout');
@@ -193,7 +202,7 @@ Deno.serve(async req=>{
    input.expectedVersion,next,actionType,action);
   return reply(updated,200);
  }catch(error){
-  const message=String(error?.message||'Operation failed');
+  const message=String((error as Error)?.message||'Operation failed');
   if(/version conflict/i.test(message))return fail(409,'Game version conflict');
   if(/(Invalid seat|does not own|Not your turn|cannot claim)/i.test(message))
    return fail(403,message);
