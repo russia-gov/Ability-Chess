@@ -122,10 +122,34 @@ Deno.serve(async req=>{
    return fail(400,'Expected game version is required');
   if(room.version!==input.expectedVersion)
    return fail(409,'Game version conflict: refresh authoritative state');
-  if(room.status!=='active')return fail(409,'Game is no longer active');
   const action=input.action;
   if(!action||typeof action!=='object'||typeof action.type!=='string')
    return fail(400,'Typed action is required');
+  if(action.type==='configureRoom'){
+   if(room.host_token!==input.seatToken)
+    return fail(403,'Only the host can configure a room');
+   if(!room.guest_token||room.status!=='active')
+    return fail(409,'Waiting for a second player');
+   if(room.game_state?.onlineStarted===true)
+    return fail(409,'Game has already started');
+   if(action.settings?.tournamentId) return fail(403,'Tournament settings cannot be changed');
+   const rows=await rest('/rest/v1/rpc/ability_chess_start_verified_room',{
+    method:'POST',body:JSON.stringify({
+     p_room_id:room.id,p_host_token:input.seatToken,
+     p_actor_user_id:userId,p_expected_version:input.expectedVersion,
+     p_settings:action.settings,p_host_color:action.hostColor
+    })
+   });
+   if(!Array.isArray(rows)||rows.length!==1)throw new Error('Room start returned no state');
+   const assigned=action.hostColor;
+   return reply({version:rows[0].new_version,
+      state:viewerState(rows[0].updated_state,assigned),status:'active',
+      settings:rows[0].room_settings});
+  }
+  if(room.status!=='active')return fail(409,'Game is no longer active');
+  if(room.game_state?.onlineStarted!==true)
+   return fail(409,'Game has not been started');
+
   const current=structuredClone(room.game_state);
   const remaining=estimateClock(room,current);
   if(remaining!==null){
