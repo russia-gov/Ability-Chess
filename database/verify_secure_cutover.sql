@@ -42,6 +42,24 @@ begin
        where oid='public.ability_chess_verified_rematches'::regclass) then
    raise exception 'Rematch offers table lacks private RLS/grants';
  end if;
+ -- Alternate room, reconnect, queue, and tournament reads must use the
+ -- same protected seat/spectator projector. Otherwise hidden Ambush details
+ -- can leak even when the main room endpoint is correct.
+ foreach name in array array[
+   'public.get_ability_chess_room(uuid,uuid)',
+   'public.reconnect_ability_chess_room(text,uuid)',
+   'public.ability_chess_resume_my_active_room()',
+   'public.ability_chess_poll_seek(uuid,uuid)',
+   'public.ability_chess_my_active_tournament_game()',
+   'public.ability_chess_tournament_spectate(uuid)',
+   'public.ability_chess_tournament_game_context(uuid)'
+ ] loop
+   f:=to_regprocedure(name);
+   if f is null
+     or position('ability_chess_viewer_state' in pg_get_functiondef(f::oid))=0 then
+     raise exception 'Unsafe alternate game read still exposed: %',name;
+   end if;
+ end loop;
  -- The public creation functions must remain callable for matchmaking,
  -- but may no longer use client-supplied p_game_state as the official board.
  foreach name in array array[
