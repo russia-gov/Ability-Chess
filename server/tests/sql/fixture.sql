@@ -5,6 +5,8 @@ create role authenticated;
 create role service_role;
 create table public.ability_chess_profiles (
  id uuid primary key,
+ username text,
+ display_name text,
  bullet_rating integer default 1200,
  blitz_rating integer default 1200,
  rapid_rating integer default 1200,
@@ -76,3 +78,13 @@ create table public.ability_chess_room_actions (
 
 create schema if not exists auth;
 create or replace function auth.uid() returns uuid language sql stable as $$ select null::uuid $$;
+
+create table public.ability_chess_game_history(
+ id uuid primary key default gen_random_uuid(),
+ player_id uuid not null references public.ability_chess_profiles(id),
+ game_key text not null,played_at timestamptz not null default now(),
+ mode text,player_color text,result text,result_reason text,
+ opponent_name text,settings jsonb,replay jsonb,
+ rating_before integer,rating_after integer,rating_change integer,
+ unique(player_id,game_key)
+);
