@@ -9,7 +9,8 @@ const terms=[
  /supabaseRpc\(['"](?:ability_chess_|start_|join_|create_)/,
  /endGame\s*\(/,
  /function (?:apply|attempt|complete|tryUse|handleAbility|makeMove|finishTurn|purchaseUpgrade|startConfiguredOnlineGame)/,
- /reportTournament/,/submit.*Result/
+ /reportTournament/,/submit.*Result/,
+ /id=["']board/, /boardEl[.]addEventListener/,/boardEl[.]append/, /className=.*square/, /classList[.]add\(['"]square/, /dataset[.](?:r|c|row|col)/, /function renderBoard/
 ];
 for(let i=0;i<lines.length;i++){
  const line=lines[i];
