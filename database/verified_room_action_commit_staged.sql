@@ -79,7 +79,10 @@ begin
  update public.ability_chess_rooms
    set game_state=p_next_state,
        status=case when next_over then 'finished' else 'active' end,
-       version=version+1
+       version=version+1,
+       -- Clock accounting in Edge uses this as the current turn's baseline.
+       -- Without refreshing it, each new turn is charged for previous turns.
+       updated_at=now()
    where id=p_room_id returning * into new_row;
 
  insert into public.ability_chess_room_actions
