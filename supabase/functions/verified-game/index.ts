@@ -116,6 +116,8 @@ Deno.serve(async req=>{
   if(req.method==='GET'){
    const viewed=enforceClock(room,room.game_state);
    return reply({roomVersion:room.version,roomStatus:room.status,
+     opponentJoined:!!room.guest_token,serverNow:new Date().toISOString(),
+     stateUpdatedAt:room.updated_at,
      state:viewerState(viewed,seat.color),settings:room.settings});
   }
   if(!Number.isSafeInteger(input.expectedVersion)||input.expectedVersion<0)
