@@ -26,8 +26,8 @@ begin
   upgrade_limit := coalesce((cfg->>'upgradeLimit')::integer,3);
   base_minutes := coalesce((cfg->>'base')::integer,(cfg->>'baseMinutes')::integer,10);
   increment_seconds := coalesce((cfg->>'increment')::integer,(cfg->>'incrementSeconds')::integer,0);
-  if starting_points not between 0 and 100 or upgrade_limit not between 0 and 10
-    or base_minutes not between 1 and 180 or increment_seconds not between 0 and 120 then
+  if starting_points not between 0 and 30 or upgrade_limit not between 0 and 6
+    or base_minutes not between 1 and 180 or increment_seconds not between 0 and 30 then
     raise exception 'Game settings outside supported range';
   end if;
   return jsonb_build_object(
