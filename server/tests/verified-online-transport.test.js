@@ -105,3 +105,52 @@ test('delayed move response cannot revert a newer room refresh',async()=>{
  assert.equal(session.version,3);
  assert.deepEqual(states,[{turn:'w',move:'newer'}]);
 });
+
+test('a rematch offer is visible despite unchanged finished-game version',async()=>{
+ const session={id:'old',token:'old-seat',version:9},updates=[],rematches=[];
+ let phase=0;
+ const client=new Transport({
+  endpoint:'https://example.test/game',apiKey:'pub',
+  getSession:()=>session,onState:(s)=>updates.push(s),onRematch:(r)=>rematches.push(r),
+  fetchImpl:async(url,opts)=>{
+   if(opts.method==='GET')return json(200,{roomVersion:9,state:{over:true},
+    rematch:phase===0?{status:'none',offeredBy:null}:{status:'offered',offeredBy:'b'}});
+   if(opts.method==='POST')return json(200,{version:9,state:{over:true},
+    rematch:{status:'offered',offeredBy:'b'}});
+  }
+ });
+ await client.refresh();
+ assert.equal(rematches[0].status,'none');
+ phase=1;
+ await client.refresh();
+ assert.equal(rematches[1].offeredBy,'b');
+ assert.equal(updates.length,0);
+ await client.submit({type:'acceptRematch'});
+ assert.equal(session.version,9);
+});
+test('rematch room handoff cannot be undone by the old poll response',async()=>{
+ const session={id:'old',token:'seat',version:9},applied=[],events=[];
+ let release;
+ const gate=new Promise(resolve=>{release=resolve});
+ const replacement={id:'fresh',token:'new-seat',color:'b',version:0,state:{over:false}};
+ const client=new Transport({
+  endpoint:'https://example.test/game',apiKey:'pub',getSession:()=>session,
+  onState:(s)=>applied.push(s),
+  onRematch:(r)=>{
+   events.push(r.status);
+   if(r.status==='ready'){
+    Object.assign(session,{id:r.room.id,token:r.room.token,version:r.room.version});
+   }
+  },
+  fetchImpl:async()=>gate
+ });
+ const oldPoll=client.refresh();
+ release(json(200,{roomVersion:9,state:{over:true},
+  rematch:{status:'ready',offeredBy:'w',room:replacement}}));
+ await oldPoll;
+ assert.deepEqual(events,['ready']);
+ assert.equal(session.id,'fresh');
+ assert.equal(session.token,'new-seat');
+ assert.equal(session.version,0);
+ assert.deepEqual(applied,[]);
+});
