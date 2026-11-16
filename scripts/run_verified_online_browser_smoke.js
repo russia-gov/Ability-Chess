@@ -112,6 +112,10 @@ async function makePlayer(browser,color,port){
  const page=await context.newPage();
  const errors=[];
  page.on('pageerror',e=>errors.push(String(e)));
+ page.on('console',m=>{
+  if(['warning','error'].includes(m.type()))
+   console.log('BROWSER CONSOLE '+color+' '+m.type()+': '+m.text().slice(0,500));
+ });
  await routes(page);
  await page.goto('http://127.0.0.1:'+port+'/index.html?page=game',{waitUntil:'domcontentloaded'});
  if(!await page.locator('#gameScreen.active').isVisible()){
@@ -161,7 +165,18 @@ async function makePlayer(browser,color,port){
    await page.locator('#board [data-r="'+r+'"][data-c="'+c+'"]').click({timeout:timeout});
   }
   await click(white.page,6,4);
+  console.log('AFTER E2 '+JSON.stringify(await white.page.evaluate(()=>({
+   from:document.querySelector('#board [data-r="6"][data-c="4"]')?.className,
+   targets:[...document.querySelectorAll('#board .legal,#board .legal-move,#board .selected')]
+     .map(x=>({r:x.dataset.r,c:x.dataset.c,className:x.className})).slice(0,10),
+   status:document.querySelector('#gameMessage')?.textContent||''
+  }))));
   await click(white.page,4,4);
+  console.log('AFTER E4 '+JSON.stringify(await white.page.evaluate(()=>({
+   from:document.querySelector('#board [data-r="6"][data-c="4"]')?.className,
+   to:document.querySelector('#board [data-r="4"][data-c="4"]')?.className,
+   status:document.querySelector('#gameMessage')?.textContent||''
+  }))));
   await waitForActions(1);
   if(serverState.actions.length!==1||serverState.actions[0].action.type!=='move')
     throw Error('White move was not sent through the verified action endpoint');
