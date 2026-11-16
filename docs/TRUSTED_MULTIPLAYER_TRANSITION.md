@@ -166,3 +166,52 @@ No staged SQL was applied to the live Supabase project. This PR remains a draft.
 - Tournament token-return and SQL function quoting issues caught in CI were fixed in this draft.
 
 These checks are necessary but insufficient for live launch: the full mixed-ability two-account integration, authoritative clocks, rematch replacement, Supabase staging deployment and coordinated legacy endpoint revocation remain release gates. The production Supabase project has not been changed.
+
+## Secure casual rematch implementation (staged, November 15)
+
+- `database/verified_rematch_staged.sql` adds an RLS-protected, service-only
+  per-finished-room rematch offer record and a transactionally locked
+  `ability_chess_verified_rematch` RPC. The finished game's board, outcome,
+  recorded actions, rating and history are **never** rewritten for a rematch.
+- The first player offers; the opponent alone may accept. Declining or
+  cancelling removes a pending offer. Concurrent accepts cannot create two rooms.
+- Acceptance creates a new server-generated, **unrated** casual room containing
+  the official initial position, original mutually accepted settings, reversed
+  player colors and completely fresh tokens. Only the caller's new token is
+  returned. Both sides can recover their new room by polling the original room.
+- Rated and tournament rematches are refused by this protocol. Players must
+  use normal rated matchmaking or tournament pairing for another competitive game.
+- The verified Edge endpoint handles `offerRematch`, `acceptRematch` and
+  `declineRematch`; its GET returns the offer's status even when the
+  original game version has not changed.
+- The browser transport handles rematch metadata independently of the game's
+  version and ignores late poll responses from the previous room.
+- The draft game's rematch controls call the verified endpoint and switch
+  to the newly assigned room/seat after acceptance.
+- Disposable PostgreSQL tests cover authorization, offer/accept/decline,
+  fresh state and colors, token rotation, immutable completed game, rated
+  rejection and duplicate acceptance. A Chromium two-client rematch test
+  was added; consult the latest CI result before considering it verified.
+- The post-cutover audit now checks the rematch RPC and table privileges.
+
+### Required coordinated deployment order (NOT executed)
+
+1. Confirm there are no active rated games/tournament matches to interrupt;
+   provide users with a maintenance window and ensure rollback assets are saved.
+2. Apply the tested `canonical_initial_game_state_staged.sql`, finalizer,
+   verified history, verified room start, action commit, hidden-state reads,
+   hardened room genesis/challenge activation, **and**
+   `verified_rematch_staged.sql` in their tested dependency order.
+3. Deploy the matching `verified-game` Edge function and browser assets.
+   Never publish the Edge service-role key to a client.
+4. Atomically cut over the site and revoke legacy mutation, rating, history
+   and unsafe read RPCs with the documented fail-closed migrations.
+5. Run `database/verify_secure_cutover.sql` and authenticated adversarial
+   move/rematch checks. Confirm the old APIs return permission denied and
+   neither player can observe the opponent's hidden Ambush or seat token.
+6. If an issue appears, **fail closed** for competitive play. Do not restore
+   the vulnerable browser rating or whole-state mutation endpoints as a rollback.
+
+**Still a release blocker:** Real Supabase end-to-end authentication,
+clock/timeout/draw and full ability regression with two accounts has not
+been performed. No production change is authorized by this document.
