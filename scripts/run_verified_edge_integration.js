@@ -140,6 +140,7 @@ async function run(){
   request('b',{type:'move',from:{r:1,c:4},to:{r:3,c:4}}),
   request('b',{type:'move',from:{r:1,c:3},to:{r:3,c:3}})
  ]);
+ console.log('CONCURRENT ACTION RESULTS '+JSON.stringify({a,b}));
  check([a.status,b.status].sort().join(',')==='200,409','same-version action race commits only once');
  check(room.version===3&&commits.length===2,'concurrent actions did not duplicate');
  // The next player can offer a draw without asserting a browser-made outcome.
