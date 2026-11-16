@@ -1,6 +1,8 @@
 -- Extends the isolated game test fixture to compile and exercise the
 -- production-shaped create/seek/challenge/tournament RPC replacements.
 alter table public.ability_chess_rooms add column room_code text unique;
+alter table public.ability_chess_rooms alter column id set default gen_random_uuid();
+alter table public.ability_chess_tournament_games alter column id set default gen_random_uuid();
 alter table public.ability_chess_rooms alter column guest_token drop default;
 alter table public.ability_chess_rooms alter column host_token set default gen_random_uuid();
 alter table public.ability_chess_rooms alter column status set default 'waiting';
