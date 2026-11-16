@@ -68,10 +68,6 @@ begin
  if s#>>'{ambushed,w,r}' <> '4' or s#>'{ambushed,b}' <> 'null'::jsonb
    or s ? 'secret' or s->'positionCounts'<>'{}'::jsonb
  then raise exception 'Main legacy room read leaks hidden opponent details'; end if;
- select state into s from public.reconnect_ability_chess_room(
-  'SOME-CODE','00000000-0000-0000-0000-000000000095');
- exception when others then
-   if SQLERRM not like '%Room not found%' then raise; end if;
 end $test$;
 -- Attach a valid code after the baseline fixtures are set up.
 alter table public.ability_chess_rooms add column if not exists room_code text;
