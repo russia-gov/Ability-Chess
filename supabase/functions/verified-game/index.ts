@@ -174,6 +174,13 @@ Deno.serve(async req=>{
     return fail(409,'No opponent draw offer');
    next={...current,over:true,winner:null,resultReason:'agreement',
     drawOffer:null};actionType='draw';
+  }else if(action.type==='cancelDraw'){
+   if(current.drawOffer!==seat.color)return fail(409,'No own draw offer to cancel');
+   next={...current,drawOffer:null};actionType='draw';
+  }else if(action.type==='declineDraw'){
+   if(current.drawOffer!==(seat.color==='w'?'b':'w'))
+    return fail(409,'No opponent draw offer to decline');
+   next={...current,drawOffer:null};actionType='draw';
   }else{
    if(remaining!==null&&remaining<=0)return fail(409,'Clock expired');
    if(seat.color!==current.turn)return fail(403,'Not your turn');
