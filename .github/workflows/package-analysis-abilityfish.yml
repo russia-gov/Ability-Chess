@@ -6,6 +6,8 @@ on:
     branches: [ main, abilityfish ]
     paths:
       - 'scripts/patch_analysis_wasm_runtime.py'
+      - 'engine/fairy-depth15-worker.js'
+      - 'scripts/check_abilityfish_transport.js'
       - 'scripts/patch_admin_directory.py'
       - 'scripts/patch_dm_safety_nav.py'
       - 'scripts/patch_compact_admin_nav.py'
@@ -40,6 +42,8 @@ on:
     branches: [ main ]
     paths:
       - 'scripts/patch_analysis_wasm_runtime.py'
+      - 'engine/fairy-depth15-worker.js'
+      - 'scripts/check_abilityfish_transport.js'
       - 'scripts/patch_admin_directory.py'
       - 'scripts/patch_dm_safety_nav.py'
       - 'scripts/patch_compact_admin_nav.py'
@@ -130,6 +134,9 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: '22'
+
+      - name: Verify AbilityFish upgrade transport and time budget
+        run: node scripts/check_abilityfish_transport.js
 
       - name: Prove packaged engine reaches depth 15 in Node
         run: node scripts/run_wasm_uci_smoke.js vendor/Fairy-Wasm/src/emscripten/public 15

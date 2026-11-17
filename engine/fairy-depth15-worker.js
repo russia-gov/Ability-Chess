@@ -121,9 +121,14 @@ function upgradeCommands(value) {
       if (typeIndex == null) continue;
       const id=typeof rawUpgrade==='string'
         ? rawUpgrade
-        : rawUpgrade?.id ?? rawUpgrade?.upgradeId ?? rawUpgrade?.name ?? null;
-      const encoded=UPGRADE_CODE[String(id||'').toLowerCase()] || int(rawUpgrade?.encoded ?? rawUpgrade?.code ?? 0);
-      if (encoded>=0 && encoded<=14) commands.push(`abilityupgrade ${side} ${typeIndex} ${encoded}`);
+        : rawUpgrade?.id ?? rawUpgrade?.upgradeId ?? rawUpgrade?.upgrade ?? rawUpgrade?.name ?? null;
+      // Accept snake_case, kebab-case, human labels and camelCase aliases.
+      const normalized=String(id||'').replace(/([a-z0-9])([A-Z])/g,'$1_$2')
+        .trim().toLowerCase().replace(/[\s-]+/g,'_');
+      const encoded=UPGRADE_CODE[normalized] || int(rawUpgrade?.encoded ?? rawUpgrade?.code ?? 0);
+      // Zero is not a purchased upgrade; avoid resetting an existing engine
+      // upgrade when an unrecognized client-side label is encountered.
+      if (encoded>=1 && encoded<=14) commands.push(`abilityupgrade ${side} ${typeIndex} ${encoded}`);
     }
   }
   return commands;
